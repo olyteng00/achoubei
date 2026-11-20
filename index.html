@@ -52,7 +52,7 @@ function defaultState(){
     lastPaid: ymd(lp),
     bank:{lastMonth: ym(new Date(now)), accrued:0},
     applied:[], shop: DEFAULT_SHOP.map(([cat,icon,name,price])=>({id:uid(),cat,icon,name,price})),
-    wish:null, vouchers:[], log:[], shopFix1:true, shopFix2:true, mapStart: ym(new Date(now)), zoneBonus:0, zonesSeen:1, reveals:[], plantedTotal:0, treeSeen:0
+    wish:null, vouchers:[], log:[], extraPay:null, shopFix1:true, shopFix2:true, mapStart: ym(new Date(now)), zoneBonus:0, zonesSeen:1, reveals:[], plantedTotal:0, treeSeen:0
   };
 }
 function iconOf(x){return (x&&(x.icon||EMOJI2ICON[x.emoji]))||"gift";}
@@ -318,7 +318,8 @@ function say(text){ speakEn(toEn(text)); }
 const sayBtn = t => canSpeak?`<button class="say" data-act="say" data-t="${esc(t)}" aria-label="念給我聽">${ic("speaker")}</button>`:"";
 
 /* ---------- coin helpers ---------- */
-function breakdown(n){n=Math.max(0,Math.round(n));const out=[];for(const c of [50,10,5,1]){while(n>=c){out.push(c);n-=c;}}return out;}
+const DENOMS=[1000,500,100,50,10,5,1];
+function breakdown(n){n=Math.max(0,Math.round(n));const out=[];for(const c of DENOMS){while(n>=c){out.push(c);n-=c;}}return out;}
 function coinEl(v,extra){extra=extra||""; let cls=""; extra=extra.replace(/class-x="([^"]*)"/,(m,c)=>{cls=" "+c;return "";}); return `<span class="coin c${v}${cls}" ${extra}>${v}</span>`;}
 function coinsHTML(n,max){const b=breakdown(n);max=max||14;if(!b.length)return `<span class="sub">空空的</span>`;
   const shown=b.slice(0,max).map(v=>coinEl(v)).join("");return shown+(b.length>max?`<span class="more">…還有${b.length-max}個</span>`:"");}
@@ -347,6 +348,7 @@ function render(){
 }
 function greeting(){
   const p=pendingPaydays();
+  if(state.extraPay&&state.extraPay.length) return "爸爸媽媽給你零用錢囉！快來分一分！";
   if(p>0) return "發薪日到了！我帶硬幣來給你囉！";
   const w=state.wish&&state.shop.find(i=>i.id===state.wish);
   if(w){const left=w.price-(state.spend+state.save);if(left<=0)return `${w.name}的錢夠了！要去買嗎？`;return `${w.name}還差 ${left} 元，加油！`;}
@@ -401,7 +403,7 @@ function home(){
   </g></svg>`;
   const W=x=>(x/30).toFixed(3);
   let hud="";
-  if(p>0) hud+=`<button class="hudbtn hudpay" data-act="go" data-s="payday">${ic("moneybag")}<span>發薪日！</span></button>`;
+  if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay" data-act="go" data-s="payday">${ic("moneybag")}<span>${p>0?"發薪日！":"有零用錢！"}</span></button>`;
   if(w){ const have=state.spend+state.save, left=Math.max(0,w.price-have), pct=Math.min(100,have/w.price*100);
     hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span><span class="wl">${left>0?`還差 ${left} 元`:"可以買了！"}</span></span></button>`; }
   hud+=`<div class="hudbtn starchip">${ic("star")}<span id="starCount">${starsGot}</span></div>`;
@@ -413,7 +415,7 @@ function home(){
     <button class="sign" style="left:${W(370)}%;top:70%;--tilt:-3deg" data-act="go" data-s="shop"><div class="t"><span class="e">${ic("shop")}</span>商店</div><div class="v">有 ${state.spend} 元</div></button>
     <button class="sign" style="left:${W(730)}%;top:74%;--tilt:2deg" data-act="go" data-s="bank"><div class="t"><span class="e">${ic("bank")}</span>銀行</div><div class="v">存了 ${state.save} 元</div></button>
     <button class="sign" style="left:${W(540)}%;top:31%;--tilt:-1deg" data-act="go" data-s="tree"><div class="t"><span class="e">${ic("sprout")}</span>搖錢樹</div><div class="v">${money(treeTotal())} 元 ${wt.e}</div></button>
-    ${p>0?`<button class="sign sun pulse" style="left:${W(840)}%;top:44%;--tilt:3deg" data-act="go" data-s="payday"><div class="t"><span class="e">${ic("moneybag")}</span>發薪日！</div><div class="v">點我領錢</div></button>`:""}
+    ${p>0||(state.extraPay&&state.extraPay.length)?`<button class="sign sun pulse" style="left:${W(840)}%;top:44%;--tilt:3deg" data-act="go" data-s="payday"><div class="t"><span class="e">${ic("moneybag")}</span>發薪日！</div><div class="v">點我領錢</div></button>`:""}
     ${open>=2?`<button class="sign" style="left:${W(1690)}%;top:56%;--tilt:-2deg" data-act="go" data-s="game" data-g="beach" data-stop="beach"><div class="t"><span class="e">${ic("shell")}</span>撿貝殼</div><div class="v">海邊小遊戲</div></button>`:""}
     ${open>=3?`<button class="sign" style="left:${W(2590)}%;top:66%;--tilt:2deg" data-act="go" data-s="game" data-g="boss" data-stop="boss"><div class="t"><span class="e">${ic("ferris")}</span>當店長</div><div class="v">遊樂園小遊戲</div></button>`:""}
     ${fog}
@@ -427,7 +429,7 @@ function home(){
 
 /* payday */
 function payday(){
-  if(!ui.pd){ ui.pd={left:breakdown10(state.weekly),spend:[],save:[],tree:[],fresh:true}; }
+  if(!ui.pd){ const ex=state.extraPay&&state.extraPay.length&&!pendingPaydays(); ui.pd={left:ex?state.extraPay.slice().sort((a,b)=>b-a):breakdown10(state.weekly),spend:[],save:[],tree:[],fresh:true,extra:!!ex}; }
   const pd=ui.pd, done=pd.left.length===0; setTimeout(()=>{ if(ui.pd) ui.pd.fresh=false; },50);
   const line = done?"分好了！按「完成」就放進去囉！":"點一個罐子，把硬幣放進去！";
   return topBar(`${ic("moneybag")} 發薪日`,"home")+
@@ -452,24 +454,41 @@ function shop(){
   const items=state.shop.filter(i=>i.cat===cat);
   return topBar(`${ic("shop")} 阿臭被商店`,"home")+
   `<div class="body">${side(`<div class="walletline">${ic("bag")}<span>商店有</span><b>${state.spend} 元</b><span class="coins">${coinsHTML(state.spend,6)}</span></div>
-    <div class="tabs">${CATS.map(c=>`<button class="tab ${c.k===cat?"on":""}" data-act="cat" data-c="${c.k}"><span class="e">${ic(c.e)}</span>${c.n}</button>`).join("")}</div>`)}
+    <div class="tabs">${CATS.map(c=>`<button class="tab ${c.k===cat?"on":""}" data-act="cat" data-c="${c.k}"><span class="e">${ic(c.e)}</span>${c.n}</button>`).join("")}</div>
+    <button class="tab other" data-act="custom"><span class="e">${ic("gift")}</span>買別的東西</button>`)}
   <main class="main"><div class="items">${items.map(i=>`<button class="item ${i.price>state.spend?"cant":""}" data-act="item" data-id="${i.id}">
     ${state.wish===i.id?`<span class="star">${ic("star")}</span>`:""}<div class="e">${itemIcon(i)}</div><div class="n">${esc(i.name)}</div><div class="p">${i.price} 元</div></button>`).join("")||'<div class="sub">這裡還沒有東西</div>'}</div></main></div>`;
 }
+function getItem(id){ return state.shop.find(i=>i.id===id) || (tmpItem&&tmpItem.id===id?tmpItem:null); }
+let tmpItem=null;
+function priceEditor(p){
+  return `<div class="pricebox"><span class="pl">實際價格</span><input id="mp" type="number" inputmode="numeric" min="0" max="99999" value="${p}"><span>元</span></div>
+  <div class="denoms">${DENOMS.slice().reverse().map(v=>`<button class="dn" data-act="mpadd" data-v="${v}"><span>+</span>${coinEl(v,'style="--s:.85"')}</button>`).join("")}<button class="dn clr" data-act="mpclr">清除</button></div>`;
+}
 function itemModal(id){
-  const it=state.shop.find(i=>i.id===id); if(!it) return;
-  const can=state.spend>=it.price, total=state.spend+state.save;
-  const line = can? `${it.name}要 ${it.price} 元，你的商店有 ${state.spend} 元，可以買！`
-    : total>=it.price ? `商店只有 ${state.spend} 元，還差 ${it.price-state.spend} 元。可以從銀行拿錢出來喔！`
-    : `${it.name}要 ${it.price} 元，還差 ${it.price-state.spend} 元。先存起來，設成願望吧！`;
-  openModal(`<div class="sheet wide"><div class="l"><div class="row" style="justify-content:center;gap:4px">${lion(can?"cheer":total>=it.price?"shy":"sad","","width:130px")}<div class="e">${itemIcon(it)}</div></div><div class="n">${esc(it.name)}</div>
-    <div class="coins" style="margin:10px 0">${coinsHTML(it.price)}</div><div class="h2" style="margin:4px 0">${it.price} 元</div>
-    <div class="sub" style="font-size:21px">${esc(line)} ${sayBtn(line)}</div></div>
+  const it=getItem(id); if(!it) return;
+  if(ui.mpFor!==id){ ui.mpFor=id; ui.mp=it.price; }
+  const price=Math.max(0,Math.round(ui.mp||0)); const can=price>0&&state.spend>=price, total=state.spend+state.save;
+  const line = price<=0? "先輸入這個東西要多少錢喔！" : can? `${it.name}要 ${price} 元，你的商店有 ${state.spend} 元，可以買！`
+    : total>=price ? `商店只有 ${state.spend} 元，還差 ${price-state.spend} 元。可以從銀行拿錢出來喔！`
+    : `${it.name}要 ${price} 元，還差 ${price-state.spend} 元。先存起來，設成願望吧！`;
+  openModal(`<div class="sheet wide buy"><div class="l"><div class="row" style="justify-content:center;gap:4px">${lion(can?"cheer":total>=price?"shy":"sad","","width:110px")}<div class="e">${itemIcon(it)}</div></div><div class="n">${esc(it.name)}</div>
+    ${priceEditor(price)}
+    <div class="coins" style="margin:8px 0;min-height:44px">${coinsHTML(price,10)}</div>
+    <div class="sub" style="font-size:19px">${esc(line)}</div></div>
     <div class="btns">
-      ${can?`<button class="btn g" data-act="buy" data-id="${it.id}">${ic("coins")} 用硬幣付錢</button>`:""}
-      ${!can&&total>=it.price?`<button class="btn b" data-act="go" data-s="bank" data-atm="wd">${ic("bank")} 去銀行領錢</button>`:""}
-      ${state.wish===it.id?`<button class="btn w" data-act="unwish">取消願望</button>`:`<button class="btn" data-act="wish" data-id="${it.id}">${ic("star")} 設成我的願望</button>`}
+      ${can?`<button class="btn g" data-act="buy" data-id="${it.id}">${ic("coins")} 用錢付 ${price} 元</button>`:""}
+      ${price>0&&!can&&total>=price?`<button class="btn b" data-act="go" data-s="bank" data-atm="wd">${ic("bank")} 去銀行領錢</button>`:""}
+      ${tmpItem&&tmpItem.id===it.id?"":state.wish===it.id?`<button class="btn w" data-act="unwish">取消願望</button>`:`<button class="btn" data-act="wish" data-id="${it.id}">${ic("star")} 設成我的願望</button>`}
       <button class="btn w" data-act="close">先不要</button></div></div>`);
+}
+function customModal(){
+  const c=ui.cust||(ui.cust={name:"",cat:ui.cat||"food"});
+  openModal(`<div class="sheet wide buy"><div class="l"><div class="n">${ic("gift")} 買別的東西</div>
+    <div class="pricebox"><span class="pl">東西名稱</span><input id="cname" type="text" maxlength="12" placeholder="例如：貼紙" value="${esc(c.name)}"></div>
+    <div class="catpick">${CATS.map(x=>`<button class="dn ${x.k===c.cat?"on":""}" data-act="ccat" data-c="${x.k}">${ic(x.e)}<span>${x.n}</span></button>`).join("")}</div>
+    <div class="sub" style="font-size:18px;margin-top:8px">輸入名字、選分類，再按「下一步」輸入價格</div></div>
+    <div class="btns"><button class="btn g" data-act="cnext">${ic("next")} 下一步</button><button class="btn w" data-act="close">先不要</button></div></div>`);
 }
 
 /* coin picker (pay / move) */
@@ -482,10 +501,11 @@ function pickerZones(srcName){
     <div class="sum">${sum} 元</div><div class="need" id="need"></div></div></div>`};
 }
 function pay(){
-  const it=state.shop.find(i=>i.id===ui.item); if(!it){ui.screen="shop";return shop();}
+  const it0=getItem(ui.item); if(!it0){ui.screen="shop";return shop();}
+  const it={...it0,price:ui.price||it0.price};
   const {sum,html}=pickerZones(`${ic("bag")} 商店`);
   const ok=sum>=it.price, change=sum-it.price;
-  const line = sum===0?`${it.name}要 ${it.price} 元，點硬幣拿出來付錢！`: !ok?`還差 ${it.price-sum} 元喔！`: change>0?`錢夠了！付 ${sum} 元，阿臭被會找你 ${change} 元。`:`剛剛好 ${it.price} 元！好厲害！`;
+  const line = sum===0?`${it.name}要 ${it.price} 元，點錢拿出來付錢！`: !ok?`還差 ${it.price-sum} 元喔！`: change>0?`錢夠了！付 ${sum} 元，阿臭被會找你 ${change} 元。`:`剛剛好 ${it.price} 元！好厲害！`;
   return topBar(`付錢：${itemIcon(it)} ${esc(it.name)}`,"home")+
   `<div class="body">${side(`<div class="pricetag">${itemIcon(it)}<span>${it.price} 元</span></div><div class="bubble">${esc(line)}${sayBtn(line)}</div>${lion(ok?"cheer":sum>0?"shy":"wave")}`,
     `<button class="btn w" data-act="go" data-s="shop">${ic("back")} 回商店</button><button class="btn g" data-act="paydo" ${ok?"":"disabled"}>${ic("pay")} 付錢！</button>`)}
@@ -533,7 +553,7 @@ function bank(){
     const tr=a.mode==="tree";
     line= tr?"要轉多少錢到搖錢樹？用下面的按鍵加加看！":"要領多少錢？用下面的按鍵加加看！";
     lcd=`<div class="l1">${tr?"轉進搖錢樹":"提款"}</div><div class="l2">${tr?"要轉多少錢？":"要領多少錢？"}</div><div class="big">${a.amt}<small> 元</small></div><div class="l4">存款還有 ${state.save-a.amt} 元</div>`;
-    keys=`<div class="numkeys">${[10,5,1].map(v=>key("atmadd",`<span class="pl">+</span>${coinEl(v,'style="--s:1.15"')}`,"nk",`data-v="${v}"`,a.amt+v>state.save)).join("")}${key("atmclr","清除","nk clr","",a.amt<=0)}</div>
+    keys=`<div class="numkeys">${DENOMS.slice().reverse().map(v=>key("atmadd",`<span class="pl">+</span>${coinEl(v,'style="--s:.95"')}`,"nk",`data-v="${v}"`,a.amt+v>state.save)).join("")}${key("atmclr","清除","nk clr","",a.amt<=0)}</div>
       <div class="softkeys">${key("atmcancel",`${ic("cross")}<span>取消</span>`,"sk r")}${key("atmok",`${ic("check")}<span>確定</span>`,"sk g","",a.amt<=0)}</div>`;
   }else if(a.mode==="busy"){
     line="機器在動了…等一下下！"; lcd=`<div class="l1">處理中</div><div class="l2">請稍候…</div><div class="dots"><i></i><i></i><i></i></div>`;
@@ -785,6 +805,12 @@ function parentScreen(){
     <div class="prow"><label>孩子名字 <input class="tx" id="s-name" value="${esc(state.kidName)}"></label><label>每週零用錢 <input class="n" type="number" id="s-weekly" value="${state.weekly}"></label></div>
     <div class="prow"><label>存款真實年利率 % <input class="n" type="number" step="0.001" id="s-rate" value="${state.rate}"></label><label>放大倍數 × <input class="n" type="number" step="1" id="s-mult" value="${state.mult}"></label><label>搖錢樹鎖定週數 <input class="n" type="number" id="s-lock" value="${state.lockWeeks}"></label><button class="btn sm" data-act="psettings">儲存設定</button></div>
     <div class="note">預設利率 0.825% 為臺灣銀行活期儲蓄存款牌告利率（2026/11/20）。放大倍數同時套用在存款利息和搖錢樹漲跌。</div></div>
+  <div class="card psec"><h3>${ic("moneybag")} 加發零用錢（紅包、獎勵）</h3>
+    <div class="note">現實中多給孩子的錢，照實際的硬幣和鈔票點進來，孩子會在「發薪日」畫面自己分配。</div>
+    <div class="prow"><div class="denoms">${DENOMS.slice().reverse().map(v=>`<button class="dn" data-act="xpadd" data-v="${v}"><span>+</span>${coinEl(v,'style="--s:.85"')}</button>`).join("")}<button class="dn clr" data-act="xpclr">清除</button></div></div>
+    <div class="prow"><div class="coins" style="justify-content:flex-start;min-height:40px">${(ui.xp||[]).map(v=>coinEl(v,'style="--s:.85"')).join("")||'<span class="note">還沒選</span>'}</div><b>共 ${(ui.xp||[]).reduce((a,b)=>a+b,0)} 元</b>
+      <button class="btn sm g" data-act="xpsend" ${(ui.xp||[]).length?"":"disabled"}>送給孩子</button></div>
+    ${state.extraPay&&state.extraPay.length?`<div class="note">等孩子分配中：${state.extraPay.reduce((a,b)=>a+b,0)} 元</div>`:""}</div>
   <div class="card psec"><h3>${ic("ferris")} 地圖區域</h3>
     ${ZONES.map((z,i)=>`<div class="prow"><b style="width:90px">${z.n}</b>${i===0?"一開始就開放":i<zonesOpen()?"已開放":`${zoneOpenDate(i+1).getMonth()+1}月${zoneOpenDate(i+1).getDate()}日開放`}${z.gn?`<span class="note">小遊戲：${z.gn}</span>`:""}</div>`).join("")}
     <div class="prow"><button class="btn sm" data-act="pzone" ${zonesOpen()>=3?"disabled":""}>提前開放下一區</button><button class="btn sm w" data-act="pzonereset">恢復按月開放</button></div>
@@ -865,17 +891,30 @@ document.addEventListener("click",e=>{
     case "bkrestore": { const t=(document.getElementById("bk-in")||{}).value; if(!t||!t.trim()){ toast("先把備份碼貼進框裡","shy"); return; }
       if(!ui.bkArm){ ui.bkArm=true; const keep=t; render(); const ta=document.getElementById("bk-in"); if(ta) ta.value=keep; setTimeout(()=>{ ui.bkArm=false; },6000); return; }
       ui.bkArm=false; if(restoreFrom(t)) render(); break; }
+    case "xpadd": { ui.xp=(ui.xp||[]).concat(+el.dataset.v); if(ui.xp.length>30) ui.xp.length=30; clink(); render(); break; }
+    case "xpclr": ui.xp=[]; render(); break;
+    case "xpsend": { if(!(ui.xp||[]).length) return; state.extraPay=(state.extraPay||[]).concat(ui.xp).sort((a,b)=>b-a); log("adjust",`家長加發零用錢 ${ui.xp.reduce((a,b)=>a+b,0)} 元`,0); ui.xp=[]; save(); render(); toast("已送出！孩子打開遊戲就能分配","cheer"); break; }
     case "pzone": state.zoneBonus=(state.zoneBonus||0)+1; save(); render(); toast("已提前開放下一區","cheer"); break;
     case "pzonereset": state.zoneBonus=0; state.zonesSeen=1; save(); render(); toast("地圖已恢復成按月份開放"); break;
-    case "item": itemModal(el.dataset.id); break;
+    case "item": ui.mpFor=null; itemModal(el.dataset.id); break;
     case "wish": state.wish=el.dataset.id; save(); closeModal(); toast("設成願望了！回家看看還差多少","cheer"); render(); break;
     case "unwish": state.wish=null; save(); closeModal(); render(); break;
-    case "buy": go("pay",{item:el.dataset.id}); break;
+    case "buy": { const it=getItem(el.dataset.id); const pr=Math.max(1,Math.round(ui.mp||0));
+      if(it&&!(tmpItem&&tmpItem.id===it.id)&&it.price!==pr){ it.price=pr; save(); }
+      go("pay",{item:el.dataset.id,price:pr}); break; }
+    case "mpadd": { ui.mp=Math.min(99999,Math.max(0,Math.round(ui.mp||0))+(+el.dataset.v)); clink(); itemModal(ui.mpFor); break; }
+    case "mpclr": ui.mp=0; itemModal(ui.mpFor); break;
+    case "custom": ui.cust=null; customModal(); break;
+    case "ccat": { const nm=(document.getElementById("cname")||{}).value||""; ui.cust={...(ui.cust||{}),name:nm,cat:el.dataset.c}; customModal(); break; }
+    case "cnext": { const nm=((document.getElementById("cname")||{}).value||"").trim(); if(!nm){ toast("先寫上東西的名字","shy"); return; }
+      const c=ui.cust||{cat:"food"}; const icon={food:"food",book:"book",toy:"gift",sub:"podcast"}[c.cat]||"gift";
+      tmpItem={id:"tmp-"+uid(),cat:c.cat,icon,name:nm.slice(0,12),price:0}; ui.mpFor=null; ui.mp=0; itemModal(tmpItem.id); break; }
     case "pk": { const pk=pickerState(); pk.taken.push(+el.dataset.i); clink(); render(); break; }
     case "pkback": { const pk=pickerState(); pk.taken=pk.taken.filter(i=>i!==+el.dataset.i); render(); break; }
     case "paydo": {
-      const it=state.shop.find(i=>i.id===ui.item), pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0);
-      if(!it||sum<it.price||state.spend<it.price) return;
+      const it0=getItem(ui.item), pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0);
+      if(!it0) return; const it={...it0,price:ui.price||it0.price};
+      if(sum<it.price||state.spend<it.price) return;
       state.spend-=it.price; const v={id:uid(),itemId:it.id,cat:it.cat,icon:iconOf(it),name:it.name,price:it.price,boughtAt:Date.now(),redeemed:false};
       state.vouchers.unshift(v); if(state.vouchers.length>120) state.vouchers.length=120;
       if(state.wish===it.id) state.wish=null;
@@ -900,8 +939,8 @@ document.addEventListener("click",e=>{
     case "pddone": {
       const pd=ui.pd; if(pd.left.length) return; const s=pd.spend.reduce((a,b)=>a+b,0), b=pd.save.reduce((a,c)=>a+c,0), t=pd.tree.reduce((a,c)=>a+c,0);
       state.spend+=s; state.save+=b; if(t>0){ state.seeds.push({id:uid(),amount:t,value:t,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+t; }
-      const lp=parseYmd(state.lastPaid); lp.setDate(lp.getDate()+7); state.lastPaid=ymd(lp);
-      log("payday",`發薪日：商店 ${s}・銀行 ${b}・搖錢樹 ${t}`,s+b+t); save(); confetti(); tada();
+      if(pd.extra){ state.extraPay=null; } else { const lp=parseYmd(state.lastPaid); lp.setDate(lp.getDate()+7); state.lastPaid=ymd(lp); }
+      log("payday",`${pd.extra?"額外零用錢":"發薪日"}：商店 ${s}・銀行 ${b}・搖錢樹 ${t}`,s+b+t); save(); confetti(); tada();
       go("home"); toast(`放好了！商店 ${s} 元、銀行 ${b} 元、搖錢樹 ${t} 元`,"cheer"); break;
     }
     case "harvest": harvestModal(el.dataset.id); break;
@@ -948,6 +987,7 @@ document.addEventListener("click",e=>{
     }
   }
 });
+document.addEventListener("change",e=>{ if(e.target.id==="mp"){ ui.mp=Math.max(0,Math.min(99999,Math.round(+e.target.value||0))); const id=ui.mpFor; setTimeout(()=>{ if(document.getElementById("mp")&&ui.mpFor===id) itemModal(id); },0); return; } if(e.target.id==="cname"&&ui.cust){ ui.cust.name=e.target.value; } });
 document.addEventListener("change",e=>{ if(e.target.id==="bk-file"&&e.target.files&&e.target.files[0]){ const f=e.target.files[0]; const rd=new FileReader(); rd.onload=()=>{ const ta=document.getElementById("bk-in"); if(ta) ta.value=rd.result; toast("已讀入備份檔，按「還原備份」確認"); }; rd.readAsText(f); } });
 document.addEventListener("input",e=>{ if(e.target.id==="v-pitch"){ const o=document.getElementById("v-pv"); if(o) o.textContent=(+e.target.value).toFixed(2); } if(e.target.id==="v-rate"){ const o=document.getElementById("v-rv"); if(o) o.textContent=(+e.target.value).toFixed(2); } });
 function readShopForm(){
