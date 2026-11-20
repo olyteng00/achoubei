@@ -1,5 +1,5 @@
-/* 阿臭被零用錢 offline cache — version 515614b749 */
-const CACHE="achoubei-515614b749";
+/* 阿臭被零用錢 offline cache — version 5652b9861a */
+const CACHE="achoubei-5652b9861a";
 const ASSETS=["./", "index.html", "style.css", "icons.js", "manifest.webmanifest", "senty-core.woff", "icon-180.png", "icon-192.png", "icon-512.png", "lion-wave.webp", "lion-cheer.webp", "lion-wow.webp", "lion-shy.webp", "lion-sad.webp", "lion-sleep.webp"];
 self.addEventListener("install",e=>{ e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting())); });
 self.addEventListener("activate",e=>{ e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE&&k.startsWith("achoubei-")).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
