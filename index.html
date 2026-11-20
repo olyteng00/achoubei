@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="阿臭被零用錢">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#E6DCC1">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>阿臭被零用錢</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter><filter id="roughS" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="2.5"/></filter><filter id="rough2" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></svg>
+<div id="app"></div>
+<div id="modalRoot"></div>
+<script src="icons.js"></script>
+<script>
+"use strict";
+const MOODS={wave:"lion-wave.webp",cheer:"lion-cheer.webp",wow:"lion-wow.webp",shy:"lion-shy.webp",sad:"lion-sad.webp",sleep:"lion-sleep.webp"};
+Object.values(MOODS).forEach(src=>{const i=new Image();i.src=src;});
+function lion(mood,cls,style,id){mood=MOODS[mood]?mood:"wave";return `<div class="lionbox ${cls||""}" data-base="${mood}" data-mood="${mood}" ${id?`id="${id}"`:""} style="${style||""}" role="img" aria-label="阿臭被"><div class="lshadow"></div><div class="lean"><div class="anim"><img src="${MOODS[mood]}" alt="" draggable="false"></div></div><div class="lsay"></div></div>`;}
+const DAY = 864e5, WEEK = 7*DAY;
+const CATS = [{k:"food",n:"食物",e:"food"},{k:"book",n:"書本",e:"book"},{k:"toy",n:"玩具",e:"teddy"},{k:"sub",n:"訂閱",e:"podcast"}];
+const DEFAULT_SHOP = [
+  ["food","yakult","養樂多",10],["food","pudding","布丁",20],["food","icecream","冰淇淋",30],["food","donut","甜甜圈",35],["food","eggcake","雞蛋糕",40],["food","strawberry","草莓盒",60],
+  ["book","stickerbook","貼紙書",60],["book","crayon","著色本",80],["book","puzzle","拼圖書",120],["book","picturebook","繪本",150],
+  ["toy","balloon","氣球",20],["toy","bubbles","泡泡水",40],["toy","capsule","扭蛋",150],["toy","car","小汽車",200],["toy","teddy","玩偶",250],["toy","blocks","積木小盒",300],
+  ["sub","podcast","Podcast",100]
+];
+const uid = () => Math.random().toString(36).slice(2,9);
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const ym = d => d.getFullYear()+"-"+pad(d.getMonth()+1);
+function parseYmd(s){const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);}
+function lastPayday(now){const d=new Date(now);d.setHours(18,0,0,0);d.setDate(d.getDate()-d.getDay());if(d.getTime()>now)d.setDate(d.getDate()-7);return d;}
+
+function defaultState(){
+  const now=Date.now(); const lp=lastPayday(now); lp.setDate(lp.getDate()-7);
+  return {
+    v:1, updatedAt:0, kidName:"寶貝",
+    spend:0, save:0, seeds:[],
+    weekly:50, rate:0.825, mult:5, lockWeeks:2,
+    lastPaid: ymd(lp),
+    bank:{lastMonth: ym(new Date(now)), accrued:0},
+    applied:[], shop: DEFAULT_SHOP.map(([cat,icon,name,price])=>({id:uid(),cat,icon,name,price})),
+    wish:null, vouchers:[], log:[], shopFix1:true, shopFix2:true, mapStart: ym(new Date(now)), zoneBonus:0, zonesSeen:1, reveals:[], plantedTotal:0, treeSeen:0
+  };
+}
+function iconOf(x){return (x&&(x.icon||EMOJI2ICON[x.emoji]))||"gift";}
+function itemIcon(x){return ic(iconOf(x));}
+function normalize(st){ if(!st.shopFix1&&Array.isArray(st.shop)){ st.shop.forEach(i=>{ if(i.name==="扭蛋"&&i.price===50) i.price=150; if(i.name==="小汽車"&&i.price===100) i.price=200; }); if(!st.shop.some(i=>i.cat==="sub")) st.shop.push({id:uid(),cat:"sub",icon:"podcast",name:"Podcast",price:100}); st.shopFix1=true; } if(!st.shopFix2&&Array.isArray(st.shop)){ st.shop.forEach(i=>{ if(i.name==="Podcast"&&i.price===30) i.price=100; }); st.shopFix2=true; }  if(st.plantedTotal==null){ const seedSum=(st.seeds||[]).reduce((a,x)=>a+(x.amount||0),0); let logSum=0; (st.log||[]).forEach(l=>{ if(l.type==="plant") logSum+=l.amt||0; if(l.type==="payday"){ const m=/搖錢樹 (\d+)/.exec(l.text||""); if(m) logSum+=+m[1]; } }); st.plantedTotal=Math.max(seedSum,logSum); st.treeSeen=treeStage(st.plantedTotal); } if(st.treeSeen==null) st.treeSeen=0; if(!st.mapStart) st.mapStart=ym(new Date()); if(st.zonesSeen==null) st.zonesSeen=1; if(st.zoneBonus==null) st.zoneBonus=0; if(!Array.isArray(st.reveals)) st.reveals=[]; (st.shop||[]).forEach(i=>{ if(!i.icon) i.icon=iconOf(i); }); (st.vouchers||[]).forEach(v=>{ if(!v.icon) v.icon=iconOf(v); }); return st; }
+let state, market = {weeks:[]};
+let ui = {screen:"home"};
+let db=null, stateRef=null, marketRef=null, dbReady=false, syncNote="資料只存在這台裝置";
+const LS="achoubei-v1";
+try{ const s=localStorage.getItem(LS); state = s? normalize(JSON.parse(s)): defaultState(); }catch(e){ state=defaultState(); }
+try{ const m=localStorage.getItem(LS+"-m"); if(m) market=JSON.parse(m);}catch(e){}
+
+/* ---------- persistence ---------- */
+let writeTimer=null, writing=false, writeAgain=false;
+function save(){
+  state.updatedAt=Date.now();
+  try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}
+  if(!stateRef) return;
+  clearTimeout(writeTimer); writeTimer=setTimeout(flush,500);
+}
+async function flush(){
+  if(writing){writeAgain=true;return;}
+  writing=true;
+  try{ await stateRef.set(clone(state)); syncNote="已同步到雲端"; }
+  catch(e){ syncNote = e&&e.code==="invalid_argument" ? "這個帳號只能看，不能存檔" : "暫時連不上雲端，先存在這台裝置"; }
+  writing=false; updateSync();
+  if(writeAgain){writeAgain=false;flush();}
+}
+function updateSync(){const el=document.getElementById("sync");if(el)el.textContent=syncNote;}
+function log(type,text,amt){state.log.unshift({t:Date.now(),type,text,amt:amt||0});if(state.log.length>150)state.log.length=150;}
+
+async function initDb(){
+  try{ if(!window.claude||!claude.use) { standalone(); return; } db = await claude.use("db"); }catch(e){ db=null; }
+  if(!db){ standalone(); return; }
+  stateRef=db.doc("game/state"); marketRef=db.doc("market/0050");
+  let timer=setTimeout(()=>{ if(!dbReady){ syncNote="雲端還沒連上，先用這台裝置的資料"; updateSync(); runAutomations(); } },10000);
+  stateRef.onSnapshot(snap=>{
+    if(snap.exists){
+      const d=snap.data();
+      if(!snap.metadata.hasPendingWrites && d && (d.updatedAt||0) > (state.updatedAt||0)){
+        state=normalize(Object.assign(defaultState(),clone(d)));
+        try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}
+        if(["home","bank","tree"].includes(ui.screen)) render();
+      }
+    }else if(!snap.metadata.fromCache){ save(); }
+    if(!snap.metadata.fromCache && !dbReady){ dbReady=true; clearTimeout(timer); syncNote="已同步到雲端"; updateSync(); runAutomations(); }
+  },err=>{ clearTimeout(timer); syncNote="雲端連線中斷，先存在這台裝置"; updateSync(); if(!dbReady) runAutomations(); });
+  marketRef.onSnapshot(snap=>{
+    if(snap.exists){ market=Object.assign({weeks:[]},clone(snap.data())); try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){} if(automationsRan) applyMarket(true); }
+  },()=>{});
+}
+
+/* ---------- standalone (home-screen app) ---------- */
+let isApp=false;
+function standalone(){
+  isApp=true; syncNote="資料存在這台 iPad・記得在家長模式定期備份"; updateSync();
+  runAutomations(); refreshMarket();
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ refreshMarket(); payInterest(); if(["home","bank","tree"].includes(ui.screen)) render(); } });
+  try{ if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost") && window.top===window) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
+}
+function mergeWeeks(list,src){
+  if(!Array.isArray(list)||!list.length) return false; let changed=false; const have=new Map((market.weeks||[]).map(w=>[w.date,w]));
+  list.forEach(w=>{ if(!w||!/^\d{4}-\d{2}-\d{2}$/.test(w.date)||!isFinite(w.pct)) return; if(!have.has(w.date)){ have.set(w.date,{date:w.date,pct:+(+w.pct).toFixed(2),close:w.close,source:src}); changed=true; } });
+  if(changed){ market={...market,weeks:[...have.values()].sort((a,b)=>a.date<b.date?-1:1).slice(-80)}; try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){} }
+  return changed;
+}
+async function refreshMarket(){
+  let changed=false;
+  try{ const r=await fetch("market.json?t="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); changed=mergeWeeks(j.weeks,"網站")||changed; } }catch(e){}
+  try{ changed=mergeWeeks(await twseWeeks(),"證交所")||changed; }catch(e){}
+  if(changed){ applyMarket(true); }
+}
+/* 0050 daily closes from TWSE → completed Mon–Fri weeks */
+async function twseWeeks(){
+  const now=new Date(), months=[new Date(now.getFullYear(),now.getMonth()-1,1),new Date(now.getFullYear(),now.getMonth(),1)];
+  let rows=[];
+  for(const m of months){
+    const d=m.getFullYear()+pad(m.getMonth()+1)+"01";
+    const r=await fetch(`https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=${d}&stockNo=0050`,{cache:"no-store"}); if(!r.ok) continue;
+    const j=await r.json(); (j.data||[]).forEach(x=>{ const [y,mo,da]=String(x[0]).split("/").map(Number); const close=parseFloat(String(x[6]).replace(/,/g,"")); if(y&&isFinite(close)) rows.push({date:new Date(y+1911,mo-1,da),close}); });
+  }
+  rows.sort((a,b)=>a.date-b.date); if(rows.length<2) return [];
+  const thisMon=weekStart(ymd(now)); const byWeek=new Map();
+  rows.forEach(x=>{ const ws=weekStart(ymd(x.date)); if(ws<thisMon) byWeek.set(ws,x); });
+  const weeks=[...byWeek.values()]; const out=[];
+  for(let i=1;i<weeks.length;i++){ const a=weeks[i-1], b=weeks[i]; out.push({date:ymd(b.date),pct:(b.close/a.close-1)*100,close:b.close}); }
+  return out;
+}
+/* backup / restore */
+function backupCode(){ return JSON.stringify({app:"achoubei",v:1,at:Date.now(),state,market}); }
+function restoreFrom(text){
+  let j; try{ j=JSON.parse(String(text||"").trim()); }catch(e){ toast("備份碼看不懂，請重新複製","sad"); return false; }
+  if(!j||j.app!=="achoubei"||!j.state||!Array.isArray(j.state.shop)){ toast("這不是阿臭被的備份","sad"); return false; }
+  state=normalize(Object.assign(defaultState(),j.state)); state.updatedAt=Date.now();
+  if(j.market&&Array.isArray(j.market.weeks)){ market=j.market; try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){} }
+  save(); toast("還原完成！","cheer"); return true;
+}
+
+/* ---------- automations: interest, market ---------- */
+let automationsRan=false;
+function runAutomations(){
+  if(automationsRan) return; automationsRan=true;
+  payInterest(); applyMarket(false); render();
+}
+function payInterest(){
+  const cur=ym(new Date()); let last=state.bank.lastMonth||cur; let paid=0; let guard=0;
+  while(last<cur && guard++<24){
+    const [y,m]=last.split("-").map(Number); last=ym(new Date(y,m,1));
+    state.bank.accrued += state.save*(state.rate*state.mult/100)/12;
+    const p=Math.floor(state.bank.accrued+1e-9);
+    if(p>0){state.save+=p;state.bank.accrued-=p;paid+=p;}
+  }
+  if(last!==state.bank.lastMonth){
+    state.bank.lastMonth=last;
+    if(paid>0){log("interest","銀行發利息",paid);setTimeout(()=>toast(`銀行發利息了！存款多了 ${paid} 元`,"cheer"),900);}
+    save();
+  }
+}
+function weekStart(dateStr){const d=parseYmd(dateStr);d.setDate(d.getDate()-((d.getDay()+6)%7));d.setHours(0,0,0,0);return d.getTime();}
+function applyMarket(live){
+  const weeks=(market.weeks||[]).filter(w=>w&&w.date&&isFinite(w.pct)).sort((a,b)=>a.date<b.date?-1:1);
+  let changed=false, rev=null;
+  for(const w of weeks){
+    if(state.applied.includes(w.date)) continue;
+    const ws=weekStart(w.date); const f=1+(w.pct*state.mult)/100; let hit=false; const before=treeTotal();
+    for(const s of state.seeds){ if(s.plantedAt<ws){ s.value=Math.max(0,s.value*f); hit=true; } }
+    state.applied.push(w.date); changed=true;
+    if(hit){ if(!rev) rev={date:w.date,pct:w.pct,before}; rev.date=w.date; rev.pct=w.pct; rev.after=treeTotal(); }
+  }
+  if(state.applied.length>200) state.applied=state.applied.slice(-200);
+  if(changed){
+    if(rev){ state.reveals=[rev]; }
+    save();
+    if(live && ["home","tree"].includes(ui.screen)) render();
+  }
+}
+function showReveal(){
+  const rv=state.reveals&&state.reveals[0]; if(!rv) return false;
+  const up=rv.pct>=0, k=up?"sun":"rain";
+  const art=`<svg viewBox="0 0 400 260" class="rvsvg" aria-hidden="true"><g>${weatherArt(k,rv.pct,200,95,.75)}</g></svg>`;
+  const line="這週搖錢樹的天氣是…？點雲朵把它吹走！";
+  openModal(`<div class="sheet reveal" id="reveal"><div class="n">${ic("tree")} 搖錢樹開獎！</div>
+    <div class="rvstage">${art}<div class="rvcloud k1" data-act="rvcloud" role="button">${ic("cloudbig")}</div><div class="rvcloud k2" data-act="rvcloud" role="button">${ic("cloudbig")}</div><div class="rvcloud k3" data-act="rvcloud" role="button">${ic("cloudbig")}</div></div>
+    <div class="rvtext sub" id="rvtext">${line} ${sayBtn(line)}</div>
+    <div class="rvnum" id="rvnum">${money(rv.before)} 元</div>
+    <div class="btns" id="rvbtns" style="visibility:hidden"><button class="btn g" data-act="rvdone">${ic("check")} 好！</button></div></div>`);
+  say(line); return true;
+}
+function rvReveal(){
+  const rv=state.reveals[0]; if(!rv) return; const up=rv.pct>=0, d=money(rv.after)-money(rv.before);
+  const box=document.getElementById("reveal"); if(!box) return; box.classList.add(up?"sunny":"rainy");
+  sfx("spin"); if(up){ tada(); confetti(["sun","star","coin"]); }
+  const num=document.getElementById("rvnum"), t0=performance.now(), from=rv.before, to=rv.after;
+  (function f(now){const t=Math.min(1,(now-t0)/1200); num.textContent=money(from+(to-from)*(1-Math.pow(1-t,3)))+" 元"; if(t<1) requestAnimationFrame(f);})(t0);
+  const msg = up? (d>0?`出太陽了！搖錢樹長大了 ${d} 元！`:"出太陽了！搖錢樹長得好好的！") : (d<0?`下雨了…搖錢樹變小了 ${-d} 元。不要怕，等太陽出來！`:"下雨了，搖錢樹淋了一點雨。");
+  document.getElementById("rvtext").innerHTML=`${esc(msg)} ${sayBtn(msg)}`; say(msg);
+  num.classList.add(up?"up":"down"); react(up?"cheer":"sad",up?"耶！太陽！":"下雨了…",2500);
+  setTimeout(()=>{ const b=document.getElementById("rvbtns"); if(b) b.style.visibility="visible"; },900);
+}
+function pendingPaydays(){
+  const cur=lastPayday(Date.now()); const lp=parseYmd(state.lastPaid); lp.setHours(18,0,0,0);
+  return Math.max(0,Math.min(4,Math.round((cur-lp)/WEEK)));
+}
+const treeTotal = () => state.seeds.reduce((a,s)=>a+s.value,0);
+const money = n => Math.round(n);
+function weather(){
+  const ws=(market.weeks||[]).filter(w=>w&&w.date).sort((a,b)=>a.date<b.date?1:-1);
+  if(!ws.length) return {k:"cloud",e:ic("cloud"),t:"還沒有天氣消息"};
+  return ws[0].pct>=0?{k:"sun",e:ic("sun"),t:"這週出太陽"}:{k:"rain",e:ic("rain"),t:"這週下雨"};
+}
+
+/* ---------- sound & voice ---------- */
+let actx=null;
+function clink(hi){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;[0,0.07].forEach((d,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=(hi?1700:1250)+i*500;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.25,t+d+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d+.25);o.connect(g).connect(actx.destination);o.start(t+d);o.stop(t+d+.3);});}catch(e){}}
+function tada(){[0,.12,.24].forEach((d,i)=>setTimeout(()=>clink(i>1),d*1000));}
+const canSpeak = (()=>{try{return "speechSynthesis" in window;}catch(e){return false;}})();
+/* 阿臭被 speaks English: every Chinese line on screen has an English version */
+const NAME_EN={"養樂多":"Yakult","布丁":"pudding","冰淇淋":"ice cream","甜甜圈":"donut","雞蛋糕":"egg cake","草莓盒":"box of strawberries","貼紙書":"sticker book","著色本":"coloring book","拼圖書":"puzzle book","繪本":"picture book","氣球":"balloon","泡泡水":"bubbles","扭蛋":"capsule toy","小汽車":"toy car","玩偶":"teddy bear","積木小盒":"box of blocks","Podcast":"podcast","食物":"snack"};
+const ICON_EN={yakult:"Yakult",pudding:"pudding",icecream:"ice cream",donut:"donut",eggcake:"egg cake",strawberry:"strawberries",stickerbook:"sticker book",crayon:"crayons",puzzle:"puzzle",picturebook:"picture book",book:"book",balloon:"balloon",bubbles:"bubbles",capsule:"capsule toy",car:"toy car",teddy:"teddy bear",blocks:"blocks",rocket:"rocket",ball:"ball",kite:"kite",dino:"dinosaur",food:"snack",gift:"present",podcast:"podcast",star:"star",heart:"heart"};
+const STAGE_EN={"種子":"seed","小樹苗":"little sprout","小樹":"small tree","中樹":"medium tree","大樹":"big tree","搖錢大樹":"giant money tree"};
+const ZONE_EN={"海邊":"beach","遊樂園":"amusement park"}, GAME_EN={"海浪撿貝殼":"Shell Catch","換你當店長":"Be the Shopkeeper"};
+function nmEn(n){ if(NAME_EN[n]) return NAME_EN[n]; const it=state.shop.find(i=>i.name===n); return it&&ICON_EN[iconOf(it)]||n; }
+const $d=n=>`${n} ${+n===1?"dollar":"dollars"}`;
+const EN_RULES=[
+ [/^發薪日到了！我帶硬幣來給你囉！$/,()=>"Yay! It's payday! I brought you some coins!"],
+ [/^(.+)的錢夠了！要去買嗎？$/,m=>`You have enough for the ${nmEn(m[1])}! Shall we go buy it?`],
+ [/^(.+)還差 (\d+) 元，加油！$/,m=>`Just ${$d(m[2])} more for the ${nmEn(m[1])}. You can do it!`],
+ [/^搖錢樹在淋雨，我們一起等太陽出來。$/,()=>"The money tree is in the rain. Let's wait for the sun together."],
+ [/^嗨 (.+)！今天要做什麼呢？$/,m=>/^[\x20-\x7e]+$/.test(m[1])?`Hi ${m[1]}! What shall we do today?`:"Hi there! What shall we do today?"],
+ [/^這週搖錢樹的天氣是…？點雲朵把它吹走！$/,()=>"What's the weather for the money tree this week? Tap the clouds to blow them away!"],
+ [/^出太陽了！搖錢樹長大了 (\d+) 元！$/,m=>`Hooray, it's sunny! The money tree grew ${$d(m[1])}!`],
+ [/^出太陽了！搖錢樹長得好好的！$/,()=>"It's sunny! The money tree is doing great!"],
+ [/^下雨了…搖錢樹變小了 (\d+) 元。不要怕，等太陽出來！$/,m=>`Uh-oh, it's rainy! The money tree shrank ${$d(m[1])}. Don't worry, let's wait for the sun!`],
+ [/^下雨了，搖錢樹淋了一點雨。$/,()=>"It rained a little on the money tree."],
+ [/^分好了！按「?完成」?就放進去囉！$/,()=>"All sorted! Press done to put them away!"],
+ [/^點一個罐子，把硬幣放進去！$/,()=>"Put each coin into a jar!"],
+ [/^(.+)要 (\d+) 元，你的商店有 (\d+) 元，可以買！$/,m=>`The ${nmEn(m[1])} costs ${$d(m[2])}. You have ${$d(m[3])}. You can buy it!`],
+ [/^商店只有 (\d+) 元，還差 (\d+) 元。可以從銀行拿錢出來喔！$/,m=>`You only have ${$d(m[1])}. You need ${m[2]} more. You can take some out of the bank!`],
+ [/^(.+)要 (\d+) 元，還差 (\d+) 元。先存起來，設成願望吧！$/,m=>`The ${nmEn(m[1])} costs ${$d(m[2])}. You need ${m[3]} more. Let's save up and make it your wish!`],
+ [/^(.+)要 (\d+) 元，點硬幣拿出來付錢！$/,m=>`The ${nmEn(m[1])} costs ${$d(m[2])}. Tap your coins to pay!`],
+ [/^還差 (\d+) 元喔！$/,m=>`${$d(m[1])} more, please!`],
+ [/^錢夠了！付 (\d+) 元，阿臭被會找你 (\d+) 元。$/,m=>`Yay, that's enough! You pay ${$d(m[1])}, and I give you ${$d(m[2])} back!`],
+ [/^剛剛好 (\d+) 元！好厲害！$/,m=>`Exactly ${$d(m[1])}! Woohoo, great job!`],
+ [/^要種多少錢呢？種下去要 (\d+) 週後才能收成喔！$/,m=>`How much will you plant? You can pick it in ${m[1]} weeks!`],
+ [/^要存多少錢進銀行？$/,()=>"How much will you put in the bank?"],
+ [/^要從銀行拿多少錢出來？$/,()=>"How much will you take out of the bank?"],
+ [/^訂閱了(.+)！把兌換券給爸爸媽媽看，就可以一起聽.+囉！$/,m=>`Yippee! You got the ${nmEn(m[1])}! Show the ticket to Mommy and Daddy, and listen together!`],
+ [/^買到(.+)了！把兌換券給爸爸媽媽看，就可以去買真的.+囉！$/,m=>`Yippee! You bought the ${nmEn(m[1])}! Show the ticket to Mommy and Daddy to get the real one!`],
+ [/^歡迎光臨！你在銀行存了 (\d+) 元。要做什麼呢？$/,m=>`Hello hello! Welcome to the bank! You have ${$d(m[1])} saved. What shall we do?`],
+ [/^歡迎光臨！還沒有存錢喔，按「存錢」把錢放進來吧！$/,()=>"Hello hello! Welcome to the bank! Let's put some money in!"],
+ [/^把硬幣放進投幣口！點左邊的硬幣就會投進去喔！$/,()=>"Put your coins in the slot! Tap a coin on the left."],
+ [/^要轉多少錢到搖錢樹？用下面的按鍵加加看！$/,()=>"How much for the money tree? Use the buttons to add it up!"],
+ [/^要領多少錢？用下面的按鍵加加看！$/,()=>"How much will you take out? Use the buttons to add it up!"],
+ [/^機器在動了…等一下下！$/,()=>"The machine is working. Just a moment!"],
+ [/^存好了！銀行現在有 (\d+) 元。拿好明細表喔！$/,m=>`Ta-da! The bank has ${$d(m[1])} now. Don't forget your receipt!`],
+ [/^轉好了！(\d+) 元種到搖錢樹了！$/,m=>`Done! ${$d(m[1])} planted in the money tree!`],
+ [/^領好了！(\d+) 元放進商店了！$/,m=>`Done! ${$d(m[1])} went into your shop money!`],
+ [/^搖錢樹長大了！變成(.+)！$/,m=>`Wow wow wow! The money tree grew! It's a ${STAGE_EN[m[1]]||"bigger tree"} now!`],
+ [/^這顆錢果子有 (\d+) 元！要放到哪裡呢？$/,m=>`This money fruit has ${$d(m[1])}! Where should it go?`],
+ [/^這裡只有一顆小種子。種下第一筆錢，它就會發芽喔！$/,()=>"There's only a little seed here. Plant some money and it will sprout!"],
+ [/^搖錢樹在等你種錢！種越多，樹會長越大喔！$/,()=>"The money tree is waiting for you! The more you plant, the bigger it grows!"],
+ [/^下雨了，搖錢樹變小一點。不要怕，我們撐傘等太陽！$/,()=>"It's raining, and the money tree got a little smaller. Don't worry, let's wait for the sun!"],
+ [/^出太陽了！搖錢樹長得好好！$/,()=>"It's sunny! The money tree is growing well!"],
+ [/^搖錢樹在等天氣消息。$/,()=>"The money tree is waiting for the weather news."],
+ [/^阿臭被肚子餓了！點.*給阿臭被吃！$/,()=>"I'm so hungry! Tap the snacks to feed me!"],
+ [/^翻翻看，找出一樣的玩具！$/,()=>"Flip the cards and find the matching toys!"],
+ [/^阿臭被說故事！聽聽看，選出答案。$/,()=>"Story time! Listen and pick the answer."],
+ [/^第 (\d+) 關：撿到剛好 (\d+) 元！$/,m=>`Level ${m[1]}. Collect exactly ${$d(m[2])}!`],
+ [/^撿到剛好 (\d+) 元！$/,m=>`Collect exactly ${$d(m[1])}!`],
+ [/^我要買(.+)，(\d+) 元。給你 50 元！(要找多少錢呢？)?$/,m=>`I'd like the ${nmEn(m[1])}, please. It's ${$d(m[2])}. Here's 50 dollars!${m[3]?" How much change do I get?":""}`],
+ [/^從 (\d+) 數到 50，差 (\d+) 元喔！$/,m=>`Count from ${m[1]} up to 50. That's ${$d(m[2])}!`],
+ [/^新地圖開放了！(.+)有新的小遊戲「(.+)」！$/,m=>`Surprise! A new place is open! The ${ZONE_EN[m[1]]||"new area"} has a new game: ${GAME_EN[m[2]]||"a mini game"}!`],
+ [/^阿臭被吃飽飽了！謝謝你！$/,()=>"Yum yum! I'm so full! Thank you!"],
+ [/^全部找到了！好厲害！$/,()=>"Woohoo! You found them all! Amazing!"],
+ [/^答完了！得到 (\d+) 顆星星！$/,m=>`All done! You got ${m[1]} ${+m[1]===1?"star":"stars"}!`],
+ [/^撿貝殼高手！得到 3 顆星星！$/,()=>"You're a shell catching champion! You got 3 stars!"],
+ [/^你是很棒的店長！得到 3 顆星星！$/,()=>"You're a great shopkeeper! You got 3 stars!"],
+ [/^答對了！$/,()=>"Yay! That's right!"],
+ [/^再想想看$/,()=>"Oopsie! Let's try again!"],
+ [/^阿臭被有 3 個 10 元，買布丁用掉 2 個，還剩幾個？$/,()=>"I have three 10 dollar coins. I use two of them to buy pudding. How many are left?"],
+ [/^哪一個硬幣最多錢？$/,()=>"Which coin is worth the most?"],
+ [/^布丁要 20 元，要給幾個 10 元？$/,()=>"Pudding costs 20 dollars. How many 10 dollar coins do you need?"],
+ [/^下雨天搖錢樹變小了，阿臭被應該怎麼做？$/,()=>"It's raining and the money tree got smaller. What should I do?"],
+ [/^5 元加 5 元，是多少錢？$/,()=>"5 dollars plus 5 dollars. How much is that?"],
+ [/^錢放在銀行，會發生什麼事？$/,()=>"What happens to money you keep in the bank?"],
+ [/^想買很貴的玩偶，錢不夠，可以怎麼做？$/,()=>"I want an expensive teddy bear, but I don't have enough money. What can I do?"],
+ [/^冰淇淋 30 元，你有 50 元，付錢後會找你多少？$/,()=>"Ice cream costs 30 dollars. You pay 50 dollars. How much change do you get?"]
+];
+function toEn(zh){ zh=String(zh||"").trim(); for(const [re,fn] of EN_RULES){ const m=re.exec(zh); if(m) return fn(m); } return null; }
+let enVoice=null;
+const KID_PREF=["Nicky","Samantha","Ava","Allison","Susan","Zoe","Karen","Tessa","Moira","Kate","Serena","Google US English","Microsoft Jenny","Microsoft Aria"];
+function enVoices(){ try{ return speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)); }catch(e){ return []; } }
+function pickVoice(){ const vs=enVoices(); if(!vs.length) return;
+  if(state.voiceName){ const m=vs.find(v=>v.name===state.voiceName); if(m){ enVoice=m; return; } }
+  const score=v=>{ let sc=0; const i=KID_PREF.findIndex(p=>v.name.indexOf(p)>=0); if(i>=0) sc+=100-i*3; if(/premium|enhanced|natural|neural/i.test(v.name)) sc+=60; if(/en[-_]US/i.test(v.lang)) sc+=20; if(/female/i.test(v.name)) sc+=10;
+    if(/compact|novelty|bells|bubbles|cellos|organ|whisper|zarvox|trinoids|bad news|good news|jester|superstar|wobble|boing|albert|bahh|fred|junior|ralph|grandpa|grandma|rocko|eddy|reed|sandy|shelley|flo/i.test(v.name)) sc-=500; return sc; };
+  enVoice=vs.slice().sort((a,b)=>score(b)-score(a))[0]; }
+if(canSpeak){ try{ speechSynthesis.addEventListener("voiceschanged",()=>{ pickVoice(); if(ui.screen==="parent") render(); }); }catch(e){} }
+function speakEn(en){ if(!canSpeak||!en) return;
+  try{ speechSynthesis.cancel(); pickVoice(); const u=new SpeechSynthesisUtterance(en); if(enVoice) u.voice=enVoice; u.lang=enVoice?enVoice.lang:"en-US";
+    u.rate=state.voiceRate||.88; u.pitch=state.voicePitch||1.5; u.volume=1; speechSynthesis.speak(u);}catch(e){} }
+function say(text){ speakEn(toEn(text)); }
+const sayBtn = t => canSpeak?`<button class="say" data-act="say" data-t="${esc(t)}" aria-label="念給我聽">${ic("speaker")}</button>`:"";
+
+/* ---------- coin helpers ---------- */
+function breakdown(n){n=Math.max(0,Math.round(n));const out=[];for(const c of [50,10,5,1]){while(n>=c){out.push(c);n-=c;}}return out;}
+function coinEl(v,extra){extra=extra||""; let cls=""; extra=extra.replace(/class-x="([^"]*)"/,(m,c)=>{cls=" "+c;return "";}); return `<span class="coin c${v}${cls}" ${extra}>${v}</span>`;}
+function coinsHTML(n,max){const b=breakdown(n);max=max||14;if(!b.length)return `<span class="sub">空空的</span>`;
+  const shown=b.slice(0,max).map(v=>coinEl(v)).join("");return shown+(b.length>max?`<span class="more">…還有${b.length-max}個</span>`:"");}
+
+/* ---------- toast / confetti ---------- */
+function toast(msg,anim){const old=document.querySelector(".toast");if(old)old.remove();const d=document.createElement("div");d.className="toast";d.innerHTML=`${lion(anim||"wave")}<span>${esc(msg)}</span>`;document.body.appendChild(d);clink(true);setTimeout(()=>d.remove(),4200);}
+function confetti(set){set=set||["star","coin","heart","squiggle","party"];for(let i=0;i<34;i++){const s=document.createElement("div");s.className="confetti";s.innerHTML=ic(set[i%set.length]);s.style.left=Math.random()*100+"vw";s.style.animationDuration=(1.8+Math.random()*1.6)+"s";s.style.animationDelay=(Math.random()*.6)+"s";document.body.appendChild(s);setTimeout(()=>s.remove(),4200);}}
+
+/* ---------- render ---------- */
+const $app=document.getElementById("app"), $modal=document.getElementById("modalRoot");
+function go(screen,extra){ui=Object.assign({screen},extra||{});closeModal();render();window.scrollTo(0,0);}
+function topBar(title,backTo,hud){
+  if(title===null) return `<div class="top slim">${hud||""}<button class="iconbtn lockbtn" data-act="gate" aria-label="家長模式">${ic("lock")}</button></div>`;
+  return `<div class="top">${backTo?`<button class="back" data-act="go" data-s="${backTo}">${ic("back")} 回家</button>`:lion(baseMood(),"logo")}
+  <h1>${title}</h1>${hud||""}${backTo?"":`<button class="iconbtn lockbtn" data-act="gate" aria-label="家長模式">${ic("lock")}</button>`}</div>`;
+}
+const side=(inner,actions)=>`<aside class="side">${inner}${actions?`<div class="actions">${actions}</div>`:""}</aside>`;
+function render(){
+  const f={home,payday,shop,pay,bought,bank,tree,move,game,parent:parentScreen}[ui.screen]||home;
+  $app.innerHTML=f();
+  $app.dataset.screen=ui.screen; document.body.dataset.screen=ui.screen; $app.classList.toggle("fit",ui.screen!=="parent");
+  if(ui.screen==="game") setupGame();
+  if(typeof applyCarry==="function") applyCarry();
+  if(ui.screen==="home") afterHomeRender();
+  if(ui.screen==="tree" && automationsRan) setTimeout(()=>{ if(ui.screen==="tree") checkGrow(); },400);
+}
+function greeting(){
+  const p=pendingPaydays();
+  if(p>0) return "發薪日到了！我帶硬幣來給你囉！";
+  const w=state.wish&&state.shop.find(i=>i.id===state.wish);
+  if(w){const left=w.price-(state.spend+state.save);if(left<=0)return `${w.name}的錢夠了！要去買嗎？`;return `${w.name}還差 ${left} 元，加油！`;}
+  if(weather().k==="rain"&&state.seeds.length) return "搖錢樹在淋雨，我們一起等太陽出來。";
+  return `嗨 ${state.kidName}！今天要做什麼呢？`;
+}
+function pine(x,y,h){const w=h*.42;let p=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y-h}" stroke="#2E5A1C" stroke-width="5"/>`;for(let i=0;i<7;i++){const yy=y-h*.12-i*h*.12, ww=w*(1-i*.12);p+=`<path d="M${x-ww/2} ${yy+ww*.28} L${x} ${yy} L${x+ww/2} ${yy+ww*.28}" fill="none" stroke="#5C9B3B" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;}return p;}
+function waves(x,y){return `<path d="M${x} ${y} q12 -16 24 -2 M${x+44} ${y+26} q12 -16 24 -2 M${x+10} ${y+52} q12 -16 24 -2" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`;}
+function weatherArt(k,pct,x,y,s){
+  s=s||1; let g=`<g transform="translate(${x} ${y}) scale(${s})">`;
+  const cloud=`<path d="M-120 40 C-150 40 -150 0 -118 -4 C-115 -40 -66 -48 -50 -20 C-36 -56 22 -56 34 -14 C64 -26 96 -4 84 24 C104 30 102 40 84 40 Z" fill="#FFFDF7"/>`;
+  if(k==="sun"){ g+=`<g fill="none" stroke-width="16"><circle r="170" stroke="#EE4524" cx="10" cy="210"/><circle r="154" stroke="#EC8C88" cx="10" cy="210"/><circle r="138" stroke="#5C9B3B" cx="10" cy="210"/><circle r="122" stroke="#2F9ADB" cx="10" cy="210"/></g><circle r="78" fill="#F3B228"/>`; }
+  else if(k==="rain"){ g+=`<circle r="74" fill="#F3B228" cx="40" cy="-6" opacity=".9"/>${cloud}`; for(let i=0;i<9;i++){const dx=-110+i*24, dy=62+(i%3)*22; g+=`<path d="M${dx} ${dy} q-6 12 0 14 q6 -2 0 -14z" fill="#2F9ADB"/>`;} if(pct<-2) g+=`<path d="M-30 60 l-16 34 h14 l-12 34 l30 -42 h-14 l12 -26z" fill="#F3B228"/><path d="M40 70 l-12 26 h11 l-9 26 l24 -32 h-11 l9 -20z" fill="#F3B228"/>`; }
+  else { g+=`<circle r="74" fill="#F3B228" cx="30" cy="-10"/>${cloud}`; }
+  return g+`</g>`;
+}
+function palm(x,y,s){s=s||1;return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C-6 -50 6 -100 -4 -150" fill="none" stroke="#8C5A3B" stroke-width="14" stroke-linecap="round"/>${[[-70,-130],[-60,-175],[0,-195],[60,-175],[70,-130]].map(([dx,dy])=>`<path d="M-4 -150 Q${dx*.5} ${dy-30} ${dx} ${dy}" fill="none" stroke="#5C9B3B" stroke-width="16" stroke-linecap="round"/>`).join("")}<circle cx="-12" cy="-142" r="8" fill="#8C5A3B"/><circle cx="4" cy="-140" r="8" fill="#8C5A3B"/></g>`;}
+function zone2Art(){ return `
+    <path d="M1000 400 C1200 370 1420 410 1620 385 C1800 365 1900 395 2000 385 L2000 640 L1000 640Z" fill="#F3DFA2"/>
+    <path d="M1330 -10 H2010 V250 C1910 272 1810 228 1710 252 C1610 276 1510 236 1420 206 C1360 186 1320 120 1330 -10Z" fill="#2F9ADB"/>
+    ${waves(1500,60)}${waves(1700,130)}${waves(1880,40)}
+    <g transform="translate(1790 150)"><path d="M-60 0 H60 L44 30 H-44Z" fill="#EE4524"/><path d="M0 0 V-80" stroke="#8C5A3B" stroke-width="6"/><path d="M4 -78 L52 -10 H4Z" fill="#FFFDF7"/><path d="M-4 -60 L-40 -10 H-4Z" fill="#F3B228"/></g>
+    ${palm(1110,470,1)}${palm(1930,520,.9)}
+    <g transform="translate(1300 560)"><path d="M0 0 V-110" stroke="#8C5A3B" stroke-width="6"/><path d="M-80 -100 C-60 -150 60 -150 80 -100Z" fill="#EE4524"/><path d="M-40 -100 C-30 -140 -10 -146 0 -146 C10 -146 30 -140 40 -100Z" fill="#FFFDF7"/><rect x="-60" y="-6" width="120" height="22" rx="4" fill="#2F9ADB"/></g>
+    <g transform="translate(1460 590)"><path d="M0 -14 L4 -4 L15 -4 L6 3 L10 14 L0 7 L-10 14 L-6 3 L-15 -4 L-4 -4Z" fill="#EE8A5B"/></g>
+    <g transform="translate(1720 585) scale(.35)">${ICONS.shell}</g>`; }
+function zone3Art(){ return `
+    <path d="M2000 0 Q2100 40 2200 0 Q2300 40 2400 0 Q2500 40 2600 0 Q2700 40 2800 0 Q2900 40 3000 0" fill="none" stroke="#1F1B18" stroke-width="3"/>
+    ${[2050,2150,2250,2350,2450,2550,2650,2750,2850,2950].map((x,i)=>`<path d="M${x-14} ${18} L${x+14} ${18} L${x} ${46}Z" fill="${["#EE4524","#F3B228","#2F9ADB","#5C9B3B","#EC8C88"][i%5]}"/>`).join("")}
+    <g transform="translate(2240 210)"><path d="M-90 190 L0 0 L90 190" fill="none" stroke="#8C5A3B" stroke-width="14" stroke-linecap="round"/>
+      <g class="wheel"><circle r="150" fill="none" stroke="#13707A" stroke-width="12"/>${[0,45,90,135,180,225,270,315].map((a,i)=>{const r=a*Math.PI/180;return `<line x2="${(150*Math.cos(r)).toFixed(1)}" y2="${(150*Math.sin(r)).toFixed(1)}" stroke="#13707A" stroke-width="5"/><rect x="${(150*Math.cos(r)-20).toFixed(1)}" y="${(150*Math.sin(r)-16).toFixed(1)}" width="40" height="32" rx="8" fill="${["#EE4524","#F3B228","#2F9ADB","#5C9B3B"][i%4]}"/>`;}).join("")}</g>
+      <circle r="18" fill="#F3B228"/></g>
+    <g transform="translate(2780 330)"><path d="M-120 0 L0 -150 L120 0Z" fill="#EE4524"/><path d="M-60 0 L0 -150 L-20 0Z M20 0 L0 -150 L60 0Z" fill="#FFFDF7"/><rect x="-110" y="0" width="220" height="110" fill="#FFFDF7"/>${[-110,-66,-22,22,66].map(x=>`<rect x="${x}" y="0" width="22" height="110" fill="#EE4524"/>`).join("")}<path d="M-26 110 C-26 60 26 60 26 110Z" fill="#1F1B18"/><path d="M0 -150 V-190" stroke="#1F1B18" stroke-width="4"/><path d="M0 -190 L30 -180 L0 -170Z" fill="#F3B228"/></g>
+    ${[[2560,120,"#EE4524"],[2610,90,"#2F9ADB"],[2650,140,"#F3B228"]].map(([x,y,c])=>`<path d="M${x} ${y+40} q-8 30 4 60" fill="none" stroke="#8C5A3B" stroke-width="3"/><ellipse cx="${x}" cy="${y}" rx="26" ry="32" fill="${c}"/>`).join("")}
+    ${pine(2040,600,90)}${pine(2960,590,110)}`; }
+function home(){
+  const p=pendingPaydays(); const open=zonesOpen();
+  const w=state.wish&&state.shop.find(i=>i.id===state.wish);
+  const g=greeting(); const wt=weather(); const lastW=(market.weeks||[]).filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?1:-1)[0];
+  const svg=`<svg viewBox="0 0 3000 620" preserveAspectRatio="none" aria-hidden="true"><g filter="url(#rough2)">
+    <path d="M0 455 C90 430 210 452 236 520 C258 585 190 640 0 640Z" fill="#2F9ADB"/>${waves(40,520)}
+    <path d="M1010 300 C905 286 838 330 850 392 C862 452 950 462 1010 450Z" fill="#2F9ADB"/>${waves(890,360)}
+    <path d="M70 250 L120 140 L150 200 L185 105 L222 190 L255 130 L305 250Z" fill="#EC8C88"/>
+    <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85">${[[130,200],[160,228],[190,170],[205,215],[240,200],[255,230],[175,240]].map(([x,y])=>`<line x1="${x}" y1="${y}" x2="${x-4}" y2="${y+12}"/>`).join("")}</g>
+    ${zone2Art()}${zone3Art()}
+    <path id="road" d="M-80 560 C100 560 230 475 380 462 C520 450 590 520 720 488 C850 456 880 360 800 300 C730 250 640 290 575 225 C520 170 560 80 700 66 C820 54 940 40 1080 60 C1220 80 1240 230 1300 330 C1360 430 1480 470 1600 430 C1720 390 1760 280 1880 250 C1990 222 2060 330 2120 420 C2180 510 2300 540 2420 500 C2540 460 2600 360 2720 330 C2840 300 2920 380 3080 420" fill="none" stroke="#EE4524" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pine(470,360,120)}${pine(940,570,110)}${pine(90,420,90)}${pine(330,600,80)}
+    <g transform="translate(410 262) scale(${[.45,.45,.42,.4,.34,.34][treeStage()]})">${treeArt(treeStage(),wt.k==="rain")}</g>
+    <g transform="translate(205 395)"><rect x="-62" y="-10" width="124" height="66" fill="#FFFDF7"/><path d="M-74 -10 L-60 -48 H60 L74 -10Z" fill="#EE4524"/><path d="M-50 -48 L-42 -10 M-20 -48 L-14 -10 M10 -48 L14 -10 M40 -48 L42 -10" stroke="#FFFDF7" stroke-width="10"/><rect x="-16" y="16" width="32" height="40" fill="#F3B228"/></g>
+    <g transform="translate(830 540)"><path d="M-70 -18 L0 -64 L70 -18Z" fill="#EC8C88"/><rect x="-60" y="-18" width="120" height="74" fill="#2F9ADB"/><g fill="#FFFDF7"><rect x="-46" y="-4" width="12" height="48"/><rect x="-20" y="-4" width="12" height="48"/><rect x="8" y="-4" width="12" height="48"/><rect x="34" y="-4" width="12" height="48"/></g></g>
+    ${weatherArt(wt.k,lastW?lastW.pct:0,875,105,.85)}
+  </g></svg>`;
+  const W=x=>(x/30).toFixed(3);
+  let hud="";
+  if(p>0) hud+=`<button class="hudbtn hudpay" data-act="go" data-s="payday">${ic("moneybag")}<span>發薪日！</span></button>`;
+  if(w){ const have=state.spend+state.save, left=Math.max(0,w.price-have), pct=Math.min(100,have/w.price*100);
+    hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span><span class="wl">${left>0?`還差 ${left} 元`:"可以買了！"}</span></span></button>`; }
+  hud+=`<div class="hudbtn starchip">${ic("star")}<span id="starCount">${starsGot}</span></div>`;
+  const fog = open<3?`<div class="fog" style="left:${(open*100/3).toFixed(3)}%;width:${((3-open)*100/3).toFixed(3)}%"><div class="locksign">${ic("lock")}<b>${ZONES[open].n}</b><span>${zoneOpenDate(open+1).getMonth()+1}月${zoneOpenDate(open+1).getDate()}日開放</span></div></div>`:"";
+  return topBar(null,null,`<div class="hud">${hud}</div>`)+
+  `<div class="mapwrap"><div class="map" data-map="1">
+    <div class="world" style="transform:translateX(${(-camX/30).toFixed(3)}%)">${svg}
+    ${lion(walkMood||baseMood(),"maplion",`left:${mapLion.x}%;top:${mapLion.y}%`)}
+    <button class="sign" style="left:${W(370)}%;top:70%;--tilt:-3deg" data-act="go" data-s="shop"><div class="t"><span class="e">${ic("shop")}</span>商店</div><div class="v">有 ${state.spend} 元</div></button>
+    <button class="sign" style="left:${W(730)}%;top:74%;--tilt:2deg" data-act="go" data-s="bank"><div class="t"><span class="e">${ic("bank")}</span>銀行</div><div class="v">存了 ${state.save} 元</div></button>
+    <button class="sign" style="left:${W(540)}%;top:31%;--tilt:-1deg" data-act="go" data-s="tree"><div class="t"><span class="e">${ic("sprout")}</span>搖錢樹</div><div class="v">${money(treeTotal())} 元 ${wt.e}</div></button>
+    ${p>0?`<button class="sign sun pulse" style="left:${W(840)}%;top:44%;--tilt:3deg" data-act="go" data-s="payday"><div class="t"><span class="e">${ic("moneybag")}</span>發薪日！</div><div class="v">點我領錢</div></button>`:""}
+    ${open>=2?`<button class="sign" style="left:${W(1690)}%;top:56%;--tilt:-2deg" data-act="go" data-s="game" data-g="beach" data-stop="beach"><div class="t"><span class="e">${ic("shell")}</span>撿貝殼</div><div class="v">海邊小遊戲</div></button>`:""}
+    ${open>=3?`<button class="sign" style="left:${W(2590)}%;top:66%;--tilt:2deg" data-act="go" data-s="game" data-g="boss" data-stop="boss"><div class="t"><span class="e">${ic("ferris")}</span>當店長</div><div class="v">遊樂園小遊戲</div></button>`:""}
+    ${fog}
+    </div>
+    <div class="cloudsay">${esc(g)}${sayBtn(g)}</div>
+    <button class="edge l" data-act="pan" data-d="-1" aria-label="往左">${ic("back")}<span></span></button>
+    <button class="edge r" data-act="pan" data-d="1" aria-label="往右"><span></span>${ic("next")}</button>
+  </div></div>
+  <div class="sync" id="sync">${esc(syncNote)}</div>`;
+}
+
+/* payday */
+function payday(){
+  if(!ui.pd){ ui.pd={left:breakdown10(state.weekly),spend:[],save:[],tree:[],fresh:true}; }
+  const pd=ui.pd, done=pd.left.length===0; setTimeout(()=>{ if(ui.pd) ui.pd.fresh=false; },50);
+  const line = done?"分好了！按「完成」就放進去囉！":"點一個罐子，把硬幣放進去！";
+  return topBar(`${ic("moneybag")} 發薪日`,"home")+
+  `<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion(done?"cheer":"wave")}`,
+    `<button class="btn w" data-act="pdundo" ${pd.spend.length+pd.save.length+pd.tree.length?"":"disabled"}>${ic("undo")} 拿回來</button>
+     <button class="btn g" data-act="pddone" ${done?"":"disabled"}>${ic("check")} 完成</button>`)}
+  <main class="main">
+  <div class="card sky"><div class="pd-coins" id="pdLeft">${pd.left.map((v,i)=>coinEl(v,`style="--s:1.7;--d:${pd.fresh?i*0.12:0}s" data-i="${i}" class-x="dragcoin ${pd.fresh?"drop":""}"`)).join("")||`<span class="sub">硬幣都分完了 ${ic("check")}</span>`}</div>
+  ${pd.left.length?`<div class="pdhint">${ic("tap")} 用手指把硬幣拖到罐子裡！</div>`:""}</div>
+  <div class="pd-jars">
+    ${[["spend","bag","商店","j-spend","想買東西"],["save","bank","銀行","j-save","慢慢存"],["tree","sprout","搖錢樹","j-tree",`${state.lockWeeks} 週後收成`]].map(([k,e,n,c,h])=>`
+    <button class="jar ${c}" data-act="pdput" data-k="${k}" id="pd-${k}"><div class="ico">${ic(e)}</div><div class="nm">${n}</div><div class="hint">${h}</div>
+    <div class="amt">${pd[k].reduce((a,b)=>a+b,0)}<small> 元</small></div><div class="coins">${pd[k].map(v=>coinEl(v)).join("")}</div>
+    ${done?"":`<div class="tap">${ic("tap")} 點我放進來</div>`}</button>`).join("")}
+  </div></main></div>`;
+}
+function breakdown10(n){const out=[];n=Math.round(n);while(n>=10){out.push(10);n-=10;}while(n>=5){out.push(5);n-=5;}while(n>=1){out.push(1);n-=1;}return out;}
+
+/* shop */
+function shop(){
+  const cat=ui.cat||"food";
+  const items=state.shop.filter(i=>i.cat===cat);
+  return topBar(`${ic("shop")} 阿臭被商店`,"home")+
+  `<div class="body">${side(`<div class="walletline">${ic("bag")}<span>商店有</span><b>${state.spend} 元</b><span class="coins">${coinsHTML(state.spend,6)}</span></div>
+    <div class="tabs">${CATS.map(c=>`<button class="tab ${c.k===cat?"on":""}" data-act="cat" data-c="${c.k}"><span class="e">${ic(c.e)}</span>${c.n}</button>`).join("")}</div>`)}
+  <main class="main"><div class="items">${items.map(i=>`<button class="item ${i.price>state.spend?"cant":""}" data-act="item" data-id="${i.id}">
+    ${state.wish===i.id?`<span class="star">${ic("star")}</span>`:""}<div class="e">${itemIcon(i)}</div><div class="n">${esc(i.name)}</div><div class="p">${i.price} 元</div></button>`).join("")||'<div class="sub">這裡還沒有東西</div>'}</div></main></div>`;
+}
+function itemModal(id){
+  const it=state.shop.find(i=>i.id===id); if(!it) return;
+  const can=state.spend>=it.price, total=state.spend+state.save;
+  const line = can? `${it.name}要 ${it.price} 元，你的商店有 ${state.spend} 元，可以買！`
+    : total>=it.price ? `商店只有 ${state.spend} 元，還差 ${it.price-state.spend} 元。可以從銀行拿錢出來喔！`
+    : `${it.name}要 ${it.price} 元，還差 ${it.price-state.spend} 元。先存起來，設成願望吧！`;
+  openModal(`<div class="sheet wide"><div class="l"><div class="row" style="justify-content:center;gap:4px">${lion(can?"cheer":total>=it.price?"shy":"sad","","width:130px")}<div class="e">${itemIcon(it)}</div></div><div class="n">${esc(it.name)}</div>
+    <div class="coins" style="margin:10px 0">${coinsHTML(it.price)}</div><div class="h2" style="margin:4px 0">${it.price} 元</div>
+    <div class="sub" style="font-size:21px">${esc(line)} ${sayBtn(line)}</div></div>
+    <div class="btns">
+      ${can?`<button class="btn g" data-act="buy" data-id="${it.id}">${ic("coins")} 用硬幣付錢</button>`:""}
+      ${!can&&total>=it.price?`<button class="btn b" data-act="go" data-s="bank" data-atm="wd">${ic("bank")} 去銀行領錢</button>`:""}
+      ${state.wish===it.id?`<button class="btn w" data-act="unwish">取消願望</button>`:`<button class="btn" data-act="wish" data-id="${it.id}">${ic("star")} 設成我的願望</button>`}
+      <button class="btn w" data-act="close">先不要</button></div></div>`);
+}
+
+/* coin picker (pay / move) */
+function pickerState(){ if(!ui.pk){ const src=ui.screen==="pay"?"spend":ui.from; ui.pk={wallet:breakdown(state[src]),taken:[]}; } return ui.pk; }
+function pickerZones(srcName){
+  const pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0);
+  return {sum,html:`<div class="picker">
+    <div class="zone"><h3>${srcName}（點硬幣）</h3><div class="coins">${pk.wallet.map((v,i)=>pk.taken.includes(i)?"":coinEl(v,`data-act="pk" data-i="${i}"`)).join("")||'<span class="sub">沒有硬幣了</span>'}</div></div>
+    <div class="zone tray"><h3>拿出來的錢（點一下放回去）</h3><div class="coins">${pk.taken.map(i=>coinEl(pk.wallet[i],`data-act="pkback" data-i="${i}"`)).join("")||'<span class="sub">還沒拿</span>'}</div>
+    <div class="sum">${sum} 元</div><div class="need" id="need"></div></div></div>`};
+}
+function pay(){
+  const it=state.shop.find(i=>i.id===ui.item); if(!it){ui.screen="shop";return shop();}
+  const {sum,html}=pickerZones(`${ic("bag")} 商店`);
+  const ok=sum>=it.price, change=sum-it.price;
+  const line = sum===0?`${it.name}要 ${it.price} 元，點硬幣拿出來付錢！`: !ok?`還差 ${it.price-sum} 元喔！`: change>0?`錢夠了！付 ${sum} 元，阿臭被會找你 ${change} 元。`:`剛剛好 ${it.price} 元！好厲害！`;
+  return topBar(`付錢：${itemIcon(it)} ${esc(it.name)}`,"home")+
+  `<div class="body">${side(`<div class="pricetag">${itemIcon(it)}<span>${it.price} 元</span></div><div class="bubble">${esc(line)}${sayBtn(line)}</div>${lion(ok?"cheer":sum>0?"shy":"wave")}`,
+    `<button class="btn w" data-act="go" data-s="shop">${ic("back")} 回商店</button><button class="btn g" data-act="paydo" ${ok?"":"disabled"}>${ic("pay")} 付錢！</button>`)}
+  <main class="main">${html}</main></div>`;
+}
+function move(){
+  const names={spend:`${ic("bag")} 商店`,save:`${ic("bank")} 銀行`,tree:`${ic("sprout")} 搖錢樹`};
+  const {sum,html}=pickerZones(names[ui.from]);
+  const line = ui.to==="tree" ? `要種多少錢呢？種下去要 ${state.lockWeeks} 週後才能收成喔！` : ui.to==="save"?"要存多少錢進銀行？":"要從銀行拿多少錢出來？";
+  return topBar(`${names[ui.from]} ${ic("next")} ${names[ui.to]}`,"home")+
+  `<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion("shy")}`,
+    `<button class="btn w" data-act="go" data-s="${ui.back||"home"}">取消</button><button class="btn g" data-act="movedo" ${sum>0?"":"disabled"}>${ic("check")} 好了</button>`)}
+  <main class="main">${html}</main></div>`;
+}
+function bought(){
+  const v=ui.v; const cat=CATS.find(c=>c.k===v.cat);
+  const line=v.cat==="sub"?`訂閱了${v.name}！把兌換券給爸爸媽媽看，就可以一起聽${v.name}囉！`:`買到${v.name}了！把兌換券給爸爸媽媽看，就可以去買真的${v.name}囉！`;
+  return topBar(`${ic("party")} 買到了！`,"home")+
+  `<div class="body">${side(`<div class="bubble">${esc(line)}${sayBtn(line)}${ui.change>0?`<div style="margin-top:8px">找你 ${ui.change} 元：<span class="coins" style="display:inline-flex">${coinsHTML(ui.change)}</span></div>`:""}</div>${lion("cheer")}`,
+    `<button class="btn w" data-act="go" data-s="home">${ic("home")} 回家</button><button class="btn g" data-act="go" data-s="game" data-g="${v.cat}" data-e="${iconOf(v)}">${ic("play")} ${cat?cat.n:""}闖關</button>`)}
+  <main class="main center"><div class="ticket big"><div>${ic("ticket")} 兌換券</div><div class="e">${itemIcon(v)}</div><div class="tn">${esc(v.name)}</div><div class="sub">${v.price} 元・${new Date(v.boughtAt).toLocaleDateString("zh-TW")}</div></div></main></div>`;
+}
+
+/* bank */
+/* bank = ATM */
+function atmState(){ if(!ui.atm||typeof ui.atm==="string") ui.atm={mode:typeof ui.atm==="string"?ui.atm:"menu",amt:0,taken:[],wallet:null,rc:null}; return ui.atm; }
+function bank(){
+  const a=atmState(); const r=state.rate*state.mult;
+  const now=new Date(); const dim=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const est=state.bank.accrued + state.save*(r/100)/12*(now.getDate()/dim); const prog=Math.min(100,(est%1)*100);
+  if(a.mode==="dep"&&!a.wallet) a.wallet=breakdown(state.spend);
+  let lcd="", keys="", sideExtra="", line="";
+  const key=(act,label,cls,extra,dis)=>`<button class="atmkey ${cls||""}" data-act="${act}" ${extra||""} ${dis?"disabled":""}>${label}</button>`;
+  if(a.mode==="menu"){
+    line = state.save>0?`歡迎光臨！你在銀行存了 ${state.save} 元。要做什麼呢？`:"歡迎光臨！還沒有存錢喔，按「存錢」把錢放進來吧！";
+    lcd=`<div class="l1">您好，${esc(state.kidName)}！</div><div class="l2">存款餘額</div><div class="big">${state.save}<small> 元</small></div>
+      <div class="l3">${ic("sprout")} 下一個 1 元利息</div><div class="lbar"><i style="width:${prog}%"></i></div><div class="l4">每月 1 號發利息・年利率 ${r.toFixed(1)}%</div>`;
+    keys=`<div class="softkeys">${key("atm",`${ic("down")}<span>存錢</span>`,"sk g",'data-m="dep"',state.spend<=0)}${key("atm",`${ic("up")}<span>領錢</span>`,"sk o",'data-m="wd"',state.save<=0)}${key("atm",`${ic("sprout")}<span>種搖錢樹</span>`,"sk t",'data-m="tree"',state.save<=0)}</div>`;
+  }else if(a.mode==="dep"){
+    line="把硬幣放進投幣口！點左邊的硬幣就會投進去喔！";
+    lcd=`<div class="l1">存款</div><div class="l2">請放入硬幣</div><div class="big">${a.amt}<small> 元</small></div><div class="lcoins">${a.taken.map(i=>coinEl(a.wallet[i],'style="--s:.8"')).join("")}</div>`;
+    keys=`<div class="softkeys">${key("atmcancel",`${ic("cross")}<span>取消</span>`,"sk r")}${key("atmok",`${ic("check")}<span>確定存入</span>`,"sk g","",a.amt<=0)}</div>`;
+    sideExtra=`<div class="card atmwallet"><div class="sub">${ic("bag")} 商店的錢（點我投幣）</div><div class="coins">${a.wallet.map((v,i)=>a.taken.includes(i)?"":coinEl(v,`data-act="atmin" data-i="${i}" style="--s:1.25"`)).join("")||'<span class="sub">沒有硬幣了</span>'}</div></div>`;
+  }else if(a.mode==="wd"||a.mode==="tree"){
+    const tr=a.mode==="tree";
+    line= tr?"要轉多少錢到搖錢樹？用下面的按鍵加加看！":"要領多少錢？用下面的按鍵加加看！";
+    lcd=`<div class="l1">${tr?"轉進搖錢樹":"提款"}</div><div class="l2">${tr?"要轉多少錢？":"要領多少錢？"}</div><div class="big">${a.amt}<small> 元</small></div><div class="l4">存款還有 ${state.save-a.amt} 元</div>`;
+    keys=`<div class="numkeys">${[10,5,1].map(v=>key("atmadd",`<span class="pl">+</span>${coinEl(v,'style="--s:1.15"')}`,"nk",`data-v="${v}"`,a.amt+v>state.save)).join("")}${key("atmclr","清除","nk clr","",a.amt<=0)}</div>
+      <div class="softkeys">${key("atmcancel",`${ic("cross")}<span>取消</span>`,"sk r")}${key("atmok",`${ic("check")}<span>確定</span>`,"sk g","",a.amt<=0)}</div>`;
+  }else if(a.mode==="busy"){
+    line="機器在動了…等一下下！"; lcd=`<div class="l1">處理中</div><div class="l2">請稍候…</div><div class="dots"><i></i><i></i><i></i></div>`;
+  }else if(a.mode==="done"){
+    const rc=a.rc||{};
+    line= rc.kind==="dep"?`存好了！銀行現在有 ${state.save} 元。拿好明細表喔！`: rc.kind==="tree"?`轉好了！${rc.amt} 元種到搖錢樹了！`:`領好了！${rc.amt} 元放進商店了！`;
+    lcd=`<div class="l1">交易完成</div><div class="l2">謝謝光臨！</div><div class="big">${ic("check")}</div><div class="l4">存款餘額 ${state.save} 元</div>`;
+    keys=`<div class="softkeys">${key("atmdone",`${ic("check")}<span>完成</span>`,"sk g")}</div>`;
+  }
+  const rc=a.mode==="done"&&a.rc?`<div class="receipt" id="receipt"><b>阿臭被銀行</b><span>交易明細表</span><hr><span>${new Date(a.rc.t).toLocaleDateString("zh-TW")} ${new Date(a.rc.t).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"})}</span><span>${a.rc.kind==="dep"?"存入":a.rc.kind==="tree"?"轉入搖錢樹":"領出"}　<b>${a.rc.amt} 元</b></span><span>存款餘額　<b>${state.save} 元</b></span><hr><span class="thx">謝謝光臨 ♥</span></div>`:"";
+  return topBar(`${ic("bank")} 阿臭被銀行`,"home")+
+  `<div class="body">${side(`<div class="bubble">${esc(line)}${sayBtn(line)}</div>${sideExtra}${lion(a.mode==="done"?"cheer":a.mode==="dep"||a.mode==="busy"?"wow":"shy")}`)}
+  <main class="main"><div class="atm">
+    <div class="atmtop"><span class="lamp"></span>阿臭被銀行<span class="atmsub">ATM</span><span class="lamp"></span></div>
+    <div class="atmface">
+      <div class="atmscreen"><div class="lcd">${lcd}</div></div>
+      <div class="atmside">${keys}</div>
+    </div>
+    <div class="atmslots">
+      <div class="slot" id="coinslot"><div class="mouth"></div><span>${ic("down")} 投幣口</span></div>
+      <div class="slot" id="cashslot"><div class="mouth wide"></div><span>${ic("up")} 出錢口</span><div class="cashout" id="cashout"></div></div>
+      <div class="slot" id="rcslot"><div class="mouth thin"></div><span>${ic("notebook")} 明細表</span>${rc}</div>
+    </div>
+  </div></main></div>`;
+}
+function atmBeep(n,hi){ for(let k=0;k<(n||1);k++) setTimeout(()=>{ try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime,o=actx.createOscillator(),g=actx.createGain();o.type="square";o.frequency.value=hi?1560:1040;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.05,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+.09);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+.1);}catch(e){} },k*110); }
+function atmPrint(){ for(let k=0;k<7;k++) setTimeout(()=>{ try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime,o=actx.createOscillator(),g=actx.createGain();o.type="sawtooth";o.frequency.value=180+k*8;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.025,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.07);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+.08);}catch(e){} },k*80); }
+function atmFinish(kind,amt){
+  const a=atmState(); a.mode="busy"; render(); atmBeep(2);
+  const dispense = kind!=="dep";
+  setTimeout(()=>{
+    if(dispense){ const out=document.getElementById("cashout"); if(out){ breakdown(amt).slice(0,10).forEach((v,k)=>setTimeout(()=>{ out.insertAdjacentHTML("beforeend",coinEl(v,'class-x="pop" style="--s:1.1"')); clink(k%2===0); },k*140)); } }
+  },500);
+  setTimeout(()=>{
+    if(kind==="dep"){ state.spend-=amt; state.save+=amt; log("move","ATM 存進銀行",amt); }
+    else if(kind==="wd"){ state.save-=amt; state.spend+=amt; log("move","ATM 從銀行領出來",amt); }
+    else { state.save-=amt; state.seeds.push({id:uid(),amount:amt,value:amt,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+amt; log("plant","ATM 種搖錢樹（從銀行）",amt); }
+    save(); a.mode="done"; a.rc={kind,amt,t:Date.now()}; a.amt=0; a.taken=[]; a.wallet=null;
+    render(); atmPrint(); tada(); if(kind==="dep") confetti(["coin","star","bank"]);
+  }, dispense?600+Math.min(10,breakdown(amt).length)*140+500:1100);
+}
+
+/* tree growth: size follows the total ever planted, never shrinks */
+const TREE_STAGES=[{n:"種子",min:0},{n:"小樹苗",min:1},{n:"小樹",min:30},{n:"中樹",min:80},{n:"大樹",min:150},{n:"搖錢大樹",min:300}];
+function treeStage(t){ t=t==null?(state.plantedTotal||0):t; const mins=[0,1,30,80,150,300]; let st=0; for(let i=1;i<mins.length;i++) if(t>=mins[i]) st=i; return st; }
+const FRUIT_BOX=[null,[400,330,600,460],[410,270,590,410],[330,110,670,390],[220,40,780,350],[220,40,780,350]];
+function treeArt(st,rain){
+  const G=rain?"#4C8A33":"#5C9B3B", G2=rain?"#5E9A45":"#7DBB4E", Bk="#7A4B2A";
+  const tick=(arr,w)=>`<g stroke="#fff" stroke-width="${w||4}" stroke-linecap="round" opacity=".75">${arr.map(([x,y])=>`<line x1="${x}" y1="${y}" x2="${x-5}" y2="${y+16}"/>`).join("")}</g>`;
+  const mound=`<path d="M-130 4 C-100 -44 100 -44 130 4Z" fill="#8C5A3B"/>${[[-60,-14],[-10,-24],[50,-12],[20,-6]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5" fill="#6E4428"/>`).join("")}`;
+  if(st===0) return mound+`<ellipse cx="0" cy="-34" rx="16" ry="11" fill="#C98A12"/><path d="M-6 -40 q6 -6 12 0" stroke="#F3B228" stroke-width="3" fill="none"/>`;
+  if(st===1) return mound+`<path d="M0 -24 C6 -60 -6 -90 0 -116" fill="none" stroke="${G}" stroke-width="10" stroke-linecap="round"/><path d="M0 -100 C-44 -100 -66 -132 -56 -156 C-22 -158 0 -130 0 -100Z" fill="${G}"/><path d="M0 -108 C44 -114 68 -146 58 -168 C22 -168 0 -140 0 -108Z" fill="${G2}"/>`;
+  if(st===2) return mound+`<path d="M-11 0 L-8 -150 L8 -150 L11 0Z" fill="${Bk}"/><circle cx="-46" cy="-176" r="44" fill="${G}"/><circle cx="46" cy="-180" r="44" fill="${G}"/><circle cx="0" cy="-214" r="62" fill="${G2}"/>${tick([[-20,-240],[24,-226],[-50,-190],[40,-176]])}`;
+  if(st===3) return `<path d="M-22 0 C-17 -90 -15 -170 -13 -230 L13 -230 C15 -170 17 -90 22 0Z" fill="${Bk}"/><path d="M0 -150 L-60 -200 M0 -170 L64 -214" stroke="${Bk}" stroke-width="14" stroke-linecap="round"/><circle cx="-92" cy="-250" r="78" fill="${G}"/><circle cx="92" cy="-252" r="78" fill="${G}"/><circle cx="0" cy="-300" r="108" fill="${G2}"/><circle cx="-40" cy="-212" r="62" fill="${G}"/><circle cx="46" cy="-210" r="62" fill="${G}"/>${tick([[-60,-330],[20,-360],[70,-300],[-110,-260],[110,-250],[-20,-250],[40,-230]])}`;
+  const big=`<path d="M-25 0 C-20 -90 -30 -140 -45 -190 L45 -190 C30 -140 20 -90 25 0Z" fill="${Bk}"/><path d="M0 -160 L-80 -220 M0 -140 L90 -210" stroke="${Bk}" stroke-width="22" stroke-linecap="round"/><path d="M0 -480 C140 -490 290 -410 280 -300 C300 -200 150 -150 0 -170 C-150 -150 -300 -200 -280 -300 C-290 -410 -140 -490 0 -480Z" fill="${G}"/>${tick([[-170,-400],[-100,-430],[120,-420],[190,-360],[-200,-290],[200,-260],[60,-220],[-80,-220],[-140,-350],[150,-310]])}`;
+  if(st===4) return big;
+  return `<circle cx="0" cy="-320" r="330" fill="none" stroke="#F3B228" stroke-width="14" opacity=".35"/>`+big+[[-230,-470],[250,-450],[-300,-250],[300,-200],[0,-520]].map(([x,y])=>`<path d="M${x} ${y-22} L${x+7} ${y-7} L${x+22} ${y} L${x+7} ${y+7} L${x} ${y+22} L${x-7} ${y+7} L${x-22} ${y} L${x-7} ${y-7}Z" fill="#F3B228"/>`).join("");
+}
+function growCard(){
+  const st=treeStage(), t=state.plantedTotal||0, nx=TREE_STAGES[st+1];
+  if(!nx) return `<div class="card growcard"><div class="gt">${ic("star")} ${TREE_STAGES[st].n}</div><div class="sub">已經長到最大了！好厲害！</div></div>`;
+  const lo=TREE_STAGES[st].min, pct=Math.max(4,Math.min(100,(t-lo)/(nx.min-lo)*100));
+  return `<div class="card growcard"><div class="gt">${ic("sprout")} 現在是${TREE_STAGES[st].n}</div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">${st===0?"種下第一筆錢，就會冒出小樹苗！":`再種 ${nx.min-t} 元，會長成${nx.n}！`}</div></div>`;
+}
+function checkGrow(){ const st=treeStage(); if(st>(state.treeSeen||0)&&!document.querySelector(".modal")){ showGrow(state.treeSeen||0,st); return true; } return false; }
+function showGrow(from,to){
+  const line=`搖錢樹長大了！變成${TREE_STAGES[to].n}！`;
+  const art=s=>`<svg viewBox="-360 -620 720 660" class="growsvg" aria-hidden="true"><g filter="url(#rough2)"><g transform="scale(${[1.4,1.3,1.2,1,.95,.9][s]})">${treeArt(s,false)}</g></g></svg>`;
+  openModal(`<div class="sheet grow"><div class="n">${ic("sprout")} 搖錢樹長大了！</div><div class="growstage" id="growstage">${art(from)}</div><div class="sub" id="growtext">咦？搖錢樹好像在動…</div><div class="btns" id="growbtns" style="visibility:hidden"><button class="btn g" data-act="growdone" data-to="${to}">${ic("check")} 好棒！</button></div></div>`);
+  setTimeout(()=>{ const g=document.getElementById("growstage"); if(!g) return; g.classList.add("shake"); sfx("boing"); },500);
+  setTimeout(()=>{ const g=document.getElementById("growstage"); if(!g) return; g.classList.remove("shake"); g.innerHTML=art(to); g.classList.add("grown"); sfx("spin"); tada(); confetti(["sprout","star","coin"]);
+    document.getElementById("growtext").innerHTML=`${esc(line)} ${sayBtn(line)}`; say(line); react("cheer","長大了！",2000);
+    document.getElementById("growbtns").style.visibility="visible"; },1500);
+}
+
+/* tree */
+function tree(){
+  const w=weather(); const now=Date.now(); const lock=state.lockWeeks*WEEK;
+  const seeds=state.seeds.slice().sort((a,b)=>a.plantedAt-b.plantedAt);
+  const hist=(market.weeks||[]).filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?1:-1).slice(0,6);
+  const total=treeTotal(), cost=seeds.reduce((a,s)=>a+s.amount,0);
+  const fb=FRUIT_BOX[treeStage()]||FRUIT_BOX[1]; const fbox=`left:${fb[0]/10}%;top:${fb[1]/5.6}%;width:${(fb[2]-fb[0])/10}%;height:${(fb[3]-fb[1])/5.6}%`;
+  const pos=[[50,20],[25,38],[75,38],[38,58],[62,58],[15,62],[85,62],[50,44],[28,80],[72,80],[50,72],[10,85],[90,85]];
+  const fruits=seeds.slice(0,pos.length).map((s,i)=>{const ripe=now-s.plantedAt>=lock;const days=Math.ceil((s.plantedAt+lock-now)/DAY);
+    return `<div class="fruit ${ripe?"ripe":""}" style="left:${pos[i][0]}%;top:${pos[i][1]}%">${coinEl(money(s.value)>=50?50:money(s.value)>=10?10:5).replace(/>\d+</,">"+money(s.value)+"<")}<span class="lk">${ripe?"可收成！":ic("lock")+days+"天"}</span></div>`;}).join("");
+  const line = treeStage()===0? "這裡只有一顆小種子。種下第一筆錢，它就會發芽喔！" : !seeds.length? "搖錢樹在等你種錢！種越多，樹會長越大喔！"
+    : w.k==="rain"? "下雨了，搖錢樹變小一點。不要怕，我們撐傘等太陽！"
+    : w.k==="sun"? "出太陽了！搖錢樹長得好好！" : "搖錢樹在等天氣消息。";
+    const diff=total-cost;
+  return topBar(`${ic("tree")} 搖錢樹`,"home")+
+  `<div class="body rev"><main class="main treewrap"><div class="treebox"><svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g filter="url(#rough2)">
+    ${weatherArt(w.k,hist[0]?hist[0].pct:0,150,120,.95)}
+    <path d="M-40 560 C120 470 300 520 500 500 C700 480 860 440 1040 470 L1040 600 L-40 600Z" fill="#5C9B3B"/>
+    <path d="M-60 600 C160 520 380 590 560 560 C760 528 880 560 1060 520" fill="none" stroke="#EE4524" stroke-width="60" stroke-linecap="round"/>
+    <g transform="translate(500 520)">${treeArt(treeStage(),w.k==="rain")}</g>
+    ${pine(900,470,130)}${pine(80,500,100)}
+  </g></svg>
+    <div class="fruits" style="${fbox}">${fruits}</div>
+    ${lion(w.k==="rain"?"sad":w.k==="sun"?"cheer":"wow","treelion")}
+  </div></main>
+  <aside class="side"><div class="bubble">${esc(line)}${sayBtn(line)}</div>${growCard()}
+  <div class="split">
+    <div class="card green center"><div class="sub">搖錢樹上的錢</div><div class="bigamt">${money(total)}<small> 元</small></div>
+      <div class="sub" style="font-size:20px">種下去 ${cost} 元，${diff>=0.5?`<span class="up">多了 ${money(diff)} 元 ${ic("up")}</span>`:diff<=-0.5?`<span class="down">少了 ${money(-diff)} 元 ${ic("down")}</span>`:"差不多一樣"}</div>
+      <div class="wk">${hist.map(h=>`<span>${ic(h.pct>=0?"sun":"rain")} ${h.date.slice(5).replace("-","/")}</span>`).join("")}</div></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:14px;justify-content:center">
+      <button class="btn g" data-act="go" data-s="move" data-from="spend" data-to="tree" data-back="tree" ${state.spend>0?"":"disabled"}>${ic("sprout")} 用商店的錢種</button>
+      <button class="btn g" data-act="go" data-s="move" data-from="save" data-to="tree" data-back="tree" ${state.save>0?"":"disabled"}>${ic("sprout")} 用銀行的錢種</button>
+      <div class="sub center" style="font-size:16px">搖錢樹跟著台灣 0050 股票長大，每週六更新天氣</div></div>
+  </div>
+  ${seeds.length?`<div class="seeds">${seeds.map(s=>{const ripe=now-s.plantedAt>=lock;const days=Math.ceil((s.plantedAt+lock-now)/DAY);const d=s.value-s.amount;
+    return `<div class="seed">${coinEl(10,'style="--s:1.2"')}<div style="flex:1"><div class="v">${money(s.value)} 元</div><div class="d">種 ${s.amount} 元 ${d>=0.5?`<span class="up">${ic("up")}${money(d)}</span>`:d<=-0.5?`<span class="down">${ic("down")}${money(-d)}</span>`:""}・${new Date(s.plantedAt).toLocaleDateString("zh-TW",{month:"numeric",day:"numeric"})}</div></div>
+    ${ripe?`<button class="btn sm g" data-act="harvest" data-id="${s.id}">收成</button>`:`<span class="sub">${ic("lock")} ${days} 天</span>`}</div>`;}).join("")}</div>`:""}</aside></div>`;
+}
+function harvestModal(id){
+  const s=state.seeds.find(x=>x.id===id); if(!s) return; const v=money(s.value);
+  const line=`這顆錢果子有 ${v} 元！要放到哪裡呢？`;
+  openModal(`<div class="sheet wide"><div class="l">${lion(v>=s.amount?"cheer":"sad","","width:160px;margin:0 auto")}<div class="n">收成 ${v} 元！</div><div class="coins" style="margin:10px 0">${coinsHTML(v)}</div><div class="sub">${line} ${sayBtn(line)}</div></div>
+  <div class="btns"><button class="btn r" data-act="harvestTo" data-id="${id}" data-to="spend">${ic("bag")} 放進商店</button><button class="btn b" data-act="harvestTo" data-id="${id}" data-to="save">${ic("bank")} 存進銀行</button><button class="btn w" data-act="close">再等等</button></div></div>`);
+}
+
+/* ---------- games ---------- */
+const STORIES=[
+  {q:"阿臭被有 3 個 10 元，買布丁用掉 2 個，還剩幾個？",o:[["1 個","c10"],["2 個","c10c10"],["3 個","c10c10c10"]],a:0,coin:true},
+  {q:"哪一個硬幣最多錢？",o:[["1 元","c1"],["5 元","c5"],["10 元","c10"]],a:2,coin:true},
+  {q:"布丁要 20 元，要給幾個 10 元？",o:[["1 個","c10"],["2 個","c10c10"],["3 個","c10c10c10"]],a:1,coin:true},
+  {q:"下雨天搖錢樹變小了，阿臭被應該怎麼做？",o:[["撐傘等太陽","umbrella"],["全部挖出來","shovel"]],a:0},
+  {q:"5 元加 5 元，是多少錢？",o:[["5 元","c5"],["10 元","c10"],["50 元","c50"]],a:1,coin:true},
+  {q:"錢放在銀行，會發生什麼事？",o:[["慢慢變多","sprout"],["不見了","wind"]],a:0},
+  {q:"想買很貴的玩偶，錢不夠，可以怎麼做？",o:[["每週存一點","piggy"],["哭哭","cryface"]],a:0},
+  {q:"冰淇淋 30 元，你有 50 元，付錢後會找你多少？",o:[["10 元","c10"],["20 元","c10c10"],["50 元","c50"]],a:1,coin:true}
+];
+function game(){
+  const g=ui.g;
+  if(g==="beach") return topBar(`${ic("shell")} 海浪撿貝殼`,"home")+`<div class="body one"><div class="bubble" id="bq"></div><div class="stage beach" id="stage"><div class="sea"><span></span><span></span></div><div class="beachtray"><span class="tl">撿到的錢</span><div class="coins" id="tray"></div><span class="tsum" id="tsum">0 元</span></div>${lion("wave","","","glion")}</div></div>`;
+  if(g==="boss") return topBar(`${ic("ferris")} 換你當店長`,"home")+`<div class="body">${side(`<div class="bubble" id="bq"></div>${lion("wave","","","glion")}`,`<button class="btn w" data-act="bosshint">${ic("star")} 提示</button><button class="btn g" data-act="bossgive">${ic("check")} 找好了！</button>`)}
+    <main class="main"><div class="counter card"><div class="cust" id="cust"></div><div class="paid" id="paid"></div></div>
+    <div class="split"><div class="zone"><h3>錢箱（點硬幣拿出來）</h3><div class="coins drawer">${[1,5,10].map(v=>coinEl(v,`data-act="bossadd" data-v="${v}" style="--s:1.6"`)).join("")}</div></div>
+    <div class="zone tray"><h3>要找給客人的錢（點一下放回去）</h3><div class="coins" id="tray"></div><div class="sum" id="tsum">0 元</div></div></div></main></div>`;
+  if(g==="food"){ const line=`阿臭被肚子餓了！點${ui.e||"食物"}給阿臭被吃！`;
+    return topBar(`${ic("food")} 請阿臭被吃點心`,"home")+`<div class="body one"><div class="bubble">${line}${sayBtn(line)} <b id="cnt"></b></div><div class="stage" id="stage">${lion("wow","","","glion")}</div></div>`; }
+  if(g==="toy"){ const line="翻翻看，找出一樣的玩具！";
+    return topBar(`${ic("teddy")} 翻牌遊戲`,"home")+`<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion("wave")}`)}<main class="main"><div class="cards" id="cards"></div></main></div>`; }
+  const line="阿臭被說故事！聽聽看，選出答案。";
+  return topBar(`${ic("book")} 阿臭被說故事`,"home")+`<div class="body">${side(`<div class="bubble" id="qbox">${line}</div>${lion("wave")}`)}<main class="main"><div id="qarea"></div></main></div>`;
+}
+function setupGame(){
+  const g=ui.g;
+  if(g==="beach") return setupBeach();
+  if(g==="boss") return setupBoss();
+  if(g==="food"){
+    const st=document.getElementById("stage"), lion=document.getElementById("glion"); const e=ui.e||"food"; let left=6;
+    const cnt=document.getElementById("cnt"); cnt.textContent=`還有 ${left} 個`;
+    const spots=[[8,10],[30,6],[62,8],[84,12],[6,48],[86,46]];
+    spots.forEach(([x,y])=>{const f=document.createElement("button");f.className="food";f.innerHTML=ic(e);f.style.left=x+"%";f.style.top=y+"%";
+      f.onclick=()=>{if(f.dataset.done)return;f.dataset.done=1;const sr=st.getBoundingClientRect(),fr=f.getBoundingClientRect(),lr=lion.getBoundingClientRect();
+        f.style.left=(lr.left-sr.left+lr.width/2-30)+"px";f.style.top=(lr.top-sr.top+lr.height*.25)+"px";f.style.transform="scale(.3)";f.style.opacity="0";
+        setTimeout(()=>{f.remove();lion.classList.remove("chomp");void lion.offsetWidth;lion.classList.add("chomp");moodAll("cheer",700);clink();left--;cnt.textContent=left?`還有 ${left} 個`:"";
+          if(!left) finishGame("阿臭被吃飽飽了！謝謝你！",["heart","yum",e]);},450);};
+      st.appendChild(f);});
+  }else if(g==="toy"){
+    const pool=["car","teddy","balloon","ball","dino","rocket","kite","blocks"].sort(()=>Math.random()-.5).slice(0,4);
+    const deck=[...pool,...pool].sort(()=>Math.random()-.5); const el=document.getElementById("cards"); let open=[],found=0,lock=false;
+    deck.forEach((t,i)=>{const b=document.createElement("button");b.className="mcard";b.dataset.k=t;b.innerHTML=ic("star");b.onclick=()=>{
+      if(lock||b.classList.contains("open")||b.classList.contains("done"))return; b.classList.add("open");b.innerHTML=ic(t);clink();open.push(b);
+      if(open.length===2){lock=true;const [a,c]=open;setTimeout(()=>{if(a.dataset.k===c.dataset.k){a.classList.add("done");c.classList.add("done");found++;tada();react("cheer","找到了！",900);if(found===pool.length)finishGame("全部找到了！好厲害！",["🎉","⭐",...pool]);}
+        else{a.classList.remove("open");c.classList.remove("open");a.innerHTML=ic("star");c.innerHTML=ic("star");react("shy",null,800);}open=[];lock=false;},700);}
+    };el.appendChild(b);});
+  }else{
+    const qs=STORIES.slice().sort(()=>Math.random()-.5).slice(0,3); let qi=0, stars=0;
+    const show=()=>{const q=qs[qi];document.getElementById("qbox").innerHTML=`<div class="sub">第 ${qi+1} 題 / 3</div>${esc(q.q)}${sayBtn(q.q)}`;say(q.q);
+      const area=document.getElementById("qarea");area.innerHTML=`<div class="qopts">${q.o.map((o,i)=>`<button class="qopt" data-i="${i}"><span style="font-size:44px">${q.coin&&o[1].startsWith("c")?o[1].split("c").filter(Boolean).map(v=>coinEl(v,'style="--s:1.4"')).join(" "):ic(o[1])}</span>${esc(o[0])}</button>`).join("")}</div>`;
+      area.querySelectorAll(".qopt").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i===q.a){b.classList.add("right");stars++;tada();say("答對了！");react("cheer",pick(LINES.right),1100);setTimeout(()=>{qi++;if(qi<qs.length)show();else finishGame(`答完了！得到 ${stars} 顆星星！`,["⭐","📚","💛"]);},1100);}
+        else{b.classList.remove("wrong");void b.offsetWidth;b.classList.add("wrong");say("再想想看");react("sad",pick(LINES.wrong),1500);}});};
+    show();
+  }
+}
+let gameTimer=null;
+function setupBeach(){
+  const st=document.getElementById("stage"), bq=document.getElementById("bq"), tray=document.getElementById("tray"), tsum=document.getElementById("tsum");
+  const T=[[6,7,9],[11,12,15],[16,18,21]]; let round=0, target=0, got=[], lock=false;
+  const sum=()=>got.reduce((a,b)=>a+b,0);
+  function show(){ const line=`第 ${round+1} 關：撿到剛好 ${target} 元！`; bq.innerHTML=`<span class="sub">第 ${round+1} 關 / 3</span><br>撿到剛好 <b class="goal">${target} 元</b>！ ${sayBtn(line)}`;
+    tray.innerHTML=got.map((v,i)=>coinEl(v,`data-i="${i}" style="--s:1.2"`)).join(""); tsum.textContent=sum()+" 元"; }
+  function next(){ target=pick(T[round]); got=[]; lock=false; show(); say(`撿到剛好 ${target} 元！`); }
+  tray.onclick=e=>{ const c=e.target.closest(".coin"); if(!c||lock) return; got.splice(+c.dataset.i,1); sfx("thud"); show(); };
+  function spawn(){
+    if(!document.body.contains(st)){ clearInterval(gameTimer); return; }
+    const v=pick([1,1,1,5,5,10]), lane=pick([16,34,52]);
+    const sh=document.createElement("button"); sh.className="shellbtn"; sh.style.top=lane+"%"; sh.style.animationDuration=(6+Math.random()*2)+"s";
+    sh.innerHTML=`${ic("shell")}${coinEl(v,'style="--s:1.05"')}`;
+    sh.onpointerdown=ev=>{ ev.stopPropagation(); if(lock||sh.dataset.got) return; sh.dataset.got=1; sh.classList.add("got"); setTimeout(()=>sh.remove(),400);
+      got.push(v); sfx("star"); show(); const t=sum();
+      if(t===target){ lock=true; tada(); react("cheer",pick(["剛剛好！","好厲害！","答對了！"]),1300); confetti(["shell","coin","star"]);
+        setTimeout(()=>{ round++; if(round<3) next(); else { clearInterval(gameTimer); starsGot+=3; finishGame("撿貝殼高手！得到 3 顆星星！",["shell","star","coin"]); } },1400); }
+      else if(t>target){ lock=true; react("sad","太多了！放回去一個",1400); setTimeout(()=>{ got.pop(); lock=false; show(); },900); }
+      else react("wow",null,500);
+    };
+    sh.addEventListener("animationend",()=>sh.remove());
+    st.appendChild(sh);
+  }
+  clearInterval(gameTimer); next(); spawn(); gameTimer=setInterval(spawn,950);
+}
+function setupBoss(){
+  const bq=document.getElementById("bq"), cust=document.getElementById("cust"), paid=document.getElementById("paid"), tray=document.getElementById("tray"), tsum=document.getElementById("tsum");
+  const pool=state.shop.filter(i=>i.price<50); let n=0, cur=null; window._boss={tray:[]};
+  const who=["teddy","dino","piggy","rocket"];
+  function next(){
+    const it=pool.length?pick(pool):{icon:"pudding",name:"布丁",price:35};
+    const price=pool.length&&Math.random()<.6?it.price:pick([12,15,18,23,25,27,32,35,38,42,45,47]);
+    cur={who:pick(who),it,price,change:50-price}; window._boss.tray=[]; render2();
+    const line=`我要買${it.name}，${price} 元。給你 50 元！`; bq.innerHTML=`<span class="sub">客人 ${n+1} / 3</span><br>${esc(line)} ${sayBtn(line)}<br><b>要找多少錢呢？</b>`; say(line+"要找多少錢呢？");
+    cust.innerHTML=`<span class="who">${ic(cur.who)}</span><span class="buy">${itemIcon(it)}<b>${price} 元</b></span>`;
+    paid.innerHTML=`<span class="sub">客人給你</span>${coinEl(50,'style="--s:1.5"')}`;
+    cust.classList.remove("in"); void cust.offsetWidth; cust.classList.add("in");
+  }
+  function render2(){ const t=window._boss.tray; tray.innerHTML=t.map((v,i)=>coinEl(v,`data-act="bossback" data-i="${i}" style="--s:1.3"`)).join("")||'<span class="sub">還沒拿</span>'; tsum.textContent=t.reduce((a,b)=>a+b,0)+" 元"; }
+  window._boss.render=render2;
+  window._boss.give=()=>{ const t=window._boss.tray.reduce((a,b)=>a+b,0);
+    if(t===cur.change){ tada(); confetti(["coin","star",cur.who]); react("cheer","謝謝店長！",1300); cust.classList.add("happy"); n++;
+      setTimeout(()=>{ cust.classList.remove("happy"); if(n<3) next(); else { starsGot+=3; finishGame("你是很棒的店長！得到 3 顆星星！",["coin","star","shop"]); } },1500); }
+    else if(t<cur.change){ react("shy",`還不夠喔！再多找一點`,1500); sfx("thud"); }
+    else { react("sad",`找太多了！拿一些回來`,1500); sfx("thud"); } };
+  window._boss.hint=()=>{ const msg=`從 ${cur.price} 數到 50，差 ${cur.change} 元喔！`; lionSay(msg); say(msg); };
+  next();
+}
+function finishGame(msg,set){confetti(set);tada();say(msg);setTimeout(()=>openModal(`<div class="sheet">${lion("cheer","","width:190px;margin:0 auto")}<div class="n">${esc(msg)}</div><div class="btns"><button class="btn g" data-act="go" data-s="home">${ic("home")} 回家</button><button class="btn w" data-act="regame">🔁 再玩一次</button></div></div>`),900);}
+
+/* ---------- parent ---------- */
+function gate(){
+  const a=6+Math.floor(Math.random()*4), b=6+Math.floor(Math.random()*4); ui.gate={a,b,in:""};
+  openModal(`<div class="sheet"><div class="n">${ic("lock")} 家長確認</div><div class="sub" style="margin-top:6px">請回答：</div><div class="h2" style="font-size:40px">${a} × ${b} = ?</div><div class="ans" id="ans"></div>
+  <div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-act="key" data-k="${n}">${n}</button>`).join("")}<button data-act="close">${ic("cross")}</button><button data-act="key" data-k="0">0</button><button data-act="key" data-k="ok" style="background:var(--ok);color:#fff">OK</button></div></div>`);
+}
+function parentScreen(){
+  const pend=state.vouchers.filter(v=>!v.redeemed), done=state.vouchers.filter(v=>v.redeemed).slice(0,8);
+  const ws=(market.weeks||[]).filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?1:-1).slice(0,10);
+  return `<div class="top"><button class="back" data-act="go" data-s="home">${ic("back")} 離開家長模式</button><h1>${ic("family")} 家長模式</h1></div>
+  <div class="pgrid">
+  <div class="card psec"><h3>${ic("ticket")} 兌換券（${pend.length} 張待兌換）</h3>
+    ${pend.map(v=>`<div class="prow"><span style="font-size:32px">${itemIcon(v)}</span><b style="flex:1">${esc(v.name)}・${v.price} 元</b><span class="note">${new Date(v.boughtAt).toLocaleDateString("zh-TW")}</span><button class="btn sm g" data-act="redeem" data-id="${v.id}">已兌換</button></div>`).join("")||'<div class="note">目前沒有待兌換的兌換券</div>'}
+    ${done.length?`<div class="note" style="margin-top:8px">最近已兌換：${done.map(v=>esc(v.name)).join("、")}</div>`:""}</div>
+  <div class="card psec"><h3>${ic("moneybag")} 金額</h3>
+    <div class="prow"><label>${ic("bag")} 商店 <input class="n" type="number" inputmode="numeric" id="p-spend" value="${state.spend}"></label><label>${ic("bank")} 存款 <input class="n" type="number" inputmode="numeric" id="p-save" value="${state.save}"></label><button class="btn sm" data-act="psaveamt">儲存金額</button></div>
+    <div class="prow">${ic("sprout")} 搖錢樹累積種了 ${state.plantedTotal||0} 元・目前是「${TREE_STAGES[treeStage()].n}」（${TREE_STAGES.slice(1).map(x=>x.n+" "+x.min).join("、")} 元）</div>
+    <div class="prow">${ic("tree")} 搖錢樹目前 ${money(treeTotal())} 元（${state.seeds.length} 筆，本金 ${state.seeds.reduce((a,s)=>a+s.amount,0)} 元）・利息累積 ${state.bank.accrued.toFixed(2)} 元</div>
+    <div class="prow">發薪：每週日 18:00・待領 ${pendingPaydays()} 週 <button class="btn sm w" data-act="padd">＋ 多發一週</button></div></div>
+  <div class="card psec"><h3>${ic("gear")} 設定</h3>
+    <div class="prow"><label>孩子名字 <input class="tx" id="s-name" value="${esc(state.kidName)}"></label><label>每週零用錢 <input class="n" type="number" id="s-weekly" value="${state.weekly}"></label></div>
+    <div class="prow"><label>存款真實年利率 % <input class="n" type="number" step="0.001" id="s-rate" value="${state.rate}"></label><label>放大倍數 × <input class="n" type="number" step="1" id="s-mult" value="${state.mult}"></label><label>搖錢樹鎖定週數 <input class="n" type="number" id="s-lock" value="${state.lockWeeks}"></label><button class="btn sm" data-act="psettings">儲存設定</button></div>
+    <div class="note">預設利率 0.825% 為臺灣銀行活期儲蓄存款牌告利率（2026/11/20）。放大倍數同時套用在存款利息和搖錢樹漲跌。</div></div>
+  <div class="card psec"><h3>${ic("speaker")} 阿臭被的聲音（英文）</h3>
+    ${canSpeak?`<div class="prow"><label>聲音 <select id="v-name"><option value="">自動挑選${enVoice?`（目前：${esc(enVoice.name)}）`:""}</option>${enVoices().map(v=>`<option value="${esc(v.name)}" ${state.voiceName===v.name?"selected":""}>${esc(v.name)}（${esc(v.lang)}）</option>`).join("")}</select></label></div>
+    <div class="prow"><label>音調 <input type="range" id="v-pitch" min="1" max="2" step="0.05" value="${state.voicePitch||1.5}"><span id="v-pv">${(state.voicePitch||1.5).toFixed(2)}</span></label>
+      <label>速度 <input type="range" id="v-rate" min="0.6" max="1.2" step="0.02" value="${state.voiceRate||.88}"><span id="v-rv">${(state.voiceRate||.88).toFixed(2)}</span></label></div>
+    <div class="prow"><button class="btn sm" data-act="vtest">${ic("speaker")} 試聽</button><button class="btn sm g" data-act="vsave">儲存聲音</button><button class="btn sm w" data-act="vreset">恢復預設</button></div>
+    <div class="note">音調越高越像小朋友（預設 1.50）。iPad 可到「設定 → 輔助使用 → 朗讀內容 → 聲音 → 英文」下載「Nicky」或「Samantha（增強版）」，下載後會出現在這裡。</div>`:'<div class="note">這台裝置不支援朗讀。</div>'}</div>
+  <div class="card psec"><h3>${ic("ferris")} 地圖區域</h3>
+    ${ZONES.map((z,i)=>`<div class="prow"><b style="width:90px">${z.n}</b>${i===0?"一開始就開放":i<zonesOpen()?"已開放":`${zoneOpenDate(i+1).getMonth()+1}月${zoneOpenDate(i+1).getDate()}日開放`}${z.gn?`<span class="note">小遊戲：${z.gn}</span>`:""}</div>`).join("")}
+    <div class="prow"><button class="btn sm" data-act="pzone" ${zonesOpen()>=3?"disabled":""}>提前開放下一區</button><button class="btn sm w" data-act="pzonereset">恢復按月開放</button></div>
+    <div class="note">每個月 1 號開放一個新區域（${state.mapStart} 開始）。</div></div>
+  <div class="card psec"><h3>${ic("chart")} 0050 每週漲跌（自動排程每週六更新）</h3>
+    ${ws.map(w=>`<div class="prow"><b>${w.date}</b><span class="${w.pct>=0?"up":"down"}">${w.pct>=0?"+":""}${(+w.pct).toFixed(2)}%</span>${w.close?`<span class="note">收盤 ${w.close}</span>`:""}<span class="note">遊戲中 ${w.pct>=0?"+":""}${(w.pct*state.mult).toFixed(1)}%</span>${state.applied.includes(w.date)?'<span class="note">✓ 已套用</span>':""}</div>`).join("")||'<div class="note">還沒有資料</div>'}
+    <div class="prow">手動補一週：<input class="tx" type="date" id="m-date"><label>漲跌 % <input class="n" type="number" step="0.01" id="m-pct"></label><button class="btn sm" data-act="maddweek">加入</button></div>
+    <div class="note">日期請填那週的最後交易日（通常是週五）。</div></div>
+  <div class="card psec"><h3>${ic("shop")} 商品</h3>
+    ${state.shop.map(i=>`<div class="prow" data-row="${i.id}"><select data-f="icon" class="icsel">${Object.keys(ICON_LABELS).map(k=>`<option value="${k}" ${k===iconOf(i)?"selected":""}>${ICON_LABELS[k]}</option>`).join("")}</select><span class="icprev" style="font-size:40px">${itemIcon(i)}</span><input class="tx" value="${esc(i.name)}" data-f="name"><input class="n" type="number" value="${i.price}" data-f="price"> 元<select data-f="cat">${CATS.map(c=>`<option value="${c.k}" ${c.k===i.cat?"selected":""}>${c.n}</option>`).join("")}</select><button class="btn sm w" data-act="pdel" data-id="${i.id}">刪除</button></div>`).join("")}
+    <div class="row" style="margin-top:10px"><button class="btn sm w" data-act="padditem">＋ 新增商品</button><button class="btn sm" data-act="psaveshop">儲存商品</button></div></div>
+  <div class="card psec"><h3>${ic("notebook")} 紀錄</h3>${state.log.slice(0,40).map(l=>`<div class="prow"><span class="note" style="width:120px">${new Date(l.t).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span><span style="flex:1">${esc(l.text)}</span><b>${l.amt?(l.amt>0?"+":"")+l.amt:""}</b></div>`).join("")||'<div class="note">還沒有紀錄</div>'}</div>
+  <div class="card psec"><h3>${ic("notebook")} 備份／還原</h3>
+    <div class="note">把全部進度（金額、搖錢樹、兌換券、商品、設定）變成一段備份碼。要把雲端版的進度搬到 iPad App，或換新 iPad 時使用。</div>
+    <div class="prow"><button class="btn sm" data-act="bkcopy">${ic("notebook")} 複製備份碼</button>${isApp?`<button class="btn sm w" data-act="bkfile">下載備份檔</button>`:""}</div>
+    <div class="prow" style="flex-direction:column;align-items:stretch"><textarea id="bk-in" rows="3" placeholder="把備份碼貼在這裡" style="width:100%;font-size:14px;border:3px solid var(--line);border-radius:10px;padding:8px;font-family:monospace;-webkit-user-select:text;user-select:text"></textarea>
+      <div class="row"><button class="btn sm g" data-act="bkrestore">${ui.bkArm?"再按一次確定還原（會蓋掉目前進度）":"還原備份"}</button><label class="btn sm w" style="cursor:pointer">選擇備份檔<input type="file" accept=".json,application/json,text/plain" id="bk-file" style="display:none"></label></div></div></div>
+  <div class="card psec"><h3>${ic("warning")} 重新開始</h3><div class="note">清除所有金額、搖錢樹、兌換券與紀錄（商品和設定保留）。</div><div class="row" style="margin-top:10px"><button class="btn sm r" data-act="preset">${ui.resetArm?"再按一次確定清除":"清除全部紀錄"}</button></div></div>
+  </div><div class="sync" id="sync">${esc(syncNote)}</div>`;
+}
+
+/* ---------- modal ---------- */
+function openModal(html){$modal.innerHTML=`<div class="modal" data-act="bg">${html}</div>`;}
+function closeModal(){$modal.innerHTML="";}
+
+/* ---------- actions ---------- */
+function flyCoin(fromEl,toEl,v,done){
+  if(!fromEl||!toEl){done();return;}
+  const a=fromEl.getBoundingClientRect(),b=toEl.getBoundingClientRect();
+  const f=document.createElement("div");f.className="fly";f.innerHTML=coinEl(v,'style="--s:1.6"');f.style.left=a.left+"px";f.style.top=a.top+"px";document.body.appendChild(f);
+  fromEl.style.visibility="hidden";
+  requestAnimationFrame(()=>{f.style.transform=`translate(${b.left+b.width/2-a.left-38}px,${b.top+b.height/2-a.top-38}px) scale(.7)`;});
+  setTimeout(()=>{f.remove();done();},560);
+}
+let busy=false;
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-act]"); if(!el) return;
+  const act=el.dataset.act;
+  if(act==="bg"){ if(e.target===el) closeModal(); return; }
+  if(actx&&actx.state==="suspended") actx.resume();
+  switch(act){
+    case "say": e.stopPropagation(); say(el.dataset.t); break;
+    case "close": closeModal(); break;
+    case "go": { const x={}; ["from","to","back","g","e","atm"].forEach(k=>{if(el.dataset[k])x[k]=el.dataset[k];});
+      const tgt=el.dataset.s, stop=el.dataset.stop||tgt;
+      if(ui.screen==="home" && STOPS[stop] && document.getElementById("road")){ walkTo(stop,()=>go(tgt,x)); break; }
+      go(tgt,x); break; }
+    case "cat": ui.cat=el.dataset.c; render(); break;
+    case "atm": { const a=atmState(); a.mode=el.dataset.m; a.amt=0; a.taken=[]; a.wallet=null; atmBeep(1,true); render(); break; }
+    case "atmin": { const a=atmState(); const i=+el.dataset.i; if(a.taken.includes(i)) return; const slot=document.querySelector("#coinslot .mouth"); const v=a.wallet[i];
+      flyCoin(el,slot,v,()=>{ a.taken.push(i); a.amt+=v; atmBeep(1,true); clink(); render(); const m=document.querySelector("#coinslot"); if(m){ m.classList.remove("gulp"); void m.offsetWidth; m.classList.add("gulp"); } }); break; }
+    case "atmadd": { const a=atmState(); const v=+el.dataset.v; if(a.amt+v>state.save){ react("sad","存款不夠喔！",1200); return; } a.amt+=v; atmBeep(1,true); render(); break; }
+    case "atmclr": { const a=atmState(); a.amt=0; atmBeep(1); render(); break; }
+    case "atmcancel": { const a=atmState(); a.mode="menu"; a.amt=0; a.taken=[]; a.wallet=null; atmBeep(2); render(); break; }
+    case "atmok": { const a=atmState(); if(a.amt<=0) return; atmBeep(1,true);
+      if(a.mode==="dep"){ if(a.amt>state.spend) return; atmFinish("dep",a.amt); }
+      else if(a.mode==="wd"){ if(a.amt>state.save) return; atmFinish("wd",a.amt); }
+      else if(a.mode==="tree"){ if(a.amt>state.save) return; atmFinish("tree",a.amt); }
+      break; }
+    case "atmdone": { const a=atmState(); const was=a.rc&&a.rc.kind; a.mode="menu"; a.rc=null; atmBeep(1); if(was==="tree"){ go("tree"); } else render(); break; }
+    case "bossadd": if(window._boss&&window._boss.tray.length<12){ window._boss.tray.push(+el.dataset.v); clink(); window._boss.render(); } break;
+    case "bossback": if(window._boss){ window._boss.tray.splice(+el.dataset.i,1); window._boss.render(); } break;
+    case "bossgive": if(window._boss) window._boss.give(); break;
+    case "bosshint": if(window._boss) window._boss.hint(); break;
+    case "rvcloud": { el.classList.add("gone"); sfx("boing"); const left=document.querySelectorAll(".rvcloud:not(.gone)").length; if(!left) setTimeout(rvReveal,250); break; }
+    case "growdone": state.treeSeen=Math.max(state.treeSeen||0,+el.dataset.to); save(); closeModal(); render(); break;
+    case "rvdone": state.reveals=[]; save(); closeModal(); render(); setTimeout(()=>{ if(ui.screen==="home") afterHomeRender(); },300); break;
+    case "pan": panZone(+el.dataset.d); break;
+    case "zonego": { const z=+el.dataset.z; state.zonesSeen=Math.max(state.zonesSeen||1,z+1); save(); closeModal(); camT=clamp(z*ZW,0,maxCam()); break; }
+    case "vtest": { const n=document.getElementById("v-name").value, p=+document.getElementById("v-pitch").value, r=+document.getElementById("v-rate").value;
+      const keep=[state.voiceName,state.voicePitch,state.voiceRate]; state.voiceName=n||null; state.voicePitch=p; state.voiceRate=r; enVoice=null;
+      speakEn("Hi! I'm your little lion blankie! Let's save some money together. Yay!"); [state.voiceName,state.voicePitch,state.voiceRate]=keep; enVoice=null; break; }
+    case "vsave": state.voiceName=document.getElementById("v-name").value||null; state.voicePitch=+document.getElementById("v-pitch").value; state.voiceRate=+document.getElementById("v-rate").value; enVoice=null; save(); toast("聲音已儲存","cheer"); break;
+    case "vreset": state.voiceName=null; state.voicePitch=1.5; state.voiceRate=.88; enVoice=null; save(); render(); toast("已恢復預設聲音"); break;
+    case "bkcopy": { const code=backupCode(); const ta=document.getElementById("bk-in");
+      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(code):Promise.reject()).then(()=>toast("備份碼已複製！","cheer")).catch(()=>{ if(ta){ ta.value=code; ta.focus(); ta.select(); } toast("請手動複製下面框裡的備份碼"); }); break; }
+    case "bkfile": { try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([backupCode()],{type:"application/json"})); a.download=`阿臭被備份-${ymd(new Date())}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }catch(e){ toast("這裡不能下載，請用「複製備份碼」"); } break; }
+    case "bkrestore": { const t=(document.getElementById("bk-in")||{}).value; if(!t||!t.trim()){ toast("先把備份碼貼進框裡","shy"); return; }
+      if(!ui.bkArm){ ui.bkArm=true; const keep=t; render(); const ta=document.getElementById("bk-in"); if(ta) ta.value=keep; setTimeout(()=>{ ui.bkArm=false; },6000); return; }
+      ui.bkArm=false; if(restoreFrom(t)) render(); break; }
+    case "pzone": state.zoneBonus=(state.zoneBonus||0)+1; save(); render(); toast("已提前開放下一區","cheer"); break;
+    case "pzonereset": state.zoneBonus=0; state.zonesSeen=1; save(); render(); toast("地圖已恢復成按月份開放"); break;
+    case "item": itemModal(el.dataset.id); break;
+    case "wish": state.wish=el.dataset.id; save(); closeModal(); toast("設成願望了！回家看看還差多少","cheer"); render(); break;
+    case "unwish": state.wish=null; save(); closeModal(); render(); break;
+    case "buy": go("pay",{item:el.dataset.id}); break;
+    case "pk": { const pk=pickerState(); pk.taken.push(+el.dataset.i); clink(); render(); break; }
+    case "pkback": { const pk=pickerState(); pk.taken=pk.taken.filter(i=>i!==+el.dataset.i); render(); break; }
+    case "paydo": {
+      const it=state.shop.find(i=>i.id===ui.item), pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0);
+      if(!it||sum<it.price||state.spend<it.price) return;
+      state.spend-=it.price; const v={id:uid(),itemId:it.id,cat:it.cat,icon:iconOf(it),name:it.name,price:it.price,boughtAt:Date.now(),redeemed:false};
+      state.vouchers.unshift(v); if(state.vouchers.length>120) state.vouchers.length=120;
+      if(state.wish===it.id) state.wish=null;
+      log("buy",`買了 ${it.name}`,-it.price); save(); tada(); confetti([iconOf(it),"party","star"]);
+      go("bought",{v,change:sum-it.price}); break;
+    }
+    case "movedo": {
+      const pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0); if(!sum||state[ui.from]<sum) return;
+      state[ui.from]-=sum;
+      if(ui.to==="tree"){ state.seeds.push({id:uid(),amount:sum,value:sum,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+sum; log("plant",`種搖錢樹（從${ui.from==="spend"?"商店":"存款"}）`,sum); }
+      else { state[ui.to]+=sum; log("move",ui.to==="save"?"存進銀行":"從銀行拿出來",sum); }
+      save(); tada();
+      const back=ui.to==="tree"?"tree":ui.back||"home";
+      const to0=ui.to; go(back); toast(to0==="tree"?`種下 ${sum} 元！${state.lockWeeks} 週後來收成`:to0==="save"?`存了 ${sum} 元，好棒！`:`拿出 ${sum} 元，放進商店了`,"cheer"); break;
+    }
+    case "pdput": {
+      if(busy||drag) return; const pd=ui.pd; if(!pd||!pd.left.length) return; busy=true;
+      const k=el.dataset.k; const v=pd.left[0]; const from=document.querySelector('#pdLeft .coin');
+      clink(); flyCoin(from,el,v,()=>{pd.left.shift();pd[k].push(v);busy=false;render(); if(!pd.left.length){tada();say("分好了！按完成就放進去囉！");react("cheer","分好了！",1500);}}); break;
+    }
+    case "pdundo": { const pd=ui.pd; for(const k of ["tree","save","spend"]){ if(pd[k].length){ pd.left.unshift(pd[k].pop()); break; } } render(); break; }
+    case "pddone": {
+      const pd=ui.pd; if(pd.left.length) return; const s=pd.spend.reduce((a,b)=>a+b,0), b=pd.save.reduce((a,c)=>a+c,0), t=pd.tree.reduce((a,c)=>a+c,0);
+      state.spend+=s; state.save+=b; if(t>0){ state.seeds.push({id:uid(),amount:t,value:t,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+t; }
+      const lp=parseYmd(state.lastPaid); lp.setDate(lp.getDate()+7); state.lastPaid=ymd(lp);
+      log("payday",`發薪日：商店 ${s}・銀行 ${b}・搖錢樹 ${t}`,s+b+t); save(); confetti(); tada();
+      go("home"); toast(`放好了！商店 ${s} 元、銀行 ${b} 元、搖錢樹 ${t} 元`,"cheer"); break;
+    }
+    case "harvest": harvestModal(el.dataset.id); break;
+    case "harvestTo": {
+      const s=state.seeds.find(x=>x.id===el.dataset.id); if(!s) return; const v=money(s.value); const to=el.dataset.to;
+      state.seeds=state.seeds.filter(x=>x!==s); state[to]+=v; log("harvest",`搖錢樹收成（種 ${s.amount} 元）`,v); save(); closeModal(); confetti(["sprout","coin","star"]); tada();
+      render(); toast(v>s.amount?`收成 ${v} 元，比種下去多了 ${v-s.amount} 元！`:v<s.amount?`收成 ${v} 元，比種下去少了 ${s.amount-v} 元。下次多等等太陽！`:`收成 ${v} 元！`, v>=s.amount?"cheer":"sad"); break;
+    }
+    case "regame": closeModal(); render(); break;
+    case "gate": gate(); break;
+    case "key": {
+      const g=ui.gate; if(!g) return; const k=el.dataset.k; const ans=document.getElementById("ans");
+      if(k==="ok"){ if(+g.in===g.a*g.b){ ui.gate=null; go("parent"); } else { g.in=""; react("sad",null,1200); ans.textContent="✕"; ans.style.color="var(--spend)"; setTimeout(()=>{ans.textContent="";ans.style.color="";},700);} }
+      else if(g.in.length<3){ g.in+=k; ans.textContent=g.in; }
+      break;
+    }
+    case "redeem": { const v=state.vouchers.find(x=>x.id===el.dataset.id); if(v){v.redeemed=true;v.redeemedAt=Date.now();log("redeem",`兌換 ${v.name}`,0);save();render();} break; }
+    case "psaveamt": { const sp=Math.max(0,Math.round(+document.getElementById("p-spend").value||0)), sv=Math.max(0,Math.round(+document.getElementById("p-save").value||0));
+      if(sp!==state.spend||sv!==state.save){ log("adjust",`家長調整：消費 ${state.spend}→${sp}，存款 ${state.save}→${sv}`,0); state.spend=sp; state.save=sv; save(); } render(); toast("金額已儲存"); break; }
+    case "padd": { const lp=parseYmd(state.lastPaid); lp.setDate(lp.getDate()-7); state.lastPaid=ymd(lp); save(); render(); break; }
+    case "psettings": {
+      state.kidName=(document.getElementById("s-name").value||"寶貝").trim().slice(0,12);
+      state.weekly=Math.max(0,Math.round(+document.getElementById("s-weekly").value||0));
+      state.rate=Math.max(0,+document.getElementById("s-rate").value||0);
+      state.mult=Math.max(1,Math.round(+document.getElementById("s-mult").value||1));
+      state.lockWeeks=Math.max(0,Math.round(+document.getElementById("s-lock").value||0));
+      save(); render(); toast("設定已儲存"); break;
+    }
+    case "maddweek": {
+      const d=document.getElementById("m-date").value, p=parseFloat(document.getElementById("m-pct").value);
+      if(!d||!isFinite(p)){toast("請填日期和漲跌 %","sad");return;}
+      const weeks=(market.weeks||[]).filter(w=>w.date!==d); weeks.push({date:d,pct:p,source:"手動"}); market={...market,weeks};
+      try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){}
+      if(marketRef) marketRef.set(clone(market)).catch(()=>{});
+      applyMarket(false); render(); toast("已加入這週的 0050 漲跌"); break;
+    }
+    case "padditem": { readShopForm(); state.shop.push({id:uid(),cat:"toy",icon:"gift",name:"新商品",price:50}); save(); render(); break; }
+    case "pdel": { readShopForm(); state.shop=state.shop.filter(i=>i.id!==el.dataset.id); if(state.wish===el.dataset.id) state.wish=null; save(); render(); break; }
+    case "psaveshop": readShopForm(); save(); render(); toast("商品已儲存"); break;
+    case "preset": {
+      if(!ui.resetArm){ ui.resetArm=true; render(); setTimeout(()=>{ui.resetArm=false;},5000); return; }
+      const keep={shop:state.shop,kidName:state.kidName,weekly:state.weekly,rate:state.rate,mult:state.mult,lockWeeks:state.lockWeeks};
+      state=Object.assign(defaultState(),keep); state.applied=(market.weeks||[]).map(w=>w.date); ui.resetArm=false; save(); render(); toast("已重新開始"); break;
+    }
+  }
+});
+document.addEventListener("change",e=>{ if(e.target.id==="bk-file"&&e.target.files&&e.target.files[0]){ const f=e.target.files[0]; const rd=new FileReader(); rd.onload=()=>{ const ta=document.getElementById("bk-in"); if(ta) ta.value=rd.result; toast("已讀入備份檔，按「還原備份」確認"); }; rd.readAsText(f); } });
+document.addEventListener("input",e=>{ if(e.target.id==="v-pitch"){ const o=document.getElementById("v-pv"); if(o) o.textContent=(+e.target.value).toFixed(2); } if(e.target.id==="v-rate"){ const o=document.getElementById("v-rv"); if(o) o.textContent=(+e.target.value).toFixed(2); } });
+function readShopForm(){
+  document.querySelectorAll("[data-row]").forEach(r=>{const it=state.shop.find(i=>i.id===r.dataset.row); if(!it) return;
+    r.querySelectorAll("[data-f]").forEach(inp=>{const f=inp.dataset.f; let v=inp.value; if(f==="price") v=Math.max(1,Math.round(+v||1)); if(f==="name") v=(v||"商品").slice(0,12); if(f==="icon") v=ICONS[v]?v:"gift"; it[f]=v;});});
+}
+
+/* ---------- 阿臭被 map game: hop movement, free roaming, star pickups ---------- */
+const ZW=1000;
+const ZONES=[{n:"小鎮"},{n:"海邊",game:"beach",gn:"海浪撿貝殼"},{n:"遊樂園",game:"boss",gn:"換你當店長"}];
+const STOPS={shop:[215,505],bank:[580,505],tree:[680,282],payday:[865,410],beach:[1560,450],boss:[2430,500]};
+function monthsSince(a){const [y,m]=a.split("-").map(Number), d=new Date(); return (d.getFullYear()-y)*12+(d.getMonth()+1-m);}
+function zonesOpen(){ return Math.max(1,Math.min(3,1+monthsSince(state.mapStart||ym(new Date()))+(state.zoneBonus||0))); }
+function zoneOpenDate(z){ const [y,m]=(state.mapStart||ym(new Date())).split("-").map(Number); return new Date(y,m-1+(z-1)-(state.zoneBonus||0),1); }
+let camX=0, camT=0, pan=null;
+function maxCam(){ const o=zonesOpen(); return o*ZW-ZW+(o<3?170:0); }
+const worldEl=()=>document.querySelector(".world");
+function applyCam(){ const w=worldEl(); if(w) w.style.transform=`translateX(${(-camX/30).toFixed(3)}%)`; updateEdges(); }
+function updateEdges(){
+  const l=document.querySelector(".edge.l"), r=document.querySelector(".edge.r"); if(!l||!r) return;
+  const o=zonesOpen(), z=Math.round(camT/ZW);
+  l.classList.toggle("hide",camT<=5); const ls=l.querySelector("span"); if(z>0&&ls) ls.textContent=ZONES[z-1].n;
+  const rs=r.querySelector("span"); const nz=Math.min(2,Math.floor((camT+ZW*.5)/ZW)+1);
+  if(nz>=3||camT>=o*ZW-ZW-5&&o>=3){ r.classList.add("hide"); }
+  else{ r.classList.remove("hide"); r.classList.toggle("locked",nz>=o); if(rs) rs.textContent=nz>=o?`${ZONES[nz].n} ${zoneOpenDate(nz+1).getMonth()+1}/${zoneOpenDate(nz+1).getDate()} 開放`:ZONES[nz].n; }
+}
+let peekTimer=null;
+function peekLocked(){ const o=zonesOpen(); if(o>=3) return; camT=maxCam(); const b=mapBox(); setMood(b,"shy");
+  lionSay(`${ZONES[o].n}${zoneOpenDate(o+1).getMonth()+1}月${zoneOpenDate(o+1).getDate()}日才會開喔！`,b);
+  clearTimeout(peekTimer); peekTimer=setTimeout(()=>{ if(!pan) camT=(zonesOpen()-1)*ZW; },1800); }
+function panZone(d){
+  const o=zonesOpen(), z=clamp(Math.round(camT/ZW)+d,0,2);
+  if(z>=o){ peekLocked(); return; }
+  camT=clamp(z*ZW,0,maxCam()); sfx("boing");
+}
+const WALK_SAY={shop:["去商店囉！","衝呀～商店！"],bank:["去銀行！","存錢去！"],tree:["去看搖錢樹！","搖錢樹等我！"],payday:["領錢囉！"],beach:["去海邊囉！"],boss:["去遊樂園當店長！"]};
+const ARRIVE_SAY={shop:"到商店了！",bank:"到銀行了！",tree:"搖錢樹到了！",payday:"發薪日！",beach:"海邊到了！",boss:"遊樂園到了！"};
+const STAR_SAY=["找到星星！","亮晶晶！","耶！星星！","再一顆！"];
+let mapLion={x:4,y:90,L:null,dir:1}, walkMood=null, moveTok=0, moving=false, walkTarget=null;
+let stars=[], starsGot=0, lastWander=Date.now(); const stopL={}; let roadRange=null;
+const MV0=()=>({jy:0,sx:1,sy:1,rot:0,on:false});
+const road=()=>document.getElementById("road"), mapBox=()=>document.querySelector(".maplion"), mapEl=()=>document.querySelector(".map");
+function nearestL(r,x,y){const tot=r.getTotalLength();let best=0,bd=1e9;for(let l=0;l<=tot;l+=5){const p=r.getPointAtLength(l);const d=(p.x-x)**2+(p.y-y)**2;if(d<bd){bd=d;best=l;}}return {l:best,d:Math.sqrt(bd)};}
+function getRange(r){ const o=zonesOpen(); if(roadRange&&roadRange.o===o) return roadRange.v; const tot=r.getTotalLength(); let lo=null,hi=0; for(let l=0;l<=tot;l+=6){const p=r.getPointAtLength(l); if(p.x>50&&p.x<o*ZW-50&&p.y>40&&p.y<600){ if(lo===null) lo=l; hi=l; }} roadRange={o,v:[lo||0,hi]}; return roadRange.v; }
+function ensureLion(){ const r=road(); if(!r) return null; if(mapLion.L==null) mapLion.L=nearestL(r,120,560).l; return r; }
+function placeAt(l){ const r=road(), box=mapBox(); if(!r) return null; const p=r.getPointAtLength(l); mapLion.x=+(p.x/30).toFixed(3); mapLion.y=+(p.y/6.2).toFixed(2);
+  if(p.x-camT>ZW*.74||p.x-camT<ZW*.26) camT=clamp(p.x-ZW/2,0,maxCam()); mapLion.L=l; if(box){box.style.left=mapLion.x+"%";box.style.top=mapLion.y+"%";} checkStars(l); return p; }
+/* tiny sound kit */
+function sfx(kind){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime,o=actx.createOscillator(),g=actx.createGain();
+  if(kind==="boing"){o.type="sine";o.frequency.setValueAtTime(260,t);o.frequency.exponentialRampToValueAtTime(620,t+.13);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.13,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.18);}
+  else if(kind==="thud"){o.type="triangle";o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(70,t+.09);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.12,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.12);}
+  else if(kind==="star"){o.type="square";o.frequency.setValueAtTime(880,t);o.frequency.setValueAtTime(1320,t+.07);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.06,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.22);}
+  else if(kind==="step"){o.type="sine";o.frequency.setValueAtTime(220,t);o.frequency.exponentialRampToValueAtTime(140,t+.05);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.035,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.07);}
+  else if(kind==="spin"){o.type="sine";o.frequency.setValueAtTime(400,t);o.frequency.exponentialRampToValueAtTime(1200,t+.3);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.1,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.35);}
+  o.connect(g).connect(actx.destination);o.start(t);o.stop(t+.4);}catch(e){}}
+/* tween the squash/stretch/jump state of a lion */
+function tween(box,dur,fn){return new Promise(res=>{ if(!box){res();return;} const mv=box._mv||(box._mv=MV0()); mv.on=true; const t0=performance.now();
+  (function f(now){ const t=Math.min(1,(now-t0)/dur); fn(t,mv); if(t<1) requestAnimationFrame(f); else res(); })(t0); });}
+function rest(box){ if(box&&box._mv){ Object.assign(box._mv,MV0()); } }
+function puffAt(xp,yp,n){ const m=worldEl(); if(!m) return; for(let i=0;i<(n||2);i++){ const d=document.createElement("div"); d.className="puff"; d.style.left=(xp+(i?.55:-.55))+"%"; d.style.top=yp+"%"; d.style.setProperty("--dx",(i?1:-1)*18+"px"); m.appendChild(d); setTimeout(()=>d.remove(),600);} }
+async function crouch(box,ms){ await tween(box,ms||120,(t,mv)=>{ const k=Math.sin(Math.PI*t); mv.sy=1-.18*k; mv.sx=1+.14*k; mv.jy=0; }); }
+async function land(box,ms){ sfx("thud"); puffAt(mapLion.x,mapLion.y,2); await tween(box,ms||110,(t,mv)=>{ const k=Math.sin(Math.PI*t); mv.jy=0; mv.sy=1-.2*k; mv.sx=1+.16*k; }); }
+/* hop along the road from current L to `to` */
+/* walk along the road: steady waddle, small bob each step, no jumping */
+async function hopTo(to,opts){
+  opts=opts||{}; const r=ensureLion(); if(!r) return false;
+  const tok=++moveTok; moving=true; const box0=mapBox(); if(box0) box0.classList.add("walking");
+  const from=mapLion.L, D=Math.abs(to-from); if(D<2){ moving=false; if(box0) box0.classList.remove("walking"); return true; }
+  const speed=opts.speed||340, dur=Math.max(500,Math.min(5200,D/speed*1000)), stepLen=58;
+  const sgn=to>from?1:-1, p0=r.getPointAtLength(from), p1=r.getPointAtLength(Math.min(r.getTotalLength(),Math.max(0,from+sgn*6)));
+  if(Math.abs(p1.x-p0.x)>.3) mapLion.dir=p1.x>p0.x?1:-1;
+  /* lean in to start */
+  await tween(mapBox(),140,(t,mv)=>{ mv.rot=mapLion.dir*7*t; mv.sy=1-.05*Math.sin(Math.PI*t); mv.jy=0; });
+  if(tok!==moveTok) return false;
+  const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+  let lastStep=0;
+  await tween(mapBox(),dur,(t,mv)=>{
+    if(tok!==moveTok) return;
+    const l=from+(to-from)*ease(t); const p=placeAt(l);
+    const q=r.getPointAtLength(Math.min(r.getTotalLength(),Math.max(0,l+sgn*5))); if(p&&Math.abs(q.x-p.x)>.4) mapLion.dir=q.x>p.x?1:-1;
+    const ph=Math.abs(l-from)/stepLen*Math.PI, sw=Math.sin(ph);
+    mv.jy=Math.abs(sw)*5; mv.rot=mapLion.dir*5+sw*6; mv.sy=1-.035*Math.abs(Math.cos(ph)); mv.sx=1+.025*Math.abs(Math.cos(ph));
+    const step=Math.floor(Math.abs(l-from)/stepLen); if(step!==lastStep){ lastStep=step; sfx("step"); if(step%2===0) puffAt(mapLion.x,mapLion.y,1); }
+  });
+  if(tok!==moveTok) return false;
+  /* settle */
+  await tween(mapBox(),200,(t,mv)=>{ const k=Math.sin(Math.PI*t); mv.jy=0; mv.rot=mapLion.dir*5*(1-t); mv.sy=1-.08*k; mv.sx=1+.06*k; });
+  if(tok!==moveTok) return false;
+  const box=mapBox(); if(box) box.classList.remove("walking"); rest(box); moving=false; return true;
+}
+async function happyWiggle(box){
+  if(!box||box._busy) return; box._busy=true; box.classList.add("walking");
+  await tween(box,520,(t,mv)=>{ mv.jy=0; mv.rot=Math.sin(t*Math.PI*4)*9*(1-t); const k=Math.abs(Math.sin(t*Math.PI*2)); mv.sy=1-.06*k; mv.sx=1+.05*k; });
+  rest(box); box.classList.remove("walking"); box._busy=false;
+}
+async function lookAround(box){
+  if(!box||box._busy) return; box._busy=true; const d0=mapLion.dir;
+  mapLion.dir=-d0; await new Promise(r=>setTimeout(r,700)); mapLion.dir=d0; await new Promise(r=>setTimeout(r,500)); box._busy=false;
+}
+async function spinJump(box,big){
+  if(!box||box._busy) return; box._busy=true; box.classList.add("walking"); const H=(box.clientWidth||150)*(big?.55:.4);
+  await crouch(box,110); sfx("spin");
+  await tween(box,big?560:460,(t,mv)=>{ mv.jy=Math.sin(Math.PI*t)*H; mv.rot=360*(t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2)*(box===mapBox()?mapLion.dir:1); const st=t<.25?1-t/.25:0; mv.sy=1+.16*st; mv.sx=1-.1*st; });
+  box._mv.rot=0; if(box===mapBox()) await land(box,140); else { sfx("thud"); await tween(box,130,(t,mv)=>{const k=Math.sin(Math.PI*t);mv.jy=0;mv.sy=1-.2*k;mv.sx=1+.16*k;}); }
+  rest(box); box.classList.remove("walking"); box._busy=false;
+}
+function walkTo(key,done){
+  const r=ensureLion(); if(!r||!STOPS[key]){done();return;}
+  if(moving&&walkTarget===key){ moveTok++; moving=false; walkTarget=null; done(); return; }
+  if(stopL[key]==null) stopL[key]=nearestL(r,...STOPS[key]).l;
+  walkTarget=key; walkMood="cheer"; const box=mapBox(); setMood(box,"cheer"); lionSay(pick(WALK_SAY[key]),box);
+  hopTo(stopL[key]).then(async ok=>{
+    if(!ok) return;
+    walkTarget=null; walkMood="wow"; const b=mapBox(); setMood(b,"wow"); lionSay(ARRIVE_SAY[key],b); tada();
+    document.querySelectorAll('.sign[data-s="'+key+'"]').forEach(sg=>{sg.classList.remove("hit");void sg.offsetWidth;sg.classList.add("hit");});
+    await happyWiggle(b);
+    walkMood=null; done();
+  });
+}
+/* tap anywhere on the map: hop to that spot on the road */
+function mapTap(e){
+  const m=mapEl(), r=ensureLion(); if(!m||!r) return;
+  const rc=m.getBoundingClientRect(); const x=camX+(e.clientX-rc.left)/rc.width*1000, y=(e.clientY-rc.top)/rc.height*620;
+  const hit=nearestL(r,x,y), range=getRange(r), box=mapBox();
+  tapMark(e.clientX-rc.left,e.clientY-rc.top,hit.d<110);
+  const o=zonesOpen(); if(x>o*ZW-20){ setMood(box,"shy"); lionSay(`${ZONES[Math.min(2,o)].n}還沒開放喔！`,box); return; }
+  if(hit.d>110){ setMood(box,"shy"); lionSay(pick(["那邊過不去啦！","要走紅色小路喔！","我只能走小路～"]),box); return; }
+  const to=clamp(hit.l,range[0],range[1]); walkTarget=null; setMood(box,"cheer");
+  hopTo(to).then(ok=>{ if(ok){ const b=mapBox(); setMood(b,b?b.dataset.base:"wave"); } });
+}
+function tapMark(x,y,ok){ const m=mapEl(); if(!m) return; const d=document.createElement("div"); d.className="tapmark"+(ok?"":" no"); d.style.left=x+"px"; d.style.top=y+"px"; m.appendChild(d); setTimeout(()=>d.remove(),600); }
+/* stars to collect along the road */
+function spawnStars(){ const r=road(); if(!r) return; const [lo,hi]=getRange(r); const avoid=Object.values(stopL).concat([mapLion.L||0]); stars=[]; let guard=0;
+  const want=5*zonesOpen(); while(stars.length<want&&guard++<400){ const l=lo+Math.random()*(hi-lo); if(avoid.some(a=>Math.abs(a-l)<60)||stars.some(s=>Math.abs(s.l-l)<90)) continue; const p=r.getPointAtLength(l); stars.push({id:uid(),l,x:p.x/30,y:p.y/6.2-4}); } }
+function starsHTML(){ return stars.map(s=>`<div class="mapstar" data-id="${s.id}" style="left:${s.x}%;top:${s.y}%">${ic("star")}</div>`).join(""); }
+function checkStars(l){ if(!stars.length) return; const hit=stars.filter(s=>Math.abs(s.l-l)<22); if(!hit.length) return;
+  hit.forEach(s=>{ stars=stars.filter(x=>x!==s); starsGot++; const el=document.querySelector(`.mapstar[data-id="${s.id}"]`); if(el){ el.classList.add("got"); setTimeout(()=>el.remove(),500); }
+    const m=worldEl(); if(m){ const f=document.createElement("div"); f.className="plus"; f.textContent="+1"; f.style.left=s.x+"%"; f.style.top=s.y+"%"; m.appendChild(f); setTimeout(()=>f.remove(),800); } });
+  sfx("star"); const c=document.getElementById("starCount"); if(c){ c.textContent=starsGot; c.parentElement.classList.remove("bump"); void c.offsetWidth; c.parentElement.classList.add("bump"); }
+  lionSay(pick(STAR_SAY),mapBox());
+  if(!stars.length){ setTimeout(()=>{ confetti(["star","star","heart"]); tada(); lionSay("全部找到了！",mapBox()); setTimeout(()=>{ if(ui.screen==="home"){ spawnStars(); const m=worldEl(); if(m){ m.querySelectorAll(".mapstar").forEach(x=>x.remove()); m.insertAdjacentHTML("beforeend",starsHTML()); } } },2500); },300); }
+}
+let starsOpen=0;
+function afterHomeRender(){ const r=road(); if(!r) return; ensureLion(); getRange(r); Object.keys(STOPS).forEach(k=>{ if(stopL[k]==null) stopL[k]=nearestL(r,...STOPS[k]).l; });
+  if(!stars.length||starsOpen!==zonesOpen()){ starsOpen=zonesOpen(); spawnStars(); } const m=worldEl(); if(m&&!m.querySelector(".mapstar")) m.insertAdjacentHTML("beforeend",starsHTML());
+  camT=clamp(camT,0,maxCam()); camX=clamp(camX,0,maxCam()); applyCam();
+  if(document.querySelector(".modal")) return;
+  if(automationsRan && state.reveals&&state.reveals.length){ showReveal(); return; }
+  if(automationsRan && checkGrow()) return;
+  const o=zonesOpen(); if(automationsRan && (state.zonesSeen||1)<o){ const z=(state.zonesSeen||1); showUnlock(z); }
+}
+function showUnlock(z){
+  const zn=ZONES[z]; const line=`新地圖開放了！${zn.n}有新的小遊戲「${zn.gn}」！`;
+  openModal(`<div class="sheet unlock"><div class="ulart">${ic(z===1?"shell":"ferris")}</div>${lion("cheer","","width:160px;margin:-10px auto 0")}<div class="n">新地圖：${zn.n}！</div><div class="sub">${esc(line)} ${sayBtn(line)}</div><div class="btns"><button class="btn g" data-act="zonego" data-z="${z}">${ic("next")} 去看看！</button></div></div>`);
+  confetti(["star","heart",z===1?"shell":"ferris"]); tada(); say(line);
+}
+/* idle: wander a little now and then */
+setInterval(()=>{ const now=Date.now();
+  if(ui.screen!=="home"||moving||sleeping||document.querySelector(".modal")) return;
+  if(now-lastAct<6000||now-lastWander<7000+Math.random()*6000) return;
+  lastWander=now; const r=road(); if(!r||mapLion.L==null) return; const [lo,hi]=getRange(r);
+  if(Math.random()<.35){ lookAround(mapBox()); return; }
+  const to=clamp(mapLion.L+(Math.random()<.5?-1:1)*(60+Math.random()*90),lo,hi); hopTo(to,{speed:200}).then(ok=>{ if(ok){ const b=mapBox(); setMood(b,b?b.dataset.base:"wave"); } });
+},1000);
+
+/* ---------- 阿臭被 character engine ---------- */
+function baseMood(){
+  switch(ui.screen){
+    case "home": { if(pendingPaydays()>0) return "cheer"; const w=state.wish&&state.shop.find(i=>i.id===state.wish); if(w&&state.spend+state.save>=w.price) return "cheer"; if(weather().k==="rain"&&state.seeds.length) return "sad"; return "wave"; }
+    case "tree": { const k=weather().k; return k==="rain"?"sad":k==="sun"?"cheer":"wow"; }
+    case "bank": case "move": return "shy";
+    case "bought": return "cheer";
+    default: return "wave";
+  }
+}
+const LINES={
+  tap:["嘻嘻，好癢！","我是阿臭被！","抱抱～","要一起存錢嗎？","你今天好棒！","哇！嚇我一跳！","我最喜歡你了！","錢要好好用喔！"],
+  wake:["啊！我醒了！","呼～睡飽了！"],
+  shop:["去買東西囉！"],bank:["存起來，慢慢變多！"],tree:["去看搖錢樹！"],payday:["發錢囉！"],home:["回家囉～"],
+  nomoney:["錢不夠耶…","再存一下下！"],right:["答對了！","好聰明！"],wrong:["嗯…再想想？"]
+};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+let moodTimer=null, lastAct=Date.now(), sleeping=false;
+function setMood(box,mood){
+  if(!box||!MOODS[mood]||box.dataset.mood===mood) return;
+  box.dataset.mood=mood; const img=box.querySelector("img");
+  img.src=MOODS[mood]; img.classList.remove("pop"); void img.offsetWidth; img.classList.add("pop");
+}
+function moodAll(mood,ms){
+  clearTimeout(moodTimer);
+  document.querySelectorAll(".lionbox").forEach(b=>setMood(b,mood));
+  if(ms) moodTimer=setTimeout(()=>{ if(!sleeping) document.querySelectorAll(".lionbox").forEach(b=>setMood(b,b.dataset.base)); },ms);
+}
+function lionSay(text,box){
+  const boxes=box?[box]:[...document.querySelectorAll(".lionbox")].filter(b=>!b.closest(".toast")).slice(-1);
+  boxes.forEach(b=>{const el=b.querySelector(".lsay"); if(!el) return; el.textContent=text; el.classList.add("on"); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove("on"),1800);});
+}
+function react(mood,line,ms){ ms=ms||1600; moodAll(mood,ms); if(line) lionSay(line); carry={mood,line,until:Date.now()+ms}; }
+let carry=null;
+function applyCarry(){ if(!carry||Date.now()>carry.until) return; const c=carry; moodAll(c.mood,c.until-Date.now()); if(c.line) lionSay(c.line); }
+function moodForEl(el){
+  if(el.disabled) return ["sad",pick(LINES.nomoney)];
+  const s=el.dataset.s, a=el.dataset.act;
+  if(s==="shop") return ["cheer",pick(LINES.shop)];
+  if(s==="bank") return ["shy",pick(LINES.bank)];
+  if(s==="tree") return ["wow",pick(LINES.tree)];
+  if(s==="payday") return ["cheer",pick(LINES.payday)];
+  if(s==="home") return ["wave",null];
+  if(a==="item") return el.classList.contains("cant")?["shy",null]:["cheer",null];
+  if(a==="pk"||a==="pdput") return ["wow",null];
+  if(a==="pkback"||a==="pdundo") return ["shy",null];
+  if(a==="gate") return ["shy",null];
+  if(el.classList.contains("g")) return ["cheer",null];
+  if(el.classList.contains("r")) return ["wow",null];
+  return null;
+}
+/* pointer tracking: lean / shift / turn toward the finger or mouse */
+let ptr=null;
+function onPtr(e){
+  ptr={x:e.clientX,y:e.clientY,t:Date.now()}; lastAct=Date.now();
+  if(sleeping){ sleeping=false; document.querySelectorAll(".lionbox").forEach(b=>setMood(b,"wow")); lionSay(pick(LINES.wake)); clearTimeout(moodTimer); moodTimer=setTimeout(()=>document.querySelectorAll(".lionbox").forEach(b=>setMood(b,b.dataset.base)),1400); }
+}
+window.addEventListener("pointermove",e=>{ onPtr(e);
+  if(pan){ const dx=e.clientX-pan.x; if(Math.abs(dx)>12) pan.moved=true; if(pan.moved){ const m=mapEl(); if(m){ const rc=m.getBoundingClientRect(); camT=camX=clamp(pan.cam-dx/rc.width*ZW,0,maxCam()); applyCam(); } } }
+  if(drag) moveDrag(e);
+},{passive:true});
+window.addEventListener("pointerup",e=>{
+  if(pan){ const p0=pan; pan=null; if(!p0.moved) mapTap(e); else { const lastOpen=(zonesOpen()-1)*ZW; if(camT>lastOpen+40){ peekLocked(); } else { const z=Math.round(camT/ZW); camT=clamp(z*ZW,0,maxCam()); } } }
+  if(drag) endDrag(e);
+},{passive:true});
+window.addEventListener("pointercancel",()=>{ pan=null; if(drag) cancelDrag(); },{passive:true});
+/* payday: drag a coin into a jar */
+let drag=null;
+function startDrag(e,el){
+  const r=el.getBoundingClientRect(); const g=el.cloneNode(true); g.classList.add("ghost"); g.classList.remove("drop");
+  g.style.left=r.left+"px"; g.style.top=r.top+"px"; g.style.width=r.width+"px"; g.style.height=r.height+"px"; document.body.appendChild(g);
+  el.style.visibility="hidden"; drag={el,g,i:+el.dataset.i,ox:e.clientX-r.left,oy:e.clientY-r.top,w:r.width,h:r.height}; clink(); react("wow","拖到罐子裡！",900);
+}
+function jarAt(x,y){ const t=document.elementFromPoint(x,y); return t&&t.closest('[data-act="pdput"]'); }
+function moveDrag(e){ const d=drag; d.g.style.left=(e.clientX-d.ox)+"px"; d.g.style.top=(e.clientY-d.oy)+"px"; const j=jarAt(e.clientX,e.clientY);
+  document.querySelectorAll(".jar.over").forEach(x=>{ if(x!==j) x.classList.remove("over"); }); if(j) j.classList.add("over"); }
+function endDrag(e){ const d=drag; drag=null; const j=jarAt(e.clientX,e.clientY); document.querySelectorAll(".jar.over").forEach(x=>x.classList.remove("over"));
+  const pd=ui.pd;
+  if(j&&pd&&pd.left[d.i]!=null){ const v=pd.left[d.i]; pd.left.splice(d.i,1); pd[j.dataset.k].push(v); d.g.remove(); sfx("star");
+    render(); const nj=document.getElementById("pd-"+j.dataset.k); if(nj){ nj.classList.add("bounce1"); setTimeout(()=>nj.classList.remove("bounce1"),400); }
+    if(!pd.left.length){ tada(); confetti(["coin","star","heart"]); say("分好了！按完成就放進去囉！"); react("cheer","分好了！",1500); }
+  } else { d.g.classList.add("back"); const r=d.el.getBoundingClientRect(); d.g.style.left=r.left+"px"; d.g.style.top=r.top+"px"; setTimeout(()=>{ d.g.remove(); d.el.style.visibility=""; },260); sfx("thud"); }
+}
+function cancelDrag(){ const d=drag; drag=null; if(!d) return; d.g.remove(); d.el.style.visibility=""; }
+window.addEventListener("pointerdown",e=>{
+  onPtr(e);
+  const box=e.target.closest(".lionbox");
+  if(box){ if(box.classList.contains("walking")||box._busy) return;
+    const m=pick(["cheer","wow","shy"]); moodAll(m,1500); lionSay(pick(LINES.tap),box); spinJump(box,true); return; }
+  if(ui.screen==="home" && e.target.closest("[data-map]") && !e.target.closest("button,.cloudsay,.starchip,.lionbox")){ pan={x:e.clientX,y:e.clientY,cam:camT,moved:false}; return; }
+  const dc=e.target.closest(".dragcoin"); if(dc&&ui.screen==="payday"){ startDrag(e,dc); return; }
+  const el=e.target.closest("button,[data-act]"); if(!el) return;
+  const r=moodForEl(el); if(r) react(r[0],r[1],1400);
+},{passive:true});
+window.addEventListener("pointerover",e=>{
+  if(e.pointerType!=="mouse") return;
+  const el=e.target.closest("button"); if(!el||el===window._hov) return; window._hov=el;
+  const r=moodForEl(el); if(r) moodAll(r[0],1200);
+},{passive:true});
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function tick(){
+  const now=Date.now();
+  if(ui.screen==="home"&&!pan&&Math.abs(camX-camT)>.3){ camX=lerp(camX,camT,.12); applyCam(); }
+  if(!sleeping && now-lastAct>40000 && !document.querySelector(".modal") && ["home","bank","tree","shop"].includes(ui.screen)){
+    sleeping=true; clearTimeout(moodTimer); document.querySelectorAll(".lionbox").forEach(b=>setMood(b,"sleep"));
+  }
+  const active=ptr && now-ptr.t<6000 && !sleeping;
+  document.querySelectorAll(".lionbox").forEach((b,i)=>{
+    const lean=b.querySelector(".lean"); const r=b.getBoundingClientRect(); if(!r.width) return;
+    const cx=r.left+r.width/2, cy=r.top+r.height*.35;
+    const st=b._st||(b._st={rot:0,tx:0,ty:0,fx:1,near:false});
+    let rot=0,tx=0,ty=0,fx=st.fx<0?-1:1;
+    const mv=b._mv||MV0();
+    if(b.classList.contains("walking")){
+      fx=b.classList.contains("maplion")?mapLion.dir:fx; st.rot=lerp(st.rot,0,.3); st.tx=lerp(st.tx,0,.3); st.ty=lerp(st.ty,0,.3); st.fx=lerp(st.fx,fx,.4);
+      const sxw=Math.abs(st.fx)<.2?(st.fx<0?-.2:.2):st.fx;
+      lean.style.transform=`translate(${st.tx.toFixed(1)}px,${(st.ty-mv.jy).toFixed(1)}px) rotate(${(st.rot+mv.rot).toFixed(2)}deg) scale(${(sxw*mv.sx).toFixed(3)},${mv.sy.toFixed(3)})`;
+      const sh=b.querySelector(".lshadow"); if(sh) sh.style.transform=`translateX(-50%) scale(${Math.max(.45,1-mv.jy/(r.width*.7)).toFixed(3)})`;
+      return;
+    }
+    if(b.classList.contains("maplion")&&!active&&mapLion.dir<0) fx=-1;
+    if(active){
+      const dx=ptr.x-cx, dy=ptr.y-cy, d=Math.hypot(dx,dy);
+      rot=clamp(dx/28,-13,13); tx=clamp(dx/16,-r.width*.09,r.width*.09); ty=clamp(dy/26,-10,10);
+      if(dx<-r.width*.35) fx=-1; else if(dx>r.width*.35) fx=1;
+      const near=d<r.width*.75;
+      if(near&&!st.near&&!b.closest(".toast")&&b.dataset.mood!=="sleep"){ setMood(b,"wow"); clearTimeout(b._nt); b._nt=setTimeout(()=>{ if(!sleeping) setMood(b,b.dataset.base); },900); }
+      st.near=near;
+    }else{
+      const t=now/1000+i*1.7; rot=Math.sin(t*.7)*4; tx=Math.sin(t*.45)*6; ty=0; st.near=false;
+    }
+    if(sleeping){ rot=0; tx=0; ty=0; }
+    st.rot=lerp(st.rot,rot,.12); st.tx=lerp(st.tx,tx,.12); st.ty=lerp(st.ty,ty,.12); st.fx=lerp(st.fx,fx,.16);
+    const sx=Math.abs(st.fx)<.15?(st.fx<0?-.15:.15):st.fx;
+    lean.style.transform=`translate(${st.tx.toFixed(1)}px,${(st.ty-mv.jy).toFixed(1)}px) rotate(${(st.rot+mv.rot).toFixed(2)}deg) scale(${(sx*mv.sx).toFixed(3)},${mv.sy.toFixed(3)})`;
+    const sh=b.querySelector(".lshadow"); if(sh) sh.style.transform=`translateX(-50%) scale(${Math.max(.45,1-mv.jy/(r.width*.7)).toFixed(3)})`;
+  });
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+render();
+initDb();
+</script>
+</body>
+</html>
