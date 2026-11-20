@@ -384,109 +384,46 @@ function zone3Art(){ return `
     <g transform="translate(2780 330)"><path d="M-120 0 L0 -150 L120 0Z" fill="#EE4524"/><path d="M-60 0 L0 -150 L-20 0Z M20 0 L0 -150 L60 0Z" fill="#FFFDF7"/><rect x="-110" y="0" width="220" height="110" fill="#FFFDF7"/>${[-110,-66,-22,22,66].map(x=>`<rect x="${x}" y="0" width="22" height="110" fill="#EE4524"/>`).join("")}<path d="M-26 110 C-26 60 26 60 26 110Z" fill="#1F1B18"/><path d="M0 -150 V-190" stroke="#1F1B18" stroke-width="4"/><path d="M0 -190 L30 -180 L0 -170Z" fill="#F3B228"/></g>
     ${[[2560,120,"#EE4524"],[2610,90,"#2F9ADB"],[2650,140,"#F3B228"]].map(([x,y,c])=>`<path d="M${x} ${y+40} q-8 30 4 60" fill="none" stroke="#8C5A3B" stroke-width="3"/><ellipse cx="${x}" cy="${y}" rx="26" ry="32" fill="${c}"/>`).join("")}
     ${pine(2040,600,90)}${pine(2960,590,110)}`; }
-function isNight(d){ const h=(d||new Date()).getHours(); return h>=19||h<7; }
-function bedTop(x){ return 428-34*Math.exp(-(((x-585)/85)**2)); }
-function bedLine(){ let d=""; for(let x=425;x<=880;x+=15) d+=(d?" L":"M")+x+" "+bedTop(x).toFixed(1); return d; }
-function starPath(cx,cy,r){ let d=""; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r*.45:r; d+=(i?"L":"M")+(cx+Math.cos(a)*rr).toFixed(1)+" "+(cy+Math.sin(a)*rr).toFixed(1); } return d+"Z"; }
-let STICKERS=null;
-function stickerSpots(){ if(STICKERS) return STICKERS; let s=7; const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
-  const block=[[0,40,235,315],[325,190,445,330],[225,85,375,240],[560,150,815,265],[885,0,1000,175],[290,290,470,620],[430,250,860,620]];
-  const out=[]; let g=0; while(out.length<60&&g++<5000){ const x=20+rnd()*960, y=18+rnd()*330; if(block.some(([a,b,c,d])=>x>a&&x<c&&y>b&&y<d)) continue; if(out.some(p=>(p[0]-x)**2+(p[1]-y)**2<42*42)) continue; out.push([x,y,7+rnd()*5,(rnd()*40-20)|0]); }
-  return STICKERS=out; }
-function stickerSVG(i,cls){ const p=stickerSpots()[i]; if(!p) return ""; return `<path class="stk ${cls||""}" d="${starPath(p[0],p[1],p[2])}" transform="rotate(${p[3]} ${p[0].toFixed(0)} ${p[1].toFixed(0)})"/>`; }
-function clockFace(){ const d=new Date(), h=d.getHours()%12+d.getMinutes()/60, m=d.getMinutes(); const ha=h*30, ma=m*6;
-  return `<line id="clkH" x1="43" y1="54" x2="43" y2="38" stroke="#3D3A3F" stroke-width="5" stroke-linecap="round" transform="rotate(${ha} 43 54)"/><line id="clkM" x1="43" y1="54" x2="43" y2="32" stroke="#3D3A3F" stroke-width="3.5" stroke-linecap="round" transform="rotate(${ma} 43 54)"/>`; }
-function hot(key,x,y,w,h,inner,attrs,extra){ return `<button class="hot hot-${key}" style="left:${x/10}%;top:${y/6.2}%;width:${w/10}%;height:${h/6.2}%" ${attrs}><svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${inner}</svg>${extra||""}</button>`; }
-const tagEl=(t,cls)=>`<span class="tag ${cls||""}">${t}</span>`;
-
 function home(){
-  const p=pendingPaydays(), payNow=p>0||(state.extraPay&&state.extraPay.length);
-  const open=zonesOpen(), night=isNight(), st=treeStage(), wt=weather();
+  const p=pendingPaydays(); const open=zonesOpen();
   const w=state.wish&&state.shop.find(i=>i.id===state.wish);
-  const wall=night?"#4E5862":"#6F7C87", sky=night?"#2B3646":"#BFD8E2";
-  const nStk=Math.min(state.stars||0,stickerSpots().length);
-  const bg=`<svg class="roombg" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
-   <defs><pattern id="dashp" width="36" height="28" patternUnits="userSpaceOnUse"><path d="M5 7h13M22 21h10" stroke="#F4F2EC" stroke-width="3.2" stroke-linecap="round" opacity=".9"/></pattern>
-   <radialGradient id="glow"><stop offset="0" stop-color="#FFE9A8" stop-opacity=".55"/><stop offset="1" stop-color="#FFE9A8" stop-opacity="0"/></radialGradient></defs>
-   <rect width="1000" height="620" fill="${wall}"/>
-   ${night?`<ellipse cx="955" cy="300" rx="190" ry="240" fill="url(#glow)"/>`:""}
-   <g id="stk">${Array.from({length:nStk},(_,i)=>stickerSVG(i)).join("")}</g>
-   <rect x="15" y="56" width="200" height="8" rx="4" fill="#3D3A3F"/>
-   <rect x="30" y="70" width="170" height="210" fill="#EDE6D8"/><rect x="42" y="82" width="146" height="186" fill="${sky}"/>
-   ${night?`<path d="M150 104 a22 22 0 1 0 14 36 a18 18 0 1 1 -14 -36Z" fill="#F4E7B5"/>${[[70,110],[95,150],[60,210],[160,200],[120,236]].map(([x,y])=>`<path d="${starPath(x,y,4)}" fill="#F4E7B5"/>`).join("")}`
-     :`<circle cx="150" cy="122" r="20" fill="#F4C04E"/><path d="M58 176 h44 a13 13 0 0 0 -13 -16 a17 17 0 0 0 -30 4 a11 11 0 0 0 -1 12Z" fill="#F4F2EC"/>`}
-   <path d="M115 82V268M42 175H188" stroke="#EDE6D8" stroke-width="8"/>
-   <path d="M15 60h40c-6 80 4 170 -6 250h-34Z" fill="#C9785B"/><path d="M215 60h-40c6 80 -4 170 6 250h34Z" fill="#C9785B"/>
-   <path d="M28 70v234M200 70v234" stroke="#B4664C" stroke-width="3" opacity=".6"/>
-   <rect x="18" y="280" width="194" height="16" rx="3" fill="#EDE6D8"/>
-   <rect x="0" y="568" width="1000" height="8" fill="#E2DACB"/><rect x="0" y="576" width="1000" height="44" fill="#A88462"/>
-   <path d="M0 598H1000M120 576V598M380 598V620M560 576V598M770 598V620M930 576V598" stroke="#967352" stroke-width="3"/>
-   <rect x="560" y="246" width="250" height="12" rx="3" fill="#8A4E2B"/><path d="M590 258v18h10M780 258v18h-10" stroke="#8A4E2B" stroke-width="6" fill="none"/>
-   <rect x="770" y="206" width="14" height="40" fill="#C9785B"/><rect x="786" y="212" width="12" height="34" fill="#E9B949"/>
-   <path d="M296 575V340Q296 302 334 302H424Q462 302 462 340V575Z" fill="#8A4E2B"/><path d="M312 560V346Q312 318 340 318H418Q446 318 446 346V560Z" fill="#9C5D36"/>
-   <rect x="300" y="520" width="606" height="30" rx="6" fill="#8A4E2B"/><rect x="318" y="548" width="16" height="27" fill="#7A4326"/><rect x="872" y="548" width="16" height="27" fill="#7A4326"/>
-   <rect x="312" y="436" width="140" height="88" rx="10" fill="#E4DDD0"/>
-   <path d="M318 400Q318 378 342 378H408Q432 378 432 400V424Q432 444 408 444H342Q318 444 318 424Z" fill="#EDE6D8"/><path d="M330 436Q375 444 420 436" stroke="#D6CDBD" stroke-width="3" fill="none"/>
-   <g><path d="M336 404C334 368 366 356 388 364C410 372 414 398 404 418C394 432 352 434 336 404Z" fill="#33292B"/>
-     <circle cx="380" cy="404" r="25" fill="#F2C9A8"/><path d="M356 398C358 378 380 370 398 380C392 388 378 392 362 400Z" fill="#33292B"/>
-     <path d="M378 408q6 5 12 0" stroke="#3D3A3F" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="394" cy="417" r="5" fill="#E9A3A0" opacity=".8"/>
-     <rect x="356" y="370" width="18" height="9" rx="4.5" fill="#F3B228" transform="rotate(-25 365 374)"/></g>
-   <path d="${bedLine()} L884 430 Q890 486 884 542 L430 544 Q420 492 425 ${bedTop(425).toFixed(1)}Z" fill="#9AAAA9"/>
-   <path d="${bedLine()} L884 430 Q890 486 884 542 L430 544 Q420 492 425 ${bedTop(425).toFixed(1)}Z" fill="url(#dashp)"/>
-   <path d="M425 ${bedTop(425).toFixed(1)}Q438 420 470 ${(bedTop(470)+2).toFixed(1)}" stroke="#B9C5C3" stroke-width="12" fill="none" stroke-linecap="round"/>
-   <path d="M430 540 Q655 548 884 540" stroke="#7F908F" stroke-width="5" fill="none"/>
-   <path d="M880 575V412Q880 390 896 390Q912 390 912 412V575Z" fill="#8A4E2B"/>
-   <rect x="918" y="452" width="82" height="12" rx="3" fill="#8A4E2B"/><rect x="926" y="464" width="74" height="104" fill="#9C5D36"/><path d="M926 512H1000" stroke="#8A4E2B" stroke-width="3"/><circle cx="962" cy="490" r="4" fill="#E9B949"/><circle cx="962" cy="538" r="4" fill="#E9B949"/>
-  </svg>`;
-  /* clock on the headboard = payday */
-  const clock=hot("clock",336,206,86,100,
-    `<g class="${payNow?"ringing":""}"><path d="M14 92l10-14M72 92l-10-14" stroke="#3D3A3F" stroke-width="5" stroke-linecap="round"/>
-     <circle cx="18" cy="20" r="12" fill="#E9B949"/><circle cx="68" cy="20" r="12" fill="#E9B949"/><rect x="38" y="6" width="10" height="10" rx="3" fill="#3D3A3F"/>
-     <circle cx="43" cy="54" r="36" fill="#E9B949"/><circle cx="43" cy="54" r="27" fill="#FBF7EE"/>
-     ${[0,90,180,270].map(a=>`<line x1="43" y1="31" x2="43" y2="36" stroke="#3D3A3F" stroke-width="3" transform="rotate(${a} 43 54)"/>`).join("")}${clockFace()}<circle cx="43" cy="54" r="3.5" fill="#C9785B"/></g>
-     ${payNow?`<circle cx="76" cy="14" r="12" fill="#E5533D"/><text x="76" y="20" text-anchor="middle" font-size="18" fill="#fff" font-family="Senty">!</text>`:""}`,
-    `data-act="go" data-s="payday" aria-label="發薪日"`, payNow?tagEl("領零用錢！","hi"):"");
-  /* piggy bank on the nightstand = bank */
-  const piggy=hot("piggy",920,388,80,66,
-    `<path d="M20 60v-10M58 60v-10" stroke="#C97F7C" stroke-width="9" stroke-linecap="round"/>
-     <ellipse cx="40" cy="38" rx="32" ry="22" fill="#E9A3A0"/><path d="M50 16l6-12 8 14Z" fill="#D88D8A"/><ellipse cx="72" cy="38" rx="7" ry="9" fill="#D88D8A"/>
-     <circle cx="70" cy="35" r="1.8" fill="#8E5552"/><circle cx="70" cy="41" r="1.8" fill="#8E5552"/><circle cx="58" cy="30" r="2.6" fill="#3D3A3F"/>
-     <rect x="28" y="16" width="18" height="4" rx="2" fill="#B9706D"/><path d="M8 34q-8 -2 -6 -10" stroke="#D88D8A" stroke-width="3" fill="none" stroke-linecap="round"/>`,
-    `data-act="go" data-s="bank" aria-label="銀行"`, tagEl(`存了 ${money(state.save)} 元`));
-  /* potted money tree on the window sill */
-  const sc=[.3,.32,.29,.25,.22,.2][st];
-  const pot=hot("tree",40,70,150,212,
-    `<g transform="translate(75 176)"><g transform="scale(${sc})">${treeArt(st,wt.k==="rain")}</g></g>
-     <path d="M47 176h56l-7 36H54Z" fill="#C9785B"/><rect x="43" y="170" width="64" height="10" rx="3" fill="#B4664C"/>`,
-    `data-act="go" data-s="tree" aria-label="搖錢樹"`, tagEl(`${money(treeTotal())} 元`));
-  /* toy basket at the foot of the bed = shop */
-  const basket=hot("basket",690,468,160,140,
-    `<circle cx="52" cy="48" r="20" fill="#E5533D"/><path d="M38 40q14 -10 28 0" stroke="#FBF7EE" stroke-width="4" fill="none"/>
-     <rect x="80" y="22" width="22" height="34" rx="3" fill="#4F86B8" transform="rotate(12 91 39)"/>
-     <circle cx="120" cy="40" r="15" fill="#C08A55"/><circle cx="110" cy="27" r="6" fill="#C08A55"/><circle cx="130" cy="27" r="6" fill="#C08A55"/><circle cx="115" cy="38" r="2" fill="#3D3A3F"/><circle cx="125" cy="38" r="2" fill="#3D3A3F"/>
-     <path d="M30 58 Q80 -14 130 58" stroke="#B57A3C" stroke-width="7" fill="none"/>
-     <path d="M14 58H146L134 136H26Z" fill="#D9A45B"/>${[76,94,112].map(y=>`<path d="M${16+(y-58)*.15} ${y}H${144-(y-58)*.15}" stroke="#B57A3C" stroke-width="3"/>`).join("")}
-     ${[40,62,84,106,128].map(x=>`<path d="M${x} 60V134" stroke="#C48D47" stroke-width="2.5"/>`).join("")}<rect x="10" y="54" width="140" height="10" rx="5" fill="#C48D47"/>`,
-    `data-act="go" data-s="shop" aria-label="商店"`, tagEl(`有 ${money(state.spend)} 元`));
-  /* shelf toys: beach shell + amusement-park wheel (unlock monthly) */
-  const lockTag=z=>tagEl(`${ic("lock")}${zoneOpenDate(z+1).getMonth()+1}/${zoneOpenDate(z+1).getDate()}`,"lk");
-  const shellArt=on=>`<path d="M35 52 L8 20 Q35 -6 62 20Z" fill="${on?"#F2B8A0":"#5E6A74"}"/>${[14,24,35,46,56].map(x=>`<path d="M35 50L${x} 14" stroke="${on?"#E08E73":"#4F5A63"}" stroke-width="2.5"/>`).join("")}<rect x="26" y="48" width="18" height="8" rx="3" fill="${on?"#E08E73":"#4F5A63"}"/>`;
-  const wheelArt=on=>{ const c=on?["#E5533D","#4F86B8","#E9B949","#7DBB4E"]:["#4F5A63"]; return `<g class="${on?"wheel":""}" style="transform-origin:40px 34px"><circle cx="40" cy="34" r="28" fill="none" stroke="${on?"#E9B949":"#5E6A74"}" stroke-width="4"/>${[0,45,90,135].map(a=>`<line x1="40" y1="6" x2="40" y2="62" stroke="${on?"#E9B949":"#5E6A74"}" stroke-width="2.5" transform="rotate(${a} 40 34)"/>`).join("")}${[0,60,120,180,240,300].map((a,i)=>`<circle cx="${40+28*Math.cos(a*Math.PI/180)}" cy="${34+28*Math.sin(a*Math.PI/180)}" r="6" fill="${c[i%c.length]}"/>`).join("")}</g><path d="M40 34L22 76M40 34L58 76" stroke="${on?"#8A4E2B":"#4F5A63"}" stroke-width="5" stroke-linecap="round"/>`; };
-  const shell=hot("shell",590,192,70,56,shellArt(open>=2), open>=2?`data-act="go" data-s="game" data-g="beach" data-stop="beach" aria-label="撿貝殼"`:`data-act="roomlock" data-z="1" aria-label="還沒開放"`, open>=2?"":lockTag(1));
-  const wheel=hot("wheel",672,170,80,78,wheelArt(open>=3), open>=3?`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="當店長"`:`data-act="roomlock" data-z="2" aria-label="還沒開放"`, open>=3?"":lockTag(2));
-  /* pendant lamp = parent mode */
-  const lamp=hot("lamp",900,0,100,175,
-    `<path d="M50 0V92" stroke="#3D3A3F" stroke-width="3"/>${night?`<ellipse cx="50" cy="128" rx="34" ry="26" fill="#FFE9A8" opacity=".55"/>`:""}
-     <path d="M26 92H74L92 132H8Z" fill="${night?"#F4D27A":"#E2DACB"}"/><path d="M8 132H92" stroke="#C9785B" stroke-width="5" stroke-linecap="round"/><circle cx="50" cy="138" r="9" fill="${night?"#FFF3C4":"#F4F2EC"}"/>`,
-    `data-act="gate" aria-label="家長模式"`);
-  /* wish card taped to the wall */
-  let wish="";
-  if(w){ const have=state.spend+state.save, pct=Math.min(100,have/w.price*100), ok=have>=w.price;
-    wish=`<button class="wishcard${ok?" ok":""}" style="left:23.5%;top:${100/6.2}%;width:12%" data-act="go" data-s="shop" aria-label="願望"><i class="tape"></i><span class="wi">${itemIcon(w)}</span><span class="bar"><i style="width:${pct}%"></i></span><b>${ok?"夠了！":`${money(w.price)} 元`}</b></button>`; }
-  else wish=`<button class="wishcard empty" style="left:23.5%;top:${100/6.2}%;width:12%" data-act="go" data-s="shop" aria-label="許願"><i class="tape"></i><span class="wi">${ic("heart")}</span><b>許個願</b></button>`;
-  return `<div class="mapwrap"><div class="room${night?" night":""}" data-room="1">${bg}${pot}${clock}${wish}${shell}${wheel}${lamp}
-    ${lion(walkMood||baseMood(),"maplion",`left:${(mapLion.rx||640)/10}%;top:${(bedTop(mapLion.rx||640)/6.2+1.2).toFixed(2)}%`)}
-    ${basket}${piggy}</div></div>
+  const g=greeting(); const wt=weather(); const lastW=(market.weeks||[]).filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?1:-1)[0];
+  const svg=`<svg viewBox="0 0 3000 620" preserveAspectRatio="none" aria-hidden="true"><g filter="url(#rough2)">
+    <path d="M0 455 C90 430 210 452 236 520 C258 585 190 640 0 640Z" fill="#2F9ADB"/>${waves(40,520)}
+    <path d="M1010 300 C905 286 838 330 850 392 C862 452 950 462 1010 450Z" fill="#2F9ADB"/>${waves(890,360)}
+    <path d="M70 250 L120 140 L150 200 L185 105 L222 190 L255 130 L305 250Z" fill="#EC8C88"/>
+    <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85">${[[130,200],[160,228],[190,170],[205,215],[240,200],[255,230],[175,240]].map(([x,y])=>`<line x1="${x}" y1="${y}" x2="${x-4}" y2="${y+12}"/>`).join("")}</g>
+    ${zone2Art()}${zone3Art()}
+    <path id="road" d="M-80 560 C100 560 230 475 380 462 C520 450 590 520 720 488 C850 456 880 360 800 300 C730 250 640 290 575 225 C520 170 560 80 700 66 C820 54 940 40 1080 60 C1220 80 1240 230 1300 330 C1360 430 1480 470 1600 430 C1720 390 1760 280 1880 250 C1990 222 2060 330 2120 420 C2180 510 2300 540 2420 500 C2540 460 2600 360 2720 330 C2840 300 2920 380 3080 420" fill="none" stroke="#EE4524" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
+    ${pine(470,360,120)}${pine(940,570,110)}${pine(90,420,90)}${pine(330,600,80)}
+    <g transform="translate(410 262) scale(${[.45,.45,.42,.4,.34,.34][treeStage()]})">${treeArt(treeStage(),wt.k==="rain")}</g>
+    <g transform="translate(205 395)"><rect x="-62" y="-10" width="124" height="66" fill="#FFFDF7"/><path d="M-74 -10 L-60 -48 H60 L74 -10Z" fill="#EE4524"/><path d="M-50 -48 L-42 -10 M-20 -48 L-14 -10 M10 -48 L14 -10 M40 -48 L42 -10" stroke="#FFFDF7" stroke-width="10"/><rect x="-16" y="16" width="32" height="40" fill="#F3B228"/></g>
+    <g transform="translate(830 540)"><path d="M-70 -18 L0 -64 L70 -18Z" fill="#EC8C88"/><rect x="-60" y="-18" width="120" height="74" fill="#2F9ADB"/><g fill="#FFFDF7"><rect x="-46" y="-4" width="12" height="48"/><rect x="-20" y="-4" width="12" height="48"/><rect x="8" y="-4" width="12" height="48"/><rect x="34" y="-4" width="12" height="48"/></g></g>
+    ${weatherArt(wt.k,lastW?lastW.pct:0,875,105,.85)}
+  </g></svg>`;
+  const W=x=>(x/30).toFixed(3);
+  let hud="";
+  if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay" data-act="go" data-s="payday">${ic("moneybag")}<span>${p>0?"發薪日！":"有零用錢！"}</span></button>`;
+  if(w){ const have=state.spend+state.save, left=Math.max(0,w.price-have), pct=Math.min(100,have/w.price*100);
+    hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span><span class="wl">${left>0?`還差 ${left} 元`:"可以買了！"}</span></span></button>`; }
+  hud+=`<div class="hudbtn starchip">${ic("star")}<span id="starCount">${starsGot}</span></div>`;
+  const fog = open<3?`<div class="fog" style="left:${(open*100/3).toFixed(3)}%;width:${((3-open)*100/3).toFixed(3)}%"><div class="locksign">${ic("lock")}<b>${ZONES[open].n}</b><span>${zoneOpenDate(open+1).getMonth()+1}月${zoneOpenDate(open+1).getDate()}日開放</span></div></div>`:"";
+  return topBar(null,null,`<div class="hud">${hud}</div>`)+
+  `<div class="mapwrap"><div class="map" data-map="1">
+    <div class="world" style="transform:translateX(${(-camX/30).toFixed(3)}%)">${svg}
+    ${lion(walkMood||baseMood(),"maplion",`left:${mapLion.x}%;top:${mapLion.y}%`)}
+    <button class="sign" style="left:${W(370)}%;top:70%;--tilt:-3deg" data-act="go" data-s="shop"><div class="t"><span class="e">${ic("shop")}</span>商店</div><div class="v">有 ${state.spend} 元</div></button>
+    <button class="sign" style="left:${W(730)}%;top:74%;--tilt:2deg" data-act="go" data-s="bank"><div class="t"><span class="e">${ic("bank")}</span>銀行</div><div class="v">存了 ${state.save} 元</div></button>
+    <button class="sign" style="left:${W(540)}%;top:31%;--tilt:-1deg" data-act="go" data-s="tree"><div class="t"><span class="e">${ic("sprout")}</span>搖錢樹</div><div class="v">${money(treeTotal())} 元 ${wt.e}</div></button>
+    ${p>0||(state.extraPay&&state.extraPay.length)?`<button class="sign sun pulse" style="left:${W(840)}%;top:44%;--tilt:3deg" data-act="go" data-s="payday"><div class="t"><span class="e">${ic("moneybag")}</span>發薪日！</div><div class="v">點我領錢</div></button>`:""}
+    ${open>=2?`<button class="sign" style="left:${W(1690)}%;top:56%;--tilt:-2deg" data-act="go" data-s="game" data-g="beach" data-stop="beach"><div class="t"><span class="e">${ic("shell")}</span>撿貝殼</div><div class="v">海邊小遊戲</div></button>`:""}
+    ${open>=3?`<button class="sign" style="left:${W(2590)}%;top:66%;--tilt:2deg" data-act="go" data-s="game" data-g="boss" data-stop="boss"><div class="t"><span class="e">${ic("ferris")}</span>當店長</div><div class="v">遊樂園小遊戲</div></button>`:""}
+    ${fog}
+    </div>
+    <div class="cloudsay">${esc(g)}${sayBtn(g)}</div>
+    <button class="edge l" data-act="pan" data-d="-1" aria-label="往左">${ic("back")}<span></span></button>
+    <button class="edge r" data-act="pan" data-d="1" aria-label="往右"><span></span>${ic("next")}</button>
+  </div></div>
   <div class="sync" id="sync">${esc(syncNote)}</div>`;
 }
 
@@ -811,7 +748,7 @@ function setupBeach(){
     sh.onpointerdown=ev=>{ ev.stopPropagation(); if(lock||sh.dataset.got) return; sh.dataset.got=1; sh.classList.add("got"); setTimeout(()=>sh.remove(),400);
       got.push(v); sfx("star"); show(); const t=sum();
       if(t===target){ lock=true; tada(); react("cheer",pick(["剛剛好！","好厲害！","答對了！"]),1300); confetti(["shell","coin","star"]);
-        setTimeout(()=>{ round++; if(round<3) next(); else { clearInterval(gameTimer); addStars(3); finishGame("撿貝殼高手！得到 3 顆星星！",["shell","star","coin"]); } },1400); }
+        setTimeout(()=>{ round++; if(round<3) next(); else { clearInterval(gameTimer); starsGot+=3; finishGame("撿貝殼高手！得到 3 顆星星！",["shell","star","coin"]); } },1400); }
       else if(t>target){ lock=true; react("sad","太多了！放回去一個",1400); setTimeout(()=>{ got.pop(); lock=false; show(); },900); }
       else react("wow",null,500);
     };
@@ -837,7 +774,7 @@ function setupBoss(){
   window._boss.render=render2;
   window._boss.give=()=>{ const t=window._boss.tray.reduce((a,b)=>a+b,0);
     if(t===cur.change){ tada(); confetti(["coin","star",cur.who]); react("cheer","謝謝店長！",1300); cust.classList.add("happy"); n++;
-      setTimeout(()=>{ cust.classList.remove("happy"); if(n<3) next(); else { addStars(3); finishGame("你是很棒的店長！得到 3 顆星星！",["coin","star","shop"]); } },1500); }
+      setTimeout(()=>{ cust.classList.remove("happy"); if(n<3) next(); else { starsGot+=3; finishGame("你是很棒的店長！得到 3 顆星星！",["coin","star","shop"]); } },1500); }
     else if(t<cur.change){ react("shy",`還不夠喔！再多找一點`,1500); sfx("thud"); }
     else { react("sad",`找太多了！拿一些回來`,1500); sfx("thud"); } };
   window._boss.hint=()=>{ const msg=`從 ${cur.price} 數到 50，差 ${cur.change} 元喔！`; lionSay(msg); say(msg); };
@@ -917,10 +854,9 @@ document.addEventListener("click",e=>{
   switch(act){
     case "say": e.stopPropagation(); say(el.dataset.t); break;
     case "close": closeModal(); break;
-    case "roomlock": roomLocked(+el.dataset.z); break;
     case "go": { const x={}; ["from","to","back","g","e","atm"].forEach(k=>{if(el.dataset[k])x[k]=el.dataset[k];});
       const tgt=el.dataset.s, stop=el.dataset.stop||tgt;
-      if(ui.screen==="home" && (isRoom()?ROOM_STOPS[stop]:STOPS[stop]&&document.getElementById("road"))){ walkTo(stop,()=>go(tgt,x)); break; }
+      if(ui.screen==="home" && STOPS[stop] && document.getElementById("road")){ walkTo(stop,()=>go(tgt,x)); break; }
       go(tgt,x); break; }
     case "cat": ui.cat=el.dataset.c; render(); break;
     case "atm": { const a=atmState(); a.mode=el.dataset.m; a.amt=0; a.taken=[]; a.wallet=null; atmBeep(1,true); render(); break; }
@@ -1068,7 +1004,7 @@ function zonesOpen(){ return Math.max(1,Math.min(3,1+monthsSince(state.mapStart|
 function zoneOpenDate(z){ const [y,m]=(state.mapStart||ym(new Date())).split("-").map(Number); return new Date(y,m-1+(z-1)-(state.zoneBonus||0),1); }
 let camX=0, camT=0, pan=null;
 function maxCam(){ const o=zonesOpen(); return o*ZW-ZW+(o<3?170:0); }
-const worldEl=()=>document.querySelector(".world")||document.querySelector(".room");
+const worldEl=()=>document.querySelector(".world");
 function applyCam(){ const w=worldEl(); if(w) w.style.transform=`translateX(${(-camX/30).toFixed(3)}%)`; updateEdges(); }
 function updateEdges(){
   const l=document.querySelector(".edge.l"), r=document.querySelector(".edge.r"); if(!l||!r) return;
@@ -1159,7 +1095,6 @@ async function spinJump(box,big){
   rest(box); box.classList.remove("walking"); box._busy=false;
 }
 function walkTo(key,done){
-  if(isRoom()){ roomWalkTo(key,done); return; }
   const r=ensureLion(); if(!r||!STOPS[key]){done();return;}
   if(moving&&walkTarget===key){ moveTok++; moving=false; walkTarget=null; done(); return; }
   if(stopL[key]==null) stopL[key]=nearestL(r,...STOPS[key]).l;
@@ -1195,83 +1130,24 @@ function checkStars(l){ if(!stars.length) return; const hit=stars.filter(s=>Math
   lionSay(pick(STAR_SAY),mapBox());
   if(!stars.length){ setTimeout(()=>{ confetti(["star","star","heart"]); tada(); lionSay("全部找到了！",mapBox()); setTimeout(()=>{ if(ui.screen==="home"){ spawnStars(); const m=worldEl(); if(m){ m.querySelectorAll(".mapstar").forEach(x=>x.remove()); m.insertAdjacentHTML("beforeend",starsHTML()); } } },2500); },300); }
 }
-/* ===== bedroom: 阿臭被 walks along the blanket ===== */
-const isRoom=()=>!!document.querySelector(".room");
-const ROOM_X=[500,800];
-const ROOM_STOPS={payday:[500,-1],tree:[500,-1],shop:[760,1],bank:[800,1],beach:[600,1],boss:[700,1]};
-let bedStars=[];
-function roomPlace(x){ const box=mapBox(); mapLion.rx=x; mapLion.x=+(x/10).toFixed(3); mapLion.y=+(bedTop(x)/6.2+1.2).toFixed(2);
-  if(box){ box.style.left=mapLion.x+"%"; box.style.top=mapLion.y+"%"; } roomCheckStars(x); }
-async function roomMove(tx,opts){
-  opts=opts||{}; const from=mapLion.rx||640; tx=clamp(tx,ROOM_X[0],ROOM_X[1]);
-  const tok=++moveTok; moving=true; const b0=mapBox(); if(b0) b0.classList.add("walking");
-  const D=Math.abs(tx-from); if(D<3){ moving=false; if(b0) b0.classList.remove("walking"); return true; }
-  mapLion.dir=tx>from?1:-1; const dur=Math.max(450,Math.min(3000,D/(opts.speed||170)*1000)), stepLen=26;
-  await tween(mapBox(),130,(t,mv)=>{ mv.rot=mapLion.dir*6*t; mv.jy=0; });
-  if(tok!==moveTok) return false;
-  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; let last=0;
-  await tween(mapBox(),dur,(t,mv)=>{ if(tok!==moveTok) return; const x=from+(tx-from)*ease(t); roomPlace(x);
-    const ph=Math.abs(x-from)/stepLen*Math.PI, sw=Math.sin(ph); mv.jy=Math.abs(sw)*4; mv.rot=mapLion.dir*4+sw*6; mv.sy=1-.03*Math.abs(Math.cos(ph)); mv.sx=1+.02*Math.abs(Math.cos(ph));
-    const s=Math.floor(Math.abs(x-from)/stepLen); if(s!==last){ last=s; sfx("step"); } });
-  if(tok!==moveTok) return false;
-  await tween(mapBox(),180,(t,mv)=>{ const k=Math.sin(Math.PI*t); mv.jy=0; mv.rot=mapLion.dir*4*(1-t); mv.sy=1-.07*k; mv.sx=1+.05*k; });
-  if(tok!==moveTok) return false;
-  const b=mapBox(); if(b) b.classList.remove("walking"); rest(b); moving=false; return true;
-}
-function roomWalkTo(key,done){
-  const s=ROOM_STOPS[key]; if(!s){ done(); return; }
-  if(moving&&walkTarget===key){ moveTok++; moving=false; walkTarget=null; done(); return; }
-  walkTarget=key; walkMood="cheer"; const box=mapBox(); setMood(box,"cheer");
-  roomMove(s[0],{speed:260}).then(async ok=>{
-    if(!ok) return; walkTarget=null; mapLion.dir=s[1]; walkMood="wow"; const b=mapBox(); setMood(b,"wow"); tada();
-    const hk={payday:"clock",tree:"tree",shop:"basket",bank:"piggy",beach:"shell",boss:"wheel"}[key];
-    document.querySelectorAll(".hot-"+hk).forEach(h=>{ h.classList.remove("hit"); void h.offsetWidth; h.classList.add("hit"); });
-    await happyWiggle(b); walkMood=null; done();
-  });
-}
-function roomTap(e){
-  const rm=document.querySelector(".room"); if(!rm) return; const rc=rm.getBoundingClientRect();
-  const x=(e.clientX-rc.left)/rc.width*1000, y=(e.clientY-rc.top)/rc.height*620, box=mapBox();
-  if(y>300&&y<560&&x>420&&x<900){ walkTarget=null; setMood(box,"cheer"); roomMove(x).then(ok=>{ if(ok){ const b=mapBox(); setMood(b,b?b.dataset.base:"wave"); } }); }
-  else { mapLion.dir=x<(mapLion.rx||640)?-1:1; setMood(box,"wow"); clearTimeout(moodTimer); moodTimer=setTimeout(()=>{ const b=mapBox(); if(b) setMood(b,b.dataset.base); },900); }
-}
-/* glowing stars land on the blanket (up to 5 a day); each one becomes a wall sticker */
-function starDay(){ const d=ymd(new Date()); if(!state.starDay||state.starDay.d!==d) state.starDay={d,n:0}; return state.starDay; }
-function roomSpawnStars(){ const sd=starDay(); const want=Math.min(2,5-sd.n); bedStars=[]; let g=0;
-  while(bedStars.length<want&&g++<100){ const x=ROOM_X[0]+20+Math.random()*(ROOM_X[1]-ROOM_X[0]-40); if(Math.abs(x-(mapLion.rx||640))<90||bedStars.some(s=>Math.abs(s.x-x)<80)) continue; bedStars.push({id:uid(),x}); } }
-function bedStarsHTML(){ return bedStars.map(s=>`<div class="mapstar" data-id="${s.id}" style="left:${s.x/10}%;top:${((bedTop(s.x)-34)/6.2).toFixed(2)}%">${ic("star")}</div>`).join(""); }
-function addStars(n){ const before=state.stars||0; state.stars=before+n; save(); const g=document.getElementById("stk");
-  if(g) for(let i=before;i<Math.min(state.stars,stickerSpots().length);i++) g.insertAdjacentHTML("beforeend",stickerSVG(i,"new")); }
-function roomCheckStars(x){ if(!bedStars.length) return; const hit=bedStars.filter(s=>Math.abs(s.x-x)<26); if(!hit.length) return; const rm=document.querySelector(".room");
-  hit.forEach(s=>{ bedStars=bedStars.filter(q=>q!==s); starDay().n++; const el=document.querySelector(`.room .mapstar[data-id="${s.id}"]`); if(el){ el.classList.add("got"); setTimeout(()=>el.remove(),500); }
-    if(rm){ const f=document.createElement("div"); f.className="plus"; f.textContent="+1"; f.style.left=s.x/10+"%"; f.style.top=((bedTop(s.x)-40)/6.2)+"%"; rm.appendChild(f); setTimeout(()=>f.remove(),800); } });
-  sfx("star"); addStars(hit.length);
-  if(!bedStars.length) setTimeout(()=>{ confetti(["star","star","heart"]); tada(); },300);
-}
-function roomAfter(){ const rm=document.querySelector(".room"); if(!rm) return; if(mapLion.rx==null) mapLion.rx=640;
-  if(!bedStars.length&&starDay().n<5) roomSpawnStars(); if(!rm.querySelector(".mapstar")) rm.insertAdjacentHTML("beforeend",bedStarsHTML()); }
-function roomLocked(z){ const b=mapBox(); setMood(b,"shy"); clearTimeout(moodTimer); moodTimer=setTimeout(()=>{ const bb=mapBox(); if(bb) setMood(bb,bb.dataset.base); },1400); sfx("thud");
-  const d=zoneOpenDate(z+1); toast(`${d.getMonth()+1}月${d.getDate()}日才會開放喔！`,"shy"); }
 let starsOpen=0;
-function afterHomeRender(){ if(isRoom()) roomAfter(); else { const r=road(); if(!r) return; ensureLion(); getRange(r); Object.keys(STOPS).forEach(k=>{ if(stopL[k]==null) stopL[k]=nearestL(r,...STOPS[k]).l; });
+function afterHomeRender(){ const r=road(); if(!r) return; ensureLion(); getRange(r); Object.keys(STOPS).forEach(k=>{ if(stopL[k]==null) stopL[k]=nearestL(r,...STOPS[k]).l; });
   if(!stars.length||starsOpen!==zonesOpen()){ starsOpen=zonesOpen(); spawnStars(); } const m=worldEl(); if(m&&!m.querySelector(".mapstar")) m.insertAdjacentHTML("beforeend",starsHTML());
-  camT=clamp(camT,0,maxCam()); camX=clamp(camX,0,maxCam()); applyCam(); }
+  camT=clamp(camT,0,maxCam()); camX=clamp(camX,0,maxCam()); applyCam();
   if(document.querySelector(".modal")) return;
   if(automationsRan && state.reveals&&state.reveals.length){ showReveal(); return; }
   if(automationsRan && checkGrow()) return;
   const o=zonesOpen(); if(automationsRan && (state.zonesSeen||1)<o){ const z=(state.zonesSeen||1); showUnlock(z); }
 }
 function showUnlock(z){
-  const zn=ZONES[z]; const line=`架子上有新玩具了！新的小遊戲「${zn.gn}」可以玩囉！`;
-  openModal(`<div class="sheet unlock"><div class="ulart">${ic(z===1?"shell":"ferris")}</div>${lion("cheer","","width:160px;margin:-10px auto 0")}<div class="n">新遊戲：${zn.gn}！</div><div class="sub">${esc(line)} ${sayBtn(line)}</div><div class="btns"><button class="btn g" data-act="zonego" data-z="${z}">${ic("next")} 去看看！</button></div></div>`);
+  const zn=ZONES[z]; const line=`新地圖開放了！${zn.n}有新的小遊戲「${zn.gn}」！`;
+  openModal(`<div class="sheet unlock"><div class="ulart">${ic(z===1?"shell":"ferris")}</div>${lion("cheer","","width:160px;margin:-10px auto 0")}<div class="n">新地圖：${zn.n}！</div><div class="sub">${esc(line)} ${sayBtn(line)}</div><div class="btns"><button class="btn g" data-act="zonego" data-z="${z}">${ic("next")} 去看看！</button></div></div>`);
   confetti(["star","heart",z===1?"shell":"ferris"]); tada(); say(line);
 }
 /* idle: wander a little now and then */
 setInterval(()=>{ const now=Date.now();
-  if(isRoom()&&now%30000<1000){ const d=new Date(),h=document.getElementById("clkH"),m=document.getElementById("clkM"); if(h){ h.setAttribute("transform",`rotate(${(d.getHours()%12+d.getMinutes()/60)*30} 43 54)`); m.setAttribute("transform",`rotate(${d.getMinutes()*6} 43 54)`); } }
   if(ui.screen!=="home"||moving||sleeping||document.querySelector(".modal")) return;
   if(now-lastAct<6000||now-lastWander<7000+Math.random()*6000) return;
-  if(isRoom()){ lastWander=now; const b=mapBox(); if(!b) return; if(Math.random()<.35){ lookAround(b); return; } roomMove((mapLion.rx||640)+(Math.random()<.5?-1:1)*(50+Math.random()*90),{speed:110}).then(ok=>{ if(ok){ const bb=mapBox(); setMood(bb,bb?bb.dataset.base:"wave"); } }); return; }
   lastWander=now; const r=road(); if(!r||mapLion.L==null) return; const [lo,hi]=getRange(r);
   if(Math.random()<.35){ lookAround(mapBox()); return; }
   const to=clamp(mapLion.L+(Math.random()<.5?-1:1)*(60+Math.random()*90),lo,hi); hopTo(to,{speed:200}).then(ok=>{ if(ok){ const b=mapBox(); setMood(b,b?b.dataset.base:"wave"); } });
@@ -1366,7 +1242,6 @@ window.addEventListener("pointerdown",e=>{
   const box=e.target.closest(".lionbox");
   if(box){ if(box.classList.contains("walking")||box._busy) return;
     const m=pick(["cheer","wow","shy"]); moodAll(m,1500); lionSay(pick(LINES.tap),box); spinJump(box,true); return; }
-  if(ui.screen==="home" && e.target.closest("[data-room]") && !e.target.closest("button,.lionbox")){ roomTap(e); return; }
   if(ui.screen==="home" && e.target.closest("[data-map]") && !e.target.closest("button,.cloudsay,.starchip,.lionbox")){ pan={x:e.clientX,y:e.clientY,cam:camT,moved:false}; return; }
   const dc=e.target.closest(".dragcoin"); if(dc&&ui.screen==="payday"){ startDrag(e,dc); return; }
   const el=e.target.closest("button,[data-act]"); if(!el) return;
