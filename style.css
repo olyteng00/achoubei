@@ -599,3 +599,46 @@ html,body{overscroll-behavior:none}
   .side .tab{min-height:50px;font-size:21px}.side .tab .e .ic{width:34px;height:34px}
   .side .walletline{padding:8px 14px}.side .walletline b{font-size:28px}.side .walletline .coins .coin{--s:.8}
 }
+/* ===== bedroom home ===== */
+#app[data-screen="home"]{padding-top:10px}
+.room{position:relative;width:100%;aspect-ratio:1000/620;border-radius:28px;overflow:hidden;container-type:inline-size;touch-action:manipulation;user-select:none;-webkit-user-select:none;box-shadow:0 10px 0 rgba(0,0,0,.08)}
+.mapwrap .room{width:min(100cqw,calc(100cqh * 1.6129));height:auto}
+.roombg{position:absolute;inset:0;width:100%;height:100%}
+.roombg .stk{fill:#F3E7B4;opacity:.75}
+.room.night .roombg .stk{fill:#FFE67A;opacity:1;filter:drop-shadow(0 0 4px #FFE67A)}
+.roombg .stk.new{animation:stkpop .6s cubic-bezier(.3,1.6,.5,1) both;transform-box:fill-box;transform-origin:center}
+@keyframes stkpop{0%{opacity:0;scale:0}100%{scale:1}}
+.hot{position:absolute;padding:0;border:0;background:none;cursor:pointer;z-index:3;-webkit-tap-highlight-color:transparent}
+.hot>svg{width:100%;height:100%;overflow:visible;display:block;transition:transform .15s}
+.hot:active>svg{transform:scale(.94)}
+.hot.hit>svg{animation:hothit .5s ease-out}
+@keyframes hothit{30%{transform:scale(1.14) rotate(-4deg)}60%{transform:scale(.96) rotate(3deg)}100%{transform:none}}
+.hot .tag{position:absolute;left:50%;top:100%;transform:translate(-50%,6px) rotate(-2deg);white-space:nowrap;background:#FBF7EE;color:#3D3A3F;font-size:2.1cqw;line-height:1;padding:.45cqw .9cqw .35cqw;border-radius:.7cqw;box-shadow:0 .3cqw 0 rgba(0,0,0,.15);pointer-events:none;display:flex;align-items:center;gap:.3cqw}
+.hot .tag.hi{background:#E5533D;color:#fff;animation:tagbob 1s ease-in-out infinite}
+.hot .tag.lk{font-size:1.6cqw;background:#3D3A3F;color:#F4F2EC}
+.hot .tag .ic{width:1.8cqw;height:1.8cqw}
+@keyframes tagbob{50%{transform:translate(-50%,2px) rotate(2deg)}}
+.hot-tree .tag{top:auto;bottom:-2.6cqw}
+.hot-piggy .tag{top:auto;bottom:-4.2cqw}
+.hot-basket{z-index:6}.hot-basket .tag{top:auto;bottom:62%;left:50%}
+.hot-piggy{z-index:6}
+.hot-clock .ringing{animation:ring .9s ease-in-out infinite;transform-origin:43px 54px}
+@keyframes ring{0%,40%,100%{transform:none}5%{transform:rotate(-12deg)}10%{transform:rotate(12deg)}15%{transform:rotate(-10deg)}20%{transform:rotate(10deg)}25%{transform:rotate(-6deg)}30%{transform:rotate(6deg)}}
+.hot-wheel .wheel{animation:wheel 14s linear infinite}
+.hot-lamp>svg{transform-origin:50% 0;animation:sway 5s ease-in-out infinite}
+@keyframes sway{50%{transform:rotate(2.5deg)}}
+.wishcard{position:absolute;z-index:3;aspect-ratio:1/.9;border:0;padding:1.6cqw 1cqw 1cqw;background:#FBF7EE;border-radius:.6cqw;box-shadow:0 .5cqw 0 rgba(0,0,0,.15);transform:rotate(-3deg);display:flex;flex-direction:column;align-items:center;justify-content:space-between;cursor:pointer;color:#3D3A3F;font-size:1.9cqw}
+.wishcard .tape{position:absolute;top:-1cqw;left:50%;width:5.5cqw;height:2.2cqw;margin-left:-2.75cqw;background:#E9B949;opacity:.85;transform:rotate(4deg)}
+.wishcard .wi .ic{width:5.6cqw;height:5.6cqw}
+.wishcard .bar{display:block;width:90%;height:1.1cqw;border-radius:1cqw;background:#E2DACB;overflow:hidden}
+.wishcard .bar i{display:block;height:100%;background:#7DBB4E}
+.wishcard.ok{animation:tagbob 1.2s ease-in-out infinite}
+.wishcard.empty{opacity:.85}
+.wishcard:active{transform:rotate(-3deg) scale(.95)}
+.room .maplion{position:absolute;width:12%;transform:translate(-50%,-92%);z-index:5;bottom:auto}
+.room .maplion .lsay{top:0}
+.room .mapstar{width:3.4%;z-index:4}
+.room .mapstar .ic{filter:drop-shadow(0 0 6px #FFE67A)}
+.room .puff{width:2cqw;height:2cqw}
+.hot-basket .tag{top:58%;bottom:auto;left:-8%;transform:translate(-50%,0) rotate(-4deg)}
+.hot-piggy .tag{left:auto;right:4%;transform:translate(0,6px) rotate(-2deg)}
