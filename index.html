@@ -21,6 +21,7 @@
 <div id="app"></div>
 <div id="modalRoot"></div>
 <script src="icons.js"></script>
+<script src="town-data.js"></script>
 <script>
 "use strict";
 const MOODS={wave:"lion-wave.webp",cheer:"lion-cheer.webp",wow:"lion-wow.webp",shy:"lion-shy.webp",sad:"lion-sad.webp",sleep:"lion-sleep.webp"};
@@ -384,47 +385,90 @@ function zone3Art(){ return `
     <g transform="translate(2780 330)"><path d="M-120 0 L0 -150 L120 0Z" fill="#EE4524"/><path d="M-60 0 L0 -150 L-20 0Z M20 0 L0 -150 L60 0Z" fill="#FFFDF7"/><rect x="-110" y="0" width="220" height="110" fill="#FFFDF7"/>${[-110,-66,-22,22,66].map(x=>`<rect x="${x}" y="0" width="22" height="110" fill="#EE4524"/>`).join("")}<path d="M-26 110 C-26 60 26 60 26 110Z" fill="#1F1B18"/><path d="M0 -150 V-190" stroke="#1F1B18" stroke-width="4"/><path d="M0 -190 L30 -180 L0 -170Z" fill="#F3B228"/></g>
     ${[[2560,120,"#EE4524"],[2610,90,"#2F9ADB"],[2650,140,"#F3B228"]].map(([x,y,c])=>`<path d="M${x} ${y+40} q-8 30 4 60" fill="none" stroke="#8C5A3B" stroke-width="3"/><ellipse cx="${x}" cy="${y}" rx="26" ry="32" fill="${c}"/>`).join("")}
     ${pine(2040,600,90)}${pine(2960,590,110)}`; }
+/* ===== town home: painted city map ===== */
+const TW=2000, TH=1240;
+const isTown=()=>!!document.getElementById("townworld");
+let townCam={x:null,y:null}, townCamT=null, townK=1, townRAF=0, townPan=null, townMoved=false, townL=null;
+const TSTOP={shop:"shop",bank:"bank",tree:"forest",home:"home",beach:"beach",boss:"park"};
+const tboard=(name,val,cls)=>`<div class="tboard ${cls||""}"><b>${name}${val!=null?`<i>${val}</i>`:""}</b></div>`;
+function tspot(x,y,w,h,attrs,inner,board,cls){ return `<button class="tspot ${cls||""}" style="left:${x/20}%;top:${y/12.4}%;width:${w/20}%;height:${h/12.4}%" ${attrs}><svg viewBox="0 0 ${w} ${h}" aria-hidden="true">${inner}</svg>${board}</button>`; }
 function home(){
-  const p=pendingPaydays(); const open=zonesOpen();
+  const T=window.TOWN, p=pendingPaydays(), open=zonesOpen(), st=treeStage();
   const w=state.wish&&state.shop.find(i=>i.id===state.wish);
-  const g=greeting(); const wt=weather(); const lastW=(market.weeks||[]).filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?1:-1)[0];
-  const svg=`<svg viewBox="0 0 3000 620" preserveAspectRatio="none" aria-hidden="true"><g filter="url(#rough2)">
-    <path d="M0 455 C90 430 210 452 236 520 C258 585 190 640 0 640Z" fill="#2F9ADB"/>${waves(40,520)}
-    <path d="M1010 300 C905 286 838 330 850 392 C862 452 950 462 1010 450Z" fill="#2F9ADB"/>${waves(890,360)}
-    <path d="M70 250 L120 140 L150 200 L185 105 L222 190 L255 130 L305 250Z" fill="#EC8C88"/>
-    <g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".85">${[[130,200],[160,228],[190,170],[205,215],[240,200],[255,230],[175,240]].map(([x,y])=>`<line x1="${x}" y1="${y}" x2="${x-4}" y2="${y+12}"/>`).join("")}</g>
-    ${zone2Art()}${zone3Art()}
-    <path id="road" d="M-80 560 C100 560 230 475 380 462 C520 450 590 520 720 488 C850 456 880 360 800 300 C730 250 640 290 575 225 C520 170 560 80 700 66 C820 54 940 40 1080 60 C1220 80 1240 230 1300 330 C1360 430 1480 470 1600 430 C1720 390 1760 280 1880 250 C1990 222 2060 330 2120 420 C2180 510 2300 540 2420 500 C2540 460 2600 360 2720 330 C2840 300 2920 380 3080 420" fill="none" stroke="#EE4524" stroke-width="84" stroke-linecap="round" stroke-linejoin="round"/>
-    ${pine(470,360,120)}${pine(940,570,110)}${pine(90,420,90)}${pine(330,600,80)}
-    <g transform="translate(410 262) scale(${[.45,.45,.42,.4,.34,.34][treeStage()]})">${treeArt(treeStage(),wt.k==="rain")}</g>
-    <g transform="translate(205 395)"><rect x="-62" y="-10" width="124" height="66" fill="#FFFDF7"/><path d="M-74 -10 L-60 -48 H60 L74 -10Z" fill="#EE4524"/><path d="M-50 -48 L-42 -10 M-20 -48 L-14 -10 M10 -48 L14 -10 M40 -48 L42 -10" stroke="#FFFDF7" stroke-width="10"/><rect x="-16" y="16" width="32" height="40" fill="#F3B228"/></g>
-    <g transform="translate(830 540)"><path d="M-70 -18 L0 -64 L70 -18Z" fill="#EC8C88"/><rect x="-60" y="-18" width="120" height="74" fill="#2F9ADB"/><g fill="#FFFDF7"><rect x="-46" y="-4" width="12" height="48"/><rect x="-20" y="-4" width="12" height="48"/><rect x="8" y="-4" width="12" height="48"/><rect x="34" y="-4" width="12" height="48"/></g></g>
-    ${weatherArt(wt.k,lastW?lastW.pct:0,875,105,.85)}
-  </g></svg>`;
-  const W=x=>(x/30).toFixed(3);
   let hud="";
   if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay" data-act="go" data-s="payday">${ic("moneybag")}<span>${p>0?"發薪日！":"有零用錢！"}</span></button>`;
   if(w){ const have=state.spend+state.save, left=Math.max(0,w.price-have), pct=Math.min(100,have/w.price*100);
     hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span><span class="wl">${left>0?`還差 ${left} 元`:"可以買了！"}</span></span></button>`; }
-  hud+=`<div class="hudbtn starchip">${ic("star")}<span id="starCount">${starsGot}</span></div>`;
-  const fog = open<3?`<div class="fog" style="left:${(open*100/3).toFixed(3)}%;width:${((3-open)*100/3).toFixed(3)}%"><div class="locksign">${ic("lock")}<b>${ZONES[open].n}</b><span>${zoneOpenDate(open+1).getMonth()+1}月${zoneOpenDate(open+1).getDate()}日開放</span></div></div>`:"";
+  const gk=[.42,.58,.72,.86,1,1.14][st];
+  const forest=T.L.forest.replace('class="growT" transform="translate(122 199)"',`class="growT" transform="translate(122 199) scale(${gk})"`);
+  const L0=townL==null?T.stops.home[0]:townL;
   return topBar(null,null,`<div class="hud">${hud}</div>`)+
-  `<div class="mapwrap"><div class="map" data-map="1">
-    <div class="world" style="transform:translateX(${(-camX/30).toFixed(3)}%)">${svg}
-    ${lion(walkMood||baseMood(),"maplion",`left:${mapLion.x}%;top:${mapLion.y}%`)}
-    <button class="sign" style="left:${W(370)}%;top:70%;--tilt:-3deg" data-act="go" data-s="shop"><div class="t"><span class="e">${ic("shop")}</span>商店</div><div class="v">有 ${state.spend} 元</div></button>
-    <button class="sign" style="left:${W(730)}%;top:74%;--tilt:2deg" data-act="go" data-s="bank"><div class="t"><span class="e">${ic("bank")}</span>銀行</div><div class="v">存了 ${state.save} 元</div></button>
-    <button class="sign" style="left:${W(540)}%;top:31%;--tilt:-1deg" data-act="go" data-s="tree"><div class="t"><span class="e">${ic("sprout")}</span>搖錢樹</div><div class="v">${money(treeTotal())} 元 ${wt.e}</div></button>
-    ${p>0||(state.extraPay&&state.extraPay.length)?`<button class="sign sun pulse" style="left:${W(840)}%;top:44%;--tilt:3deg" data-act="go" data-s="payday"><div class="t"><span class="e">${ic("moneybag")}</span>發薪日！</div><div class="v">點我領錢</div></button>`:""}
-    ${open>=2?`<button class="sign" style="left:${W(1690)}%;top:56%;--tilt:-2deg" data-act="go" data-s="game" data-g="beach" data-stop="beach"><div class="t"><span class="e">${ic("shell")}</span>撿貝殼</div><div class="v">海邊小遊戲</div></button>`:""}
-    ${open>=3?`<button class="sign" style="left:${W(2590)}%;top:66%;--tilt:2deg" data-act="go" data-s="game" data-g="boss" data-stop="boss"><div class="t"><span class="e">${ic("ferris")}</span>當店長</div><div class="v">遊樂園小遊戲</div></button>`:""}
-    ${fog}
-    </div>
-    <div class="cloudsay">${esc(g)}${sayBtn(g)}</div>
-    <button class="edge l" data-act="pan" data-d="-1" aria-label="往左">${ic("back")}<span></span></button>
-    <button class="edge r" data-act="pan" data-d="1" aria-label="往右"><span></span>${ic("next")}</button>
-  </div></div>
+  `<div class="townview" id="townview"><div class="townworld" id="townworld" style="width:2000px;height:1240px;font-size:20px">
+    <svg class="tground" viewBox="0 0 ${TW} ${TH}" aria-hidden="true">${T.ground}<g id="tcars"></g>${T.items}<g>${open>=2?T.beach:T.conR}</g><g>${open>=3?T.park:T.conB}</g><g id="tride"></g>${T.top}</svg>
+    ${tspot(732,476,172,168,`data-act="go" data-s="home" aria-label="HOME"`,T.L.home,tboard("HOME",null,"home"),"t-home")}
+    ${tspot(390,570,170,168,`data-act="go" data-s="shop" aria-label="星星商鋪"`,T.L.shop,tboard("星星商鋪",`有 ${money(state.spend)} 元`))}
+    ${tspot(700,180,240,210,`data-act="go" data-s="tree" aria-label="彩虹森林"`,forest,tboard("彩虹森林",`種了 ${money(treeTotal())} 元`),"t-forest")}
+    ${tspot(1100,508,190,186,`data-act="go" data-s="bank" aria-label="叮咚金庫"`,T.L.bank,tboard("叮咚金庫",`存了 ${money(state.save)} 元`))}
+    ${open>=2?tspot(1560,500,130,90,`data-act="go" data-s="game" data-g="beach" data-stop="beach" aria-label="海邊"`,"",tboard("海邊",null)):""}
+    ${open>=3?tspot(700,1080,180,110,`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="遊樂園"`,"",tboard("遊樂園",null)):""}
+    ${lion(walkMood||baseMood(),"maplion tlion","")}
+    <div class="tgrain"></div>
+  </div><button class="thome" data-act="townhome" aria-label="回家"><svg viewBox="0 0 40 40" width="34" height="34"><path d="M6 20L20 8L34 20" fill="none" stroke="#C56A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 18V33H30V18" fill="#F1E5CC" stroke="#C56A4A" stroke-width="3.5" stroke-linejoin="round"/><rect x="17" y="23" width="7" height="10" fill="#7FA1BA"/></svg></button></div>
   <div class="sync" id="sync">${esc(syncNote)}</div>`;
+}
+function townPlace(l){ const walk=document.getElementById("twalk"), box=mapBox(); if(!walk||!box) return null; const p=walk.getPointAtLength(l); box.style.left=(p.x/20)+"%"; box.style.top=(p.y/12.4)+"%"; return p; }
+function townClamp(){ const v=document.getElementById("townview"); if(!v) return; const r=v.getBoundingClientRect(), vw=r.width/townK, vh=r.height/townK;
+  townCam.x=vw>=TW?(TW-vw)/2:clamp(townCam.x,0,TW-vw); townCam.y=vh>=TH?(TH-vh)/2:clamp(townCam.y,0,TH-vh); }
+function townApply(){ const w=document.getElementById("townworld"); if(!w) return; townClamp(); w.style.transform=`scale(${townK.toFixed(4)}) translate(${(-townCam.x).toFixed(1)}px,${(-townCam.y).toFixed(1)}px)`; }
+function townCenter(x,y,smooth){ const v=document.getElementById("townview"); if(!v) return; const r=v.getBoundingClientRect(); const t={x:x-r.width/townK/2,y:y-r.height/townK/2}; if(smooth) townCamT=t; else { townCam.x=t.x; townCam.y=t.y; townApply(); } }
+function initTown(){
+  const view=document.getElementById("townview"), world=document.getElementById("townworld"); if(!view||!world) return;
+  cancelAnimationFrame(townRAF);
+  const vr=view.getBoundingClientRect(); townK=Math.max(vr.height/760,vr.width/1350,.3);
+  if(townL==null) townL=TOWN.stops.home[0];
+  const p=townPlace(townL);
+  if(townCam.x==null&&p) townCenter(p.x,p.y-60,false); else townApply();
+  /* vehicles */
+  const NSs="http://www.w3.org/2000/svg", loop=document.getElementById("tloop"), LL=loop.getTotalLength(), carsG=document.getElementById("tcars");
+  let BUSL=0,bd=1e9; for(let l=0;l<LL;l+=4){ const q=loop.getPointAtLength(l); const e=(q.x-905)**2+(q.y-160)**2; if(e<bd){bd=e;BUSL=l;} }
+  const V=TOWN.veh.map((v,i)=>{ const m=TOWN.vmeta[i], el=document.createElementNS(NSs,"g"); el.innerHTML=`<g>${v.side}</g><g display="none">${v.front}</g><g display="none">${v.back}</g>`; carsG.appendChild(el); return {...m,el,vs:el.children[0],vf:el.children[1],vb:el.children[2],view:""}; });
+  const ride=document.getElementById("tride"); ride.innerHTML=`<g>${TOWN.biker}</g><g>${TOWN.dog}</g>`; const bk=ride.children[0], dg=ride.children[1];
+  const rp=document.createElementNS(NSs,"path"); rp.setAttribute("d",TOWN.paths.ride); rp.setAttribute("fill","none"); ride.appendChild(rp); const RL=rp.getTotalLength();
+  const dump=document.querySelector("#dump>g");
+  const frame=now=>{ const t=now/1000;
+    V.forEach(v=>{ let l=v.off+v.dir*v.sp*t; if(v.bus){ const lap=LL+v.sp*2.6, ph=((v.off+v.sp*t)%lap+lap)%lap; l=ph<BUSL?ph:ph<BUSL+v.sp*2.6?BUSL:ph-v.sp*2.6; }
+      l=((l%LL)+LL)%LL; const a=loop.getPointAtLength(l), b=loop.getPointAtLength(((l+v.dir*6)%LL+LL)%LL), dx=b.x-a.x, dy=b.y-a.y, n=Math.hypot(dx,dy)||1;
+      const view=Math.abs(dx)>=Math.abs(dy)?(dx>0?"R":"L"):(dy>0?"D":"U");
+      if(view!==v.view){ v.view=view; v.vs.setAttribute("display",view==="R"||view==="L"?"inline":"none"); v.vf.setAttribute("display",view==="D"?"inline":"none"); v.vb.setAttribute("display",view==="U"?"inline":"none"); v.vs.setAttribute("transform",view==="L"?"scale(-1 1)":""); }
+      v.el.setAttribute("transform",`translate(${(a.x-dy/n*11).toFixed(1)} ${(a.y+dx/n*11+8).toFixed(1)})`); });
+    const T=16, rt=t%T, f=rt<T/2?rt/(T/2):1-(rt-T/2)/(T/2), dir=rt<T/2?1:-1, l=f*RL, q1=rp.getPointAtLength(l), q2=rp.getPointAtLength(clamp(l-dir*34,0,RL));
+    bk.setAttribute("transform",`translate(${q1.x.toFixed(1)} ${(q1.y+6).toFixed(1)}) scale(${dir} 1)`); dg.setAttribute("transform",`translate(${q2.x.toFixed(1)} ${(q2.y+6).toFixed(1)}) scale(${dir} 1)`);
+    if(dump){ const dt=t%14, k=dt<7?dt/7:(14-dt)/7, e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; dump.setAttribute("transform",`translate(${(1600+e*240).toFixed(1)} 940) scale(${dt<7?1:-1} 1)`); }
+    if(townCamT&&!townPan){ townCam.x+=(townCamT.x-townCam.x)*.08; townCam.y+=(townCamT.y-townCam.y)*.08; townApply(); if(Math.abs(townCamT.x-townCam.x)<.5&&Math.abs(townCamT.y-townCam.y)<.5) townCamT=null; }
+    if(isTown()) townRAF=requestAnimationFrame(frame); };
+  townRAF=requestAnimationFrame(frame);
+  /* drag to pan */
+  view.addEventListener("pointerdown",e=>{ townPan={x:e.clientX,y:e.clientY,cx:townCam.x,cy:townCam.y}; townMoved=false; townCamT=null; });
+  view.addEventListener("pointermove",e=>{ if(!townPan) return; const dx=e.clientX-townPan.x, dy=e.clientY-townPan.y; if(!townMoved&&Math.hypot(dx,dy)>9){ townMoved=true; view.classList.add("drag"); } if(townMoved){ townCam.x=townPan.cx-dx/townK; townCam.y=townPan.cy-dy/townK; townApply(); } });
+  const end=()=>{ townPan=null; view.classList.remove("drag"); }; view.addEventListener("pointerup",end); view.addEventListener("pointercancel",end); view.addEventListener("pointerleave",end);
+  view.addEventListener("click",e=>{ if(townMoved){ e.stopPropagation(); e.preventDefault(); townMoved=false; } },true);
+}
+function townWalkTo(key,done){
+  const st=TOWN.stops[TSTOP[key]]; const walk=document.getElementById("twalk"); if(!st||!walk){ done(); return; }
+  if(moving){ moveTok++; moving=false; }
+  const to=st[0], from=townL==null?TOWN.stops.home[0]:townL; const box=mapBox();
+  const hit=()=>{ const el=document.querySelector(`.tspot[data-s="${key==="beach"||key==="boss"?"game":key}"]${key==="beach"||key==="boss"?`[data-stop="${key}"]`:""}`); if(el){ el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); } };
+  if(Math.abs(to-from)<6||!box){ hit(); setTimeout(done,250); return; }
+  const tok=++moveTok; moving=true; walkTarget=key; walkMood="cheer"; setMood(box,"cheer"); box.classList.add("walking");
+  const dur=clamp(Math.abs(to-from)/240*1000,500,3800), t0=performance.now(); let lastStep=0, px=walk.getPointAtLength(from).x;
+  const stepLen=26;
+  const fr=now=>{ if(tok!==moveTok) return; const b=mapBox(); if(!b) return; const t=Math.min(1,(now-t0)/dur), e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; townL=from+(to-from)*e; const p=townPlace(townL);
+    if(Math.abs(p.x-px)>.4) mapLion.dir=p.x>px?1:-1; px=p.x;
+    const dist=Math.abs(townL-from), ph=dist/stepLen*Math.PI, sw=Math.sin(ph); b._mv=b._mv||MV0(); Object.assign(b._mv,{jy:Math.abs(sw)*5,rot:mapLion.dir*3+sw*6,sx:1,sy:1-.03*Math.abs(Math.cos(ph))});
+    const s=Math.floor(dist/stepLen); if(s!==lastStep){ lastStep=s; sfx("step"); }
+    townCenter(p.x,p.y-60,true);
+    if(t<1) requestAnimationFrame(fr); else { b.classList.remove("walking"); rest(b); moving=false; walkTarget=null; walkMood="wow"; setMood(b,"wow"); tada(); hit(); happyWiggle(b).then(()=>{ walkMood=null; if(tok===moveTok) done(); }); } };
+  requestAnimationFrame(fr);
 }
 
 /* payday */
@@ -856,6 +900,7 @@ document.addEventListener("click",e=>{
     case "close": closeModal(); break;
     case "go": { const x={}; ["from","to","back","g","e","atm"].forEach(k=>{if(el.dataset[k])x[k]=el.dataset[k];});
       const tgt=el.dataset.s, stop=el.dataset.stop||tgt;
+      if(ui.screen==="home" && isTown() && TSTOP[stop]){ if(tgt==="home"){ townWalkTo("home",()=>{}); break; } townWalkTo(stop,()=>go(tgt,x)); break; }
       if(ui.screen==="home" && STOPS[stop] && document.getElementById("road")){ walkTo(stop,()=>go(tgt,x)); break; }
       go(tgt,x); break; }
     case "cat": ui.cat=el.dataset.c; render(); break;
@@ -951,6 +996,7 @@ document.addEventListener("click",e=>{
     }
     case "regame": closeModal(); render(); break;
     case "gate": gate(); break;
+    case "townhome": townWalkTo("home",()=>{}); if(townL!=null){ const w=document.getElementById("twalk"); if(w){ const p=w.getPointAtLength(townL); townCenter(p.x,p.y-60,true); } } break;
     case "key": {
       const g=ui.gate; if(!g) return; const k=el.dataset.k; const ans=document.getElementById("ans");
       if(k==="ok"){ if(+g.in===g.a*g.b){ ui.gate=null; go("parent"); } else { g.in=""; react("sad",null,1200); ans.textContent="✕"; ans.style.color="var(--spend)"; setTimeout(()=>{ans.textContent="";ans.style.color="";},700);} }
@@ -1131,9 +1177,9 @@ function checkStars(l){ if(!stars.length) return; const hit=stars.filter(s=>Math
   if(!stars.length){ setTimeout(()=>{ confetti(["star","star","heart"]); tada(); lionSay("全部找到了！",mapBox()); setTimeout(()=>{ if(ui.screen==="home"){ spawnStars(); const m=worldEl(); if(m){ m.querySelectorAll(".mapstar").forEach(x=>x.remove()); m.insertAdjacentHTML("beforeend",starsHTML()); } } },2500); },300); }
 }
 let starsOpen=0;
-function afterHomeRender(){ const r=road(); if(!r) return; ensureLion(); getRange(r); Object.keys(STOPS).forEach(k=>{ if(stopL[k]==null) stopL[k]=nearestL(r,...STOPS[k]).l; });
+function afterHomeRender(){ if(isTown()) initTown(); else { const r=road(); if(!r) return; ensureLion(); getRange(r); Object.keys(STOPS).forEach(k=>{ if(stopL[k]==null) stopL[k]=nearestL(r,...STOPS[k]).l; });
   if(!stars.length||starsOpen!==zonesOpen()){ starsOpen=zonesOpen(); spawnStars(); } const m=worldEl(); if(m&&!m.querySelector(".mapstar")) m.insertAdjacentHTML("beforeend",starsHTML());
-  camT=clamp(camT,0,maxCam()); camX=clamp(camX,0,maxCam()); applyCam();
+  camT=clamp(camT,0,maxCam()); camX=clamp(camX,0,maxCam()); applyCam(); }
   if(document.querySelector(".modal")) return;
   if(automationsRan && state.reveals&&state.reveals.length){ showReveal(); return; }
   if(automationsRan && checkGrow()) return;
