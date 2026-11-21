@@ -662,3 +662,7 @@ html,body{background:var(--grain-d),var(--grain),#6A9C74;background-size:220px,2
 /* town view always fills the screen, in any orientation */
 #app[data-screen="home"]{padding:8px;max-width:none}
 #app[data-screen="home"] .townview,#app.fit[data-screen="home"] .townview{flex:none;height:calc(100vh - 16px);height:calc(100dvh - 16px);min-height:320px}
+/* full-bleed map */
+#app[data-screen="home"]{padding:0!important;max-width:none!important;margin:0}
+#app[data-screen="home"] .townview,#app.fit[data-screen="home"] .townview{height:100vh;height:100dvh;border-radius:0}
+body:has(#app[data-screen="home"]){padding:0}

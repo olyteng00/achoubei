@@ -427,7 +427,7 @@ function townCenter(x,y,smooth){ const v=document.getElementById("townview"); if
 function initTown(){
   const view=document.getElementById("townview"), world=document.getElementById("townworld"); if(!view||!world) return;
   cancelAnimationFrame(townRAF);
-  const vr=view.getBoundingClientRect(); townK=Math.max(vr.width/1350,vr.height/1240,Math.min(vr.height/760,vr.width/900),.3);
+  const vr=view.getBoundingClientRect(); townK=Math.max(Math.max(vr.width,vr.height)/1120,vr.height/1240,vr.width/2000,.3);
   if(townL==null) townL=TOWN.stops.home[0];
   const p=townPlace(townL);
   if(townCam.x==null&&p) townCenter(p.x,p.y-60,false); else townApply();
