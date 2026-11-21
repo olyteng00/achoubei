@@ -396,9 +396,9 @@ function home(){
   const T=window.TOWN, p=pendingPaydays(), open=zonesOpen(), st=treeStage();
   const w=state.wish&&state.shop.find(i=>i.id===state.wish);
   let hud="";
-  if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay" data-act="go" data-s="payday">${ic("moneybag")}<span>${p>0?"發薪日！":"有零用錢！"}</span></button>`;
+  if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay iconly" data-act="go" data-s="payday" aria-label="發薪日">${ic("moneybag")}</button>`;
   if(w){ const have=state.spend+state.save, left=Math.max(0,w.price-have), pct=Math.min(100,have/w.price*100);
-    hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span><span class="wl">${left>0?`還差 ${left} 元`:"可以買了！"}</span></span></button>`; }
+    hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span></span></button>`; }
   const gk=[.42,.58,.72,.86,1,1.14][st];
   const forest=T.L.forest.replace('class="growT" transform="translate(122 199)"',`class="growT" transform="translate(122 199) scale(${gk})"`);
   const L0=townL==null?T.stops.home[0]:townL;
@@ -406,15 +406,15 @@ function home(){
   `<div class="townview" id="townview"><div class="townworld" id="townworld" style="width:2000px;height:1240px;font-size:20px">
     <svg class="tground" viewBox="0 0 ${TW} ${TH}" aria-hidden="true">${T.ground}<g id="tcars"></g>${T.items}<g>${open>=2?T.beach:T.conR}</g><g>${open>=3?T.park:T.conB}</g><g id="tride"></g>${T.top}</svg>
     ${tspot(732,476,172,168,`data-act="go" data-s="home" aria-label="HOME"`,T.L.home,tboard("HOME",null,"home"),"t-home")}
-    ${tspot(390,570,170,168,`data-act="go" data-s="shop" aria-label="星星商鋪"`,T.L.shop,tboard("星星商鋪",`有 ${money(state.spend)} 元`))}
-    ${tspot(700,180,240,210,`data-act="go" data-s="tree" aria-label="彩虹森林"`,forest,tboard("彩虹森林",`種了 ${money(treeTotal())} 元`),"t-forest")}
-    ${tspot(1100,508,190,186,`data-act="go" data-s="bank" aria-label="叮咚金庫"`,T.L.bank,tboard("叮咚金庫",`存了 ${money(state.save)} 元`))}
-    ${open>=2?tspot(1560,500,130,90,`data-act="go" data-s="game" data-g="beach" data-stop="beach" aria-label="海邊"`,"",tboard("海邊",null)):""}
-    ${open>=3?tspot(700,1080,180,110,`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="遊樂園"`,"",tboard("遊樂園",null)):""}
+    ${tspot(390,570,170,168,`data-act="go" data-s="shop" aria-label="SHOP"`,T.L.shop,tboard("SHOP",null))}
+    ${tspot(700,180,240,210,`data-act="go" data-s="tree" aria-label="FOREST"`,forest,tboard("FOREST",null),"t-forest")}
+    ${tspot(1100,508,190,186,`data-act="go" data-s="bank" aria-label="BANK"`,T.L.bank,tboard("BANK",null))}
+    ${open>=2?tspot(1560,500,130,90,`data-act="go" data-s="game" data-g="beach" data-stop="beach" aria-label="海邊"`,"",tboard("BEACH",null)):""}
+    ${open>=3?tspot(700,1080,180,110,`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="遊樂園"`,"",tboard("PARK",null)):""}
     ${lion(walkMood||baseMood(),"maplion tlion","")}
     <div class="tgrain"></div>
   </div><button class="thome" data-act="townhome" aria-label="回家"><svg viewBox="0 0 40 40" width="34" height="34"><path d="M6 20L20 8L34 20" fill="none" stroke="#C56A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 18V33H30V18" fill="#F1E5CC" stroke="#C56A4A" stroke-width="3.5" stroke-linejoin="round"/><rect x="17" y="23" width="7" height="10" fill="#7FA1BA"/></svg></button></div>
-  <div class="sync" id="sync">${esc(syncNote)}</div>`;
+  `;
 }
 function townPlace(l){ const walk=document.getElementById("twalk"), box=mapBox(); if(!walk||!box) return null; const p=walk.getPointAtLength(l); box.style.left=(p.x/20)+"%"; box.style.top=(p.y/12.4)+"%"; return p; }
 function townClamp(){ const v=document.getElementById("townview"); if(!v) return; const r=v.getBoundingClientRect(), vw=r.width/townK, vh=r.height/townK;

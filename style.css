@@ -633,3 +633,7 @@ html,body{overscroll-behavior:none}
 .townworld .hook{animation:tswing 4s ease-in-out infinite;transform-box:view-box}@keyframes tswing{50%{transform:rotate(6deg)}}
 .townworld .blink{animation:tblink 1s steps(2) infinite}@keyframes tblink{50%{opacity:.2}}
 .townworld .water-l{animation:tsh 3s ease-in-out infinite alternate}@keyframes tsh{to{opacity:.35}}
+.hudpay.iconly{padding:8px 12px;animation:paybob 1.1s ease-in-out infinite}
+.hudpay.iconly .ic{width:34px;height:34px}
+@keyframes paybob{50%{transform:translateY(-4px) rotate(-4deg)}}
+.tboard b{font-family:"Senty",sans-serif;letter-spacing:.06em}
