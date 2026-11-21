@@ -334,7 +334,7 @@ const $app=document.getElementById("app"), $modal=document.getElementById("modal
 function go(screen,extra){ui=Object.assign({screen},extra||{});closeModal();render();window.scrollTo(0,0);}
 function topBar(title,backTo,hud){
   if(title===null) return `<div class="top slim">${hud||""}<button class="iconbtn lockbtn" data-act="gate" aria-label="家長模式">${ic("lock")}</button></div>`;
-  return `<div class="top">${backTo?`<button class="back" data-act="go" data-s="${backTo}">${ic("back")} 回家</button>`:lion(baseMood(),"logo")}
+  return `<div class="top">${backTo?`<button class="back" data-act="go" data-s="${backTo}">${ic("back")} HOME</button>`:lion(baseMood(),"logo")}
   <h1>${title}</h1>${hud||""}${backTo?"":`<button class="iconbtn lockbtn" data-act="gate" aria-label="家長模式">${ic("lock")}</button>`}</div>`;
 }
 const side=(inner,actions)=>`<aside class="side">${inner}${actions?`<div class="actions">${actions}</div>`:""}</aside>`;
@@ -416,7 +416,7 @@ function home(){
     ${open>=3?tspot(700,1080,180,110,`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="遊樂園"`,"",tboard("PARK",null)):""}
     ${lion(walkMood||baseMood(),"maplion tlion","")}
     <div class="tgrain"></div>
-  </div><button class="thome" data-act="townhome" aria-label="回家"><svg viewBox="0 0 40 40" width="34" height="34"><path d="M6 20L20 8L34 20" fill="none" stroke="#C56A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 18V33H30V18" fill="#F1E5CC" stroke="#C56A4A" stroke-width="3.5" stroke-linejoin="round"/><rect x="17" y="23" width="7" height="10" fill="#7FA1BA"/></svg></button></div>
+  </div><button class="thome" data-act="townhome" aria-label="HOME"><svg viewBox="0 0 40 40" width="34" height="34"><path d="M6 20L20 8L34 20" fill="none" stroke="#C56A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 18V33H30V18" fill="#F1E5CC" stroke="#C56A4A" stroke-width="3.5" stroke-linejoin="round"/><rect x="17" y="23" width="7" height="10" fill="#7FA1BA"/></svg></button></div>
   `;
 }
 function townPlace(l){ const walk=document.getElementById("twalk"), box=mapBox(); if(!walk||!box) return null; const p=walk.getPointAtLength(l); box.style.left=(p.x/20)+"%"; box.style.top=(p.y/12.4)+"%"; return p; }
@@ -572,7 +572,7 @@ function bought(){
   const line=v.cat==="sub"?`訂閱了${v.name}！把兌換券給爸爸媽媽看，就可以一起聽${v.name}囉！`:`買到${v.name}了！把兌換券給爸爸媽媽看，就可以去買真的${v.name}囉！`;
   return topBar(`${ic("party")} 買到了！`,"home")+
   `<div class="body">${side(`<div class="bubble">${esc(line)}${sayBtn(line)}${ui.change>0?`<div style="margin-top:8px">找你 ${ui.change} 元：<span class="coins" style="display:inline-flex">${coinsHTML(ui.change)}</span></div>`:""}</div>${lion("cheer")}`,
-    `<button class="btn w" data-act="go" data-s="home">${ic("home")} 回家</button><button class="btn g" data-act="go" data-s="game" data-g="${v.cat}" data-e="${iconOf(v)}">${ic("play")} ${cat?cat.n:""}闖關</button>`)}
+    `<button class="btn w" data-act="go" data-s="home">${ic("home")} HOME</button><button class="btn g" data-act="go" data-s="game" data-g="${v.cat}" data-e="${iconOf(v)}">${ic("play")} ${cat?cat.n:""}闖關</button>`)}
   <main class="main center"><div class="ticket big"><div>${ic("ticket")} 兌換券</div><div class="e">${itemIcon(v)}</div><div class="tn">${esc(v.name)}</div><div class="sub">${v.price} 元・${new Date(v.boughtAt).toLocaleDateString("zh-TW")}</div></div></main></div>`;
 }
 
@@ -827,7 +827,7 @@ function setupBoss(){
   window._boss.hint=()=>{ const msg=`從 ${cur.price} 數到 50，差 ${cur.change} 元喔！`; lionSay(msg); say(msg); };
   next();
 }
-function finishGame(msg,set){confetti(set);tada();say(msg);setTimeout(()=>openModal(`<div class="sheet">${lion("cheer","","width:190px;margin:0 auto")}<div class="n">${esc(msg)}</div><div class="btns"><button class="btn g" data-act="go" data-s="home">${ic("home")} 回家</button><button class="btn w" data-act="regame">🔁 再玩一次</button></div></div>`),900);}
+function finishGame(msg,set){confetti(set);tada();say(msg);setTimeout(()=>openModal(`<div class="sheet">${lion("cheer","","width:190px;margin:0 auto")}<div class="n">${esc(msg)}</div><div class="btns"><button class="btn g" data-act="go" data-s="home">${ic("home")} HOME</button><button class="btn w" data-act="regame">🔁 再玩一次</button></div></div>`),900);}
 
 /* ---------- parent ---------- */
 function gate(){
