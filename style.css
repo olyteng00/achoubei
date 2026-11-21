@@ -637,3 +637,9 @@ html,body{overscroll-behavior:none}
 .hudpay.iconly .ic{width:34px;height:34px}
 @keyframes paybob{50%{transform:translateY(-4px) rotate(-4deg)}}
 .tboard b{font-family:"Senty",sans-serif;letter-spacing:.06em}
+/* map labels painted straight onto the map */
+.tboard:after{display:none}
+.tboard b,.tboard.home b{background:none!important;border:0!important;box-shadow:none!important;padding:0;color:#F3E8D0;font-size:1.9em;letter-spacing:.14em;text-shadow:0 1px 0 rgba(40,60,45,.25)}
+.tboard{top:102%}
+.t-forest .tboard{top:97%}
+.tboard .hand{display:block;height:1.5em;overflow:visible}
