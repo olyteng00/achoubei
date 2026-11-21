@@ -659,3 +659,6 @@ html,body{background:var(--grain-d),var(--grain),#6A9C74;background-size:220px,2
 .ic{filter:saturate(.72) brightness(.98)}
 .lockbtn{opacity:.75}
 .lionbox .lshadow{background:rgba(30,50,36,.28)}
+/* town view always fills the screen, in any orientation */
+#app[data-screen="home"]{padding:8px;max-width:none}
+#app[data-screen="home"] .townview,#app.fit[data-screen="home"] .townview{flex:none;height:calc(100vh - 16px);height:calc(100dvh - 16px);min-height:320px}
