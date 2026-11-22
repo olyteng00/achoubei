@@ -5,34 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="阿臭被零用錢">
+<meta name="apple-mobile-web-app-title" content="Achoubei Money">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#E6DCC1">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
-<title>阿臭被零用錢</title>
+<title>Achoubei Money</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=e4076cd888">
+<link rel="stylesheet" href="style.css?v=fc5db18424">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter><filter id="roughS" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="2.5"/></filter><filter id="rough2" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></svg>
 <div id="app"></div>
 <div id="modalRoot"></div>
-<script src="icons.js?v=e4076cd888"></script>
-<script src="town-data.js?v=e4076cd888"></script>
+<script src="icons.js?v=fc5db18424"></script>
+<script src="town-data.js?v=fc5db18424"></script>
 <script>
 "use strict";
 const MOODS={wave:"lion-wave.webp",cheer:"lion-cheer.webp",wow:"lion-wow.webp",shy:"lion-shy.webp",sad:"lion-sad.webp",sleep:"lion-sleep.webp"};
 Object.values(MOODS).forEach(src=>{const i=new Image();i.src=src;});
-function lion(mood,cls,style,id){mood=MOODS[mood]?mood:"wave";return `<div class="lionbox ${cls||""}" data-base="${mood}" data-mood="${mood}" ${id?`id="${id}"`:""} style="${style||""}" role="img" aria-label="阿臭被"><div class="lshadow"></div><div class="lean"><div class="anim"><img src="${MOODS[mood]}" alt="" draggable="false"></div></div><div class="lsay"></div></div>`;}
+function lion(mood,cls,style,id){mood=MOODS[mood]?mood:"wave";return `<div class="lionbox ${cls||""}" data-base="${mood}" data-mood="${mood}" ${id?`id="${id}"`:""} style="${style||""}" role="img" aria-label="Achoubei"><div class="lshadow"></div><div class="lean"><div class="anim"><img src="${MOODS[mood]}" alt="" draggable="false"></div></div><div class="lsay"></div></div>`;}
 const DAY = 864e5, WEEK = 7*DAY;
-const CATS = [{k:"food",n:"食物",e:"food"},{k:"book",n:"書本",e:"book"},{k:"toy",n:"玩具",e:"teddy"},{k:"sub",n:"訂閱",e:"podcast"}];
+const CATS = [{k:"food",n:"Food",e:"food"},{k:"book",n:"Books",e:"book"},{k:"toy",n:"Toys",e:"teddy"},{k:"sub",n:"Subscriptions",e:"podcast"}];
 const DEFAULT_SHOP = [
-  ["food","yakult","養樂多",10],["food","pudding","布丁",20],["food","icecream","冰淇淋",30],["food","donut","甜甜圈",35],["food","eggcake","雞蛋糕",40],["food","strawberry","草莓盒",60],
-  ["book","stickerbook","貼紙書",60],["book","crayon","著色本",80],["book","puzzle","拼圖書",120],["book","picturebook","繪本",150],
-  ["toy","balloon","氣球",20],["toy","bubbles","泡泡水",40],["toy","capsule","扭蛋",150],["toy","car","小汽車",200],["toy","teddy","玩偶",250],["toy","blocks","積木小盒",300],
+  ["food","yakult","Yakult",10],["food","pudding","Pudding",20],["food","icecream","Ice cream",30],["food","donut","Donut",35],["food","eggcake","Egg cake",40],["food","strawberry","Strawberries",60],
+  ["book","stickerbook","Sticker book",60],["book","crayon","Coloring book",80],["book","puzzle","Puzzle book",120],["book","picturebook","Picture book",150],
+  ["toy","balloon","Balloon",20],["toy","bubbles","Bubbles",40],["toy","capsule","Capsule toy",150],["toy","car","Toy car",200],["toy","teddy","Plush toy",250],["toy","blocks","Blocks",300],
   ["sub","podcast","Podcast",100]
 ];
 const uid = () => Math.random().toString(36).slice(2,9);
@@ -47,7 +47,7 @@ function lastPayday(now){const d=new Date(now);d.setHours(18,0,0,0);d.setDate(d.
 function defaultState(){
   const now=Date.now(); const lp=lastPayday(now); lp.setDate(lp.getDate()-7);
   return {
-    v:1, updatedAt:0, kidName:"寶貝",
+    v:1, updatedAt:0, kidName:"Buddy",
     spend:0, save:0, seeds:[],
     weekly:50, rate:0.825, mult:5, lockWeeks:2,
     lastPaid: ymd(lp),
@@ -58,10 +58,17 @@ function defaultState(){
 }
 function iconOf(x){return (x&&(x.icon||EMOJI2ICON[x.emoji]))||"gift";}
 function itemIcon(x){return ic(iconOf(x));}
-function normalize(st){ if(!st.shopFix1&&Array.isArray(st.shop)){ st.shop.forEach(i=>{ if(i.name==="扭蛋"&&i.price===50) i.price=150; if(i.name==="小汽車"&&i.price===100) i.price=200; }); if(!st.shop.some(i=>i.cat==="sub")) st.shop.push({id:uid(),cat:"sub",icon:"podcast",name:"Podcast",price:100}); st.shopFix1=true; } if(!st.shopFix2&&Array.isArray(st.shop)){ st.shop.forEach(i=>{ if(i.name==="Podcast"&&i.price===30) i.price=100; }); st.shopFix2=true; }  if(st.plantedTotal==null){ const seedSum=(st.seeds||[]).reduce((a,x)=>a+(x.amount||0),0); let logSum=0; (st.log||[]).forEach(l=>{ if(l.type==="plant") logSum+=l.amt||0; if(l.type==="payday"){ const m=/搖錢樹 (\d+)/.exec(l.text||""); if(m) logSum+=+m[1]; } }); st.plantedTotal=Math.max(seedSum,logSum); st.treeSeen=treeStage(st.plantedTotal); } if(st.treeSeen==null) st.treeSeen=0; if(!st.mapStart) st.mapStart=ym(new Date()); if(st.zonesSeen==null) st.zonesSeen=1; if(st.zoneBonus==null) st.zoneBonus=0; if(!Array.isArray(st.reveals)) st.reveals=[]; (st.shop||[]).forEach(i=>{ if(!i.icon) i.icon=iconOf(i); }); (st.vouchers||[]).forEach(v=>{ if(!v.icon) v.icon=iconOf(v); }); return st; }
+const ZH_EN={"養樂多":"Yakult","布丁":"Pudding","冰淇淋":"Ice cream","甜甜圈":"Donut","雞蛋糕":"Egg cake","草莓盒":"Strawberries","草莓":"Strawberries","貼紙書":"Sticker book","著色本":"Coloring book","拼圖書":"Puzzle book","繪本":"Picture book","氣球":"Balloon","泡泡水":"Bubbles","扭蛋":"Capsule toy","小汽車":"Toy car","玩偶":"Plush toy","積木小盒":"Blocks","寶貝":"Buddy","新商品":"New item",
+ "額外零用錢":"Extra money","發薪日":"Payday","存進銀行":"Saved to bank","從銀行拿出來":"Taken from bank","種搖錢樹":"Plant tree","搖錢樹收成":"Tree picked","搖錢樹":"Tree","商店":"Shop","銀行":"Bank","存款":"Bank","買了":"Bought","兌換":"Used","收成":"Picked","家長調整":"Parent edit","消費":"shop","家長加發零用錢":"Extra money","銀行發利息":"Bank interest","從":"from","種":"planted","元":""};
+const ZH_KEYS=Object.keys(ZH_EN).sort((a,b)=>b.length-a.length), hasZh=t=>/[一-鿿]/.test(t||"");
+function zhToEn(t){ if(!hasZh(t)) return t; let o=String(t); ZH_KEYS.forEach(k=>{ o=o.split(k).join(ZH_EN[k]); }); return o.replace(/[一-鿿　-〿！-～]+/g," ").replace(/\s+/g," ").trim(); }
+function englishSave(st){ if(st.enDone) return; (st.shop||[]).forEach(i=>{ if(hasZh(i.name)) i.name=ZH_EN[i.name]||(window.ICON_LABELS&&ICON_LABELS[i.icon])||zhToEn(i.name)||"Item"; });
+  (st.vouchers||[]).forEach(v=>{ if(hasZh(v.name)) v.name=ZH_EN[v.name]||(window.ICON_LABELS&&ICON_LABELS[v.icon])||zhToEn(v.name)||"Item"; });
+  (st.log||[]).forEach(l=>{ if(hasZh(l.text)) l.text=zhToEn(l.text).replace(/・/g," · "); }); if(hasZh(st.kidName)) st.kidName=ZH_EN[st.kidName]||"Buddy"; if(st.wishName&&hasZh(st.wishName)) st.wishName=zhToEn(st.wishName); st.enDone=true; }
+function normalize(st){ englishSave(st); if(!st.shopFix1&&Array.isArray(st.shop)){ st.shop.forEach(i=>{ if(i.name==="Capsule toy"&&i.price===50) i.price=150; if(i.name==="Toy car"&&i.price===100) i.price=200; }); if(!st.shop.some(i=>i.cat==="sub")) st.shop.push({id:uid(),cat:"sub",icon:"podcast",name:"Podcast",price:100}); st.shopFix1=true; } if(!st.shopFix2&&Array.isArray(st.shop)){ st.shop.forEach(i=>{ if(i.name==="Podcast"&&i.price===30) i.price=100; }); st.shopFix2=true; }  if(st.plantedTotal==null){ const seedSum=(st.seeds||[]).reduce((a,x)=>a+(x.amount||0),0); let logSum=0; (st.log||[]).forEach(l=>{ if(l.type==="plant") logSum+=l.amt||0; if(l.type==="payday"){ const m=/Tree (\d+)/.exec(l.text||""); if(m) logSum+=+m[1]; } }); st.plantedTotal=Math.max(seedSum,logSum); st.treeSeen=treeStage(st.plantedTotal); } if(st.treeSeen==null) st.treeSeen=0; if(!st.mapStart) st.mapStart=ym(new Date()); if(st.zonesSeen==null) st.zonesSeen=1; if(st.zoneBonus==null) st.zoneBonus=0; if(!Array.isArray(st.reveals)) st.reveals=[]; (st.shop||[]).forEach(i=>{ if(!i.icon) i.icon=iconOf(i); }); (st.vouchers||[]).forEach(v=>{ if(!v.icon) v.icon=iconOf(v); }); return st; }
 let state, market = {weeks:[]};
 let ui = {screen:"home"};
-let db=null, stateRef=null, marketRef=null, dbReady=false, syncNote="資料只存在這台裝置";
+let db=null, stateRef=null, marketRef=null, dbReady=false, syncNote="Saved on this device";
 const LS="achoubei-v1";
 try{ const s=localStorage.getItem(LS); state = s? normalize(JSON.parse(s)): defaultState(); }catch(e){ state=defaultState(); }
 try{ const m=localStorage.getItem(LS+"-m"); if(m) market=JSON.parse(m);}catch(e){}
@@ -77,8 +84,8 @@ function save(){
 async function flush(){
   if(writing){writeAgain=true;return;}
   writing=true;
-  try{ await stateRef.set(clone(state)); syncNote="已同步到雲端"; }
-  catch(e){ syncNote = e&&e.code==="invalid_argument" ? "這個帳號只能看，不能存檔" : "暫時連不上雲端，先存在這台裝置"; }
+  try{ await stateRef.set(clone(state)); syncNote="Synced"; }
+  catch(e){ syncNote = e&&e.code==="invalid_argument" ? "View only. Can't save." : "Offline. Saved on this device."; }
   writing=false; updateSync();
   if(writeAgain){writeAgain=false;flush();}
 }
@@ -89,7 +96,7 @@ async function initDb(){
   try{ if(!window.claude||!claude.use) { standalone(); return; } db = await claude.use("db"); }catch(e){ db=null; }
   if(!db){ standalone(); return; }
   stateRef=db.doc("game/state"); marketRef=db.doc("market/0050");
-  let timer=setTimeout(()=>{ if(!dbReady){ syncNote="雲端還沒連上，先用這台裝置的資料"; updateSync(); runAutomations(); } },10000);
+  let timer=setTimeout(()=>{ if(!dbReady){ syncNote="Offline. Using this device."; updateSync(); runAutomations(); } },10000);
   stateRef.onSnapshot(snap=>{
     if(snap.exists){
       const d=snap.data();
@@ -99,8 +106,8 @@ async function initDb(){
         if(["home","bank","tree"].includes(ui.screen)) render();
       }
     }else if(!snap.metadata.fromCache){ save(); }
-    if(!snap.metadata.fromCache && !dbReady){ dbReady=true; clearTimeout(timer); syncNote="已同步到雲端"; updateSync(); runAutomations(); }
-  },err=>{ clearTimeout(timer); syncNote="雲端連線中斷，先存在這台裝置"; updateSync(); if(!dbReady) runAutomations(); });
+    if(!snap.metadata.fromCache && !dbReady){ dbReady=true; clearTimeout(timer); syncNote="Synced"; updateSync(); runAutomations(); }
+  },err=>{ clearTimeout(timer); syncNote="Offline. Saved on this device."; updateSync(); if(!dbReady) runAutomations(); });
   marketRef.onSnapshot(snap=>{
     if(snap.exists){ market=Object.assign({weeks:[]},clone(snap.data())); try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){} if(automationsRan) applyMarket(true); }
   },()=>{});
@@ -109,7 +116,7 @@ async function initDb(){
 /* ---------- standalone (home-screen app) ---------- */
 let isApp=false;
 function standalone(){
-  isApp=true; syncNote="資料存在這台 iPad・記得在家長模式定期備份"; updateSync();
+  isApp=true; syncNote="Saved on this iPad · back up in Parent mode"; updateSync();
   runAutomations(); refreshMarket();
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ refreshMarket(); payInterest(); if(["home","bank","tree"].includes(ui.screen)) render(); } });
   try{ if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost") && window.top===window) { const hadSW=!!navigator.serviceWorker.controller; navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{ r.update(); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) r.update(); }); }).catch(()=>{}); navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(hadSW&&!window.__swr){ window.__swr=1; location.reload(); } }); } }catch(e){}
@@ -122,8 +129,8 @@ function mergeWeeks(list,src){
 }
 async function refreshMarket(){
   let changed=false;
-  try{ const r=await fetch("market.json?t="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); changed=mergeWeeks(j.weeks,"網站")||changed; } }catch(e){}
-  try{ changed=mergeWeeks(await twseWeeks(),"證交所")||changed; }catch(e){}
+  try{ const r=await fetch("market.json?t="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); changed=mergeWeeks(j.weeks,"web")||changed; } }catch(e){}
+  try{ changed=mergeWeeks(await twseWeeks(),"TWSE")||changed; }catch(e){}
   if(changed){ applyMarket(true); }
 }
 /* 0050 daily closes from TWSE → completed Mon–Fri weeks */
@@ -145,11 +152,11 @@ async function twseWeeks(){
 /* backup / restore */
 function backupCode(){ return JSON.stringify({app:"achoubei",v:1,at:Date.now(),state,market}); }
 function restoreFrom(text){
-  let j; try{ j=JSON.parse(String(text||"").trim()); }catch(e){ toast("備份碼看不懂，請重新複製","sad"); return false; }
-  if(!j||j.app!=="achoubei"||!j.state||!Array.isArray(j.state.shop)){ toast("這不是阿臭被的備份","sad"); return false; }
+  let j; try{ j=JSON.parse(String(text||"").trim()); }catch(e){ toast("Bad code. Copy it again.","sad"); return false; }
+  if(!j||j.app!=="achoubei"||!j.state||!Array.isArray(j.state.shop)){ toast("Not a valid backup","sad"); return false; }
   state=normalize(Object.assign(defaultState(),j.state)); state.updatedAt=Date.now();
   if(j.market&&Array.isArray(j.market.weeks)){ market=j.market; try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){} }
-  save(); toast("還原完成！","cheer"); return true;
+  save(); toast("Restored!","cheer"); return true;
 }
 
 /* ---------- automations: interest, market ---------- */
@@ -168,7 +175,7 @@ function payInterest(){
   }
   if(last!==state.bank.lastMonth){
     state.bank.lastMonth=last;
-    if(paid>0){log("interest","銀行發利息",paid);setTimeout(()=>toast(`銀行發利息了！存款多了 ${paid} 元`,"cheer"),900);}
+    if(paid>0){log("interest","Bank interest",paid);setTimeout(()=>toast(`Interest! +$${paid}`,"cheer"),900);}
     save();
   }
 }
@@ -194,12 +201,12 @@ function showReveal(){
   const rv=state.reveals&&state.reveals[0]; if(!rv) return false;
   const up=rv.pct>=0, k=up?"sun":"rain";
   const art=`<svg viewBox="0 0 400 260" class="rvsvg" aria-hidden="true"><g>${weatherArt(k,rv.pct,200,95,.75)}</g></svg>`;
-  const line="這週搖錢樹的天氣是…？點雲朵把它吹走！";
-  openModal(`<div class="sheet reveal" id="reveal"><div class="n">${ic("tree")} 搖錢樹開獎！</div>
+  const line="What's the weather? Tap the clouds!";
+  openModal(`<div class="sheet reveal" id="reveal"><div class="n">${ic("tree")} Tree Weather!</div>
     <div class="rvstage">${art}<div class="rvcloud k1" data-act="rvcloud" role="button">${ic("cloudbig")}</div><div class="rvcloud k2" data-act="rvcloud" role="button">${ic("cloudbig")}</div><div class="rvcloud k3" data-act="rvcloud" role="button">${ic("cloudbig")}</div></div>
     <div class="rvtext sub" id="rvtext">${line} ${sayBtn(line)}</div>
-    <div class="rvnum" id="rvnum">${money(rv.before)} 元</div>
-    <div class="btns" id="rvbtns" style="visibility:hidden"><button class="btn g" data-act="rvdone">${ic("check")} 好！</button></div></div>`);
+    <div class="rvnum" id="rvnum">$${money(rv.before)}</div>
+    <div class="btns" id="rvbtns" style="visibility:hidden"><button class="btn g" data-act="rvdone">${ic("check")} OK!</button></div></div>`);
   say(line); return true;
 }
 function rvReveal(){
@@ -207,10 +214,10 @@ function rvReveal(){
   const box=document.getElementById("reveal"); if(!box) return; box.classList.add(up?"sunny":"rainy");
   sfx("spin"); if(up){ tada(); confetti(["sun","star","coin"]); }
   const num=document.getElementById("rvnum"), t0=performance.now(), from=rv.before, to=rv.after;
-  (function f(now){const t=Math.min(1,(now-t0)/1200); num.textContent=money(from+(to-from)*(1-Math.pow(1-t,3)))+" 元"; if(t<1) requestAnimationFrame(f);})(t0);
-  const msg = up? (d>0?`出太陽了！搖錢樹長大了 ${d} 元！`:"出太陽了！搖錢樹長得好好的！") : (d<0?`下雨了…搖錢樹變小了 ${-d} 元。不要怕，等太陽出來！`:"下雨了，搖錢樹淋了一點雨。");
+  (function f(now){const t=Math.min(1,(now-t0)/1200); num.textContent=money(from+(to-from)*(1-Math.pow(1-t,3)))+" "; if(t<1) requestAnimationFrame(f);})(t0);
+  const msg = up? (d>0?`Sunny! The tree grew $${d}!`:"Sunny! The tree is fine!") : (d<0?`Rain… the tree lost $${-d}. Wait for the sun!`:"Rain on the tree.");
   document.getElementById("rvtext").innerHTML=`${esc(msg)} ${sayBtn(msg)}`; say(msg);
-  num.classList.add(up?"up":"down"); react(up?"cheer":"sad",up?"耶！太陽！":"下雨了…",2500);
+  num.classList.add(up?"up":"down"); react(up?"cheer":"sad",up?"Yay! Sun!":"Rain…",2500);
   setTimeout(()=>{ const b=document.getElementById("rvbtns"); if(b) b.style.visibility="visible"; },900);
 }
 function pendingPaydays(){
@@ -221,8 +228,8 @@ const treeTotal = () => state.seeds.reduce((a,s)=>a+s.value,0);
 const money = n => Math.round(n);
 function weather(){
   const ws=(market.weeks||[]).filter(w=>w&&w.date).sort((a,b)=>a.date<b.date?1:-1);
-  if(!ws.length) return {k:"cloud",e:ic("cloud"),t:"還沒有天氣消息"};
-  return ws[0].pct>=0?{k:"sun",e:ic("sun"),t:"這週出太陽"}:{k:"rain",e:ic("rain"),t:"這週下雨"};
+  if(!ws.length) return {k:"cloud",e:ic("cloud"),t:"No weather yet"};
+  return ws[0].pct>=0?{k:"sun",e:ic("sun"),t:"Sunny week"}:{k:"rain",e:ic("rain"),t:"Rainy week"};
 }
 
 /* ---------- sound & voice ---------- */
@@ -230,100 +237,25 @@ let actx=null;
 function clink(hi){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;[0,0.07].forEach((d,i)=>{const o=actx.createOscillator(),g=actx.createGain();o.type="sine";o.frequency.value=(hi?1700:1250)+i*500;g.gain.setValueAtTime(.0001,t+d);g.gain.exponentialRampToValueAtTime(.25,t+d+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d+.25);o.connect(g).connect(actx.destination);o.start(t+d);o.stop(t+d+.3);});}catch(e){}}
 function tada(){[0,.12,.24].forEach((d,i)=>setTimeout(()=>clink(i>1),d*1000));}
 const canSpeak = false; /* spoken voice turned off: sound effects only */
-/* 阿臭被 speaks English: every Chinese line on screen has an English version */
-const NAME_EN={"養樂多":"Yakult","布丁":"pudding","冰淇淋":"ice cream","甜甜圈":"donut","雞蛋糕":"egg cake","草莓盒":"box of strawberries","貼紙書":"sticker book","著色本":"coloring book","拼圖書":"puzzle book","繪本":"picture book","氣球":"balloon","泡泡水":"bubbles","扭蛋":"capsule toy","小汽車":"toy car","玩偶":"teddy bear","積木小盒":"box of blocks","Podcast":"podcast","食物":"snack"};
+/* English names for migrating old saves */
+const NAME_EN={"Yakult":"Yakult","pudding":"pudding","ice cream":"ice cream","donut":"donut","egg cake":"egg cake","strawberries":"box of strawberries","sticker book":"sticker book","coloring book":"coloring book","puzzle book":"puzzle book","picture book":"picture book","balloon":"balloon","bubbles":"bubbles","capsule toy":"capsule toy","toy car":"toy car","plush toy":"teddy bear","blocks":"box of blocks","Podcast":"podcast","Food":"snack"};
 const ICON_EN={yakult:"Yakult",pudding:"pudding",icecream:"ice cream",donut:"donut",eggcake:"egg cake",strawberry:"strawberries",stickerbook:"sticker book",crayon:"crayons",puzzle:"puzzle",picturebook:"picture book",book:"book",balloon:"balloon",bubbles:"bubbles",capsule:"capsule toy",car:"toy car",teddy:"teddy bear",blocks:"blocks",rocket:"rocket",ball:"ball",kite:"kite",dino:"dinosaur",food:"snack",gift:"present",podcast:"podcast",star:"star",heart:"heart"};
-const STAGE_EN={"種子":"seed","小樹苗":"little sprout","小樹":"small tree","中樹":"medium tree","大樹":"big tree","搖錢大樹":"giant money tree"};
-const ZONE_EN={"海邊":"beach","遊樂園":"amusement park"}, GAME_EN={"海浪撿貝殼":"Shell Catch","換你當店長":"Be the Shopkeeper"};
+const STAGE_EN={"seed":"seed","sprout":"little sprout","small tree":"small tree","medium tree":"medium tree","big tree":"big tree","giant tree":"giant money tree"};
+const ZONE_EN={"beach":"beach","park":"amusement park"}, GAME_EN={"Shell Catch":"Shell Catch","Shopkeeper":"Be the Shopkeeper"};
 function nmEn(n){ if(NAME_EN[n]) return NAME_EN[n]; const it=state.shop.find(i=>i.name===n); return it&&ICON_EN[iconOf(it)]||n; }
-const $d=n=>`${n} ${+n===1?"dollar":"dollars"}`;
-const EN_RULES=[
- [/^發薪日到了！我帶硬幣來給你囉！$/,()=>"Yay! It's payday! I brought you some coins!"],
- [/^(.+)的錢夠了！要去買嗎？$/,m=>`You have enough for the ${nmEn(m[1])}! Shall we go buy it?`],
- [/^(.+)還差 (\d+) 元，加油！$/,m=>`Just ${$d(m[2])} more for the ${nmEn(m[1])}. You can do it!`],
- [/^搖錢樹在淋雨，我們一起等太陽出來。$/,()=>"The money tree is in the rain. Let's wait for the sun together."],
- [/^嗨 (.+)！今天要做什麼呢？$/,m=>/^[\x20-\x7e]+$/.test(m[1])?`Hi ${m[1]}! What shall we do today?`:"Hi there! What shall we do today?"],
- [/^這週搖錢樹的天氣是…？點雲朵把它吹走！$/,()=>"What's the weather for the money tree this week? Tap the clouds to blow them away!"],
- [/^出太陽了！搖錢樹長大了 (\d+) 元！$/,m=>`Hooray, it's sunny! The money tree grew ${$d(m[1])}!`],
- [/^出太陽了！搖錢樹長得好好的！$/,()=>"It's sunny! The money tree is doing great!"],
- [/^下雨了…搖錢樹變小了 (\d+) 元。不要怕，等太陽出來！$/,m=>`Uh-oh, it's rainy! The money tree shrank ${$d(m[1])}. Don't worry, let's wait for the sun!`],
- [/^下雨了，搖錢樹淋了一點雨。$/,()=>"It rained a little on the money tree."],
- [/^分好了！按「?完成」?就放進去囉！$/,()=>"All sorted! Press done to put them away!"],
- [/^點一個罐子，把硬幣放進去！$/,()=>"Put each coin into a jar!"],
- [/^(.+)要 (\d+) 元，你的商店有 (\d+) 元，可以買！$/,m=>`The ${nmEn(m[1])} costs ${$d(m[2])}. You have ${$d(m[3])}. You can buy it!`],
- [/^商店只有 (\d+) 元，還差 (\d+) 元。可以從銀行拿錢出來喔！$/,m=>`You only have ${$d(m[1])}. You need ${m[2]} more. You can take some out of the bank!`],
- [/^(.+)要 (\d+) 元，還差 (\d+) 元。先存起來，設成願望吧！$/,m=>`The ${nmEn(m[1])} costs ${$d(m[2])}. You need ${m[3]} more. Let's save up and make it your wish!`],
- [/^(.+)要 (\d+) 元，點硬幣拿出來付錢！$/,m=>`The ${nmEn(m[1])} costs ${$d(m[2])}. Tap your coins to pay!`],
- [/^還差 (\d+) 元喔！$/,m=>`${$d(m[1])} more, please!`],
- [/^錢夠了！付 (\d+) 元，阿臭被會找你 (\d+) 元。$/,m=>`Yay, that's enough! You pay ${$d(m[1])}, and I give you ${$d(m[2])} back!`],
- [/^剛剛好 (\d+) 元！好厲害！$/,m=>`Exactly ${$d(m[1])}! Woohoo, great job!`],
- [/^要種多少錢呢？種下去要 (\d+) 週後才能收成喔！$/,m=>`How much will you plant? You can pick it in ${m[1]} weeks!`],
- [/^要存多少錢進銀行？$/,()=>"How much will you put in the bank?"],
- [/^要從銀行拿多少錢出來？$/,()=>"How much will you take out of the bank?"],
- [/^訂閱了(.+)！把兌換券給爸爸媽媽看，就可以一起聽.+囉！$/,m=>`Yippee! You got the ${nmEn(m[1])}! Show the ticket to Mommy and Daddy, and listen together!`],
- [/^買到(.+)了！把兌換券給爸爸媽媽看，就可以去買真的.+囉！$/,m=>`Yippee! You bought the ${nmEn(m[1])}! Show the ticket to Mommy and Daddy to get the real one!`],
- [/^歡迎光臨！你在銀行存了 (\d+) 元。要做什麼呢？$/,m=>`Hello hello! Welcome to the bank! You have ${$d(m[1])} saved. What shall we do?`],
- [/^歡迎光臨！還沒有存錢喔，按「存錢」把錢放進來吧！$/,()=>"Hello hello! Welcome to the bank! Let's put some money in!"],
- [/^把硬幣放進投幣口！點左邊的硬幣就會投進去喔！$/,()=>"Put your coins in the slot! Tap a coin on the left."],
- [/^要轉多少錢到搖錢樹？用下面的按鍵加加看！$/,()=>"How much for the money tree? Use the buttons to add it up!"],
- [/^要領多少錢？用下面的按鍵加加看！$/,()=>"How much will you take out? Use the buttons to add it up!"],
- [/^機器在動了…等一下下！$/,()=>"The machine is working. Just a moment!"],
- [/^存好了！銀行現在有 (\d+) 元。拿好明細表喔！$/,m=>`Ta-da! The bank has ${$d(m[1])} now. Don't forget your receipt!`],
- [/^轉好了！(\d+) 元種到搖錢樹了！$/,m=>`Done! ${$d(m[1])} planted in the money tree!`],
- [/^領好了！(\d+) 元放進商店了！$/,m=>`Done! ${$d(m[1])} went into your shop money!`],
- [/^搖錢樹長大了！變成(.+)！$/,m=>`Wow wow wow! The money tree grew! It's a ${STAGE_EN[m[1]]||"bigger tree"} now!`],
- [/^這顆錢果子有 (\d+) 元！要放到哪裡呢？$/,m=>`This money fruit has ${$d(m[1])}! Where should it go?`],
- [/^這裡只有一顆小種子。種下第一筆錢，它就會發芽喔！$/,()=>"There's only a little seed here. Plant some money and it will sprout!"],
- [/^搖錢樹在等你種錢！種越多，樹會長越大喔！$/,()=>"The money tree is waiting for you! The more you plant, the bigger it grows!"],
- [/^下雨了，搖錢樹變小一點。不要怕，我們撐傘等太陽！$/,()=>"It's raining, and the money tree got a little smaller. Don't worry, let's wait for the sun!"],
- [/^出太陽了！搖錢樹長得好好！$/,()=>"It's sunny! The money tree is growing well!"],
- [/^搖錢樹在等天氣消息。$/,()=>"The money tree is waiting for the weather news."],
- [/^阿臭被肚子餓了！點.*給阿臭被吃！$/,()=>"I'm so hungry! Tap the snacks to feed me!"],
- [/^翻翻看，找出一樣的玩具！$/,()=>"Flip the cards and find the matching toys!"],
- [/^阿臭被說故事！聽聽看，選出答案。$/,()=>"Story time! Listen and pick the answer."],
- [/^第 (\d+) 關：撿到剛好 (\d+) 元！$/,m=>`Level ${m[1]}. Collect exactly ${$d(m[2])}!`],
- [/^撿到剛好 (\d+) 元！$/,m=>`Collect exactly ${$d(m[1])}!`],
- [/^我要買(.+)，(\d+) 元。給你 50 元！(要找多少錢呢？)?$/,m=>`I'd like the ${nmEn(m[1])}, please. It's ${$d(m[2])}. Here's 50 dollars!${m[3]?" How much change do I get?":""}`],
- [/^從 (\d+) 數到 50，差 (\d+) 元喔！$/,m=>`Count from ${m[1]} up to 50. That's ${$d(m[2])}!`],
- [/^新地圖開放了！(.+)有新的小遊戲「(.+)」！$/,m=>`Surprise! A new place is open! The ${ZONE_EN[m[1]]||"new area"} has a new game: ${GAME_EN[m[2]]||"a mini game"}!`],
- [/^阿臭被吃飽飽了！謝謝你！$/,()=>"Yum yum! I'm so full! Thank you!"],
- [/^全部找到了！好厲害！$/,()=>"Woohoo! You found them all! Amazing!"],
- [/^答完了！得到 (\d+) 顆星星！$/,m=>`All done! You got ${m[1]} ${+m[1]===1?"star":"stars"}!`],
- [/^撿貝殼高手！得到 3 顆星星！$/,()=>"You're a shell catching champion! You got 3 stars!"],
- [/^你是很棒的店長！得到 3 顆星星！$/,()=>"You're a great shopkeeper! You got 3 stars!"],
- [/^答對了！$/,()=>"Yay! That's right!"],
- [/^再想想看$/,()=>"Oopsie! Let's try again!"],
- [/^阿臭被有 3 個 10 元，買布丁用掉 2 個，還剩幾個？$/,()=>"I have three 10 dollar coins. I use two of them to buy pudding. How many are left?"],
- [/^哪一個硬幣最多錢？$/,()=>"Which coin is worth the most?"],
- [/^布丁要 20 元，要給幾個 10 元？$/,()=>"Pudding costs 20 dollars. How many 10 dollar coins do you need?"],
- [/^下雨天搖錢樹變小了，阿臭被應該怎麼做？$/,()=>"It's raining and the money tree got smaller. What should I do?"],
- [/^5 元加 5 元，是多少錢？$/,()=>"5 dollars plus 5 dollars. How much is that?"],
- [/^錢放在銀行，會發生什麼事？$/,()=>"What happens to money you keep in the bank?"],
- [/^想買很貴的玩偶，錢不夠，可以怎麼做？$/,()=>"I want an expensive teddy bear, but I don't have enough money. What can I do?"],
- [/^冰淇淋 30 元，你有 50 元，付錢後會找你多少？$/,()=>"Ice cream costs 30 dollars. You pay 50 dollars. How much change do you get?"]
-];
-function toEn(zh){ zh=String(zh||"").trim(); for(const [re,fn] of EN_RULES){ const m=re.exec(zh); if(m) return fn(m); } return null; }
+function say(){}
+function speakEn(){}
+function pickVoice(){}
+function enVoices(){ return []; }
 let enVoice=null;
-const KID_PREF=["Nicky","Samantha","Ava","Allison","Susan","Zoe","Karen","Tessa","Moira","Kate","Serena","Google US English","Microsoft Jenny","Microsoft Aria"];
-function enVoices(){ try{ return speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang)); }catch(e){ return []; } }
-function pickVoice(){ const vs=enVoices(); if(!vs.length) return;
-  if(state.voiceName){ const m=vs.find(v=>v.name===state.voiceName); if(m){ enVoice=m; return; } }
-  const score=v=>{ let sc=0; const i=KID_PREF.findIndex(p=>v.name.indexOf(p)>=0); if(i>=0) sc+=100-i*3; if(/premium|enhanced|natural|neural/i.test(v.name)) sc+=60; if(/en[-_]US/i.test(v.lang)) sc+=20; if(/female/i.test(v.name)) sc+=10;
-    if(/compact|novelty|bells|bubbles|cellos|organ|whisper|zarvox|trinoids|bad news|good news|jester|superstar|wobble|boing|albert|bahh|fred|junior|ralph|grandpa|grandma|rocko|eddy|reed|sandy|shelley|flo/i.test(v.name)) sc-=500; return sc; };
-  enVoice=vs.slice().sort((a,b)=>score(b)-score(a))[0]; }
-if(canSpeak){ try{ speechSynthesis.addEventListener("voiceschanged",()=>{ pickVoice(); if(ui.screen==="parent") render(); }); }catch(e){} }
-function speakEn(en){ if(!canSpeak||!en) return;
-  try{ speechSynthesis.cancel(); pickVoice(); const u=new SpeechSynthesisUtterance(en); if(enVoice) u.voice=enVoice; u.lang=enVoice?enVoice.lang:"en-US";
-    u.rate=state.voiceRate||.88; u.pitch=state.voicePitch||1.5; u.volume=1; speechSynthesis.speak(u);}catch(e){} }
-function say(text){ speakEn(toEn(text)); }
-const sayBtn = t => canSpeak?`<button class="say" data-act="say" data-t="${esc(t)}" aria-label="念給我聽">${ic("speaker")}</button>`:"";
+const sayBtn = t => canSpeak?`<button class="say" data-act="say" data-t="${esc(t)}" aria-label="Read">${ic("speaker")}</button>`:"";
 
 /* ---------- coin helpers ---------- */
 const DENOMS=[1000,500,100,50,10,5,1];
 function breakdown(n){n=Math.max(0,Math.round(n));const out=[];for(const c of DENOMS){while(n>=c){out.push(c);n-=c;}}return out;}
 function coinEl(v,extra){extra=extra||""; let cls=""; extra=extra.replace(/class-x="([^"]*)"/,(m,c)=>{cls=" "+c;return "";}); return `<span class="coin c${v}${cls}" ${extra}>${v}</span>`;}
-function coinsHTML(n,max){const b=breakdown(n);max=max||14;if(!b.length)return `<span class="sub">空空的</span>`;
-  const shown=b.slice(0,max).map(v=>coinEl(v)).join("");return shown+(b.length>max?`<span class="more">…還有${b.length-max}個</span>`:"");}
+function coinsHTML(n,max){const b=breakdown(n);max=max||14;if(!b.length)return `<span class="sub">empty</span>`;
+  const shown=b.slice(0,max).map(v=>coinEl(v)).join("");return shown+(b.length>max?`<span class="more">…+${b.length-max}</span>`:"");}
 
 /* ---------- toast / confetti ---------- */
 function toast(msg,anim){const old=document.querySelector(".toast");if(old)old.remove();const d=document.createElement("div");d.className="toast";d.innerHTML=`${lion(anim||"wave")}<span>${esc(msg)}</span>`;document.body.appendChild(d);clink(true);setTimeout(()=>d.remove(),4200);}
@@ -333,13 +265,13 @@ function confetti(set){set=set||["star","coin","heart","squiggle","party"];for(l
 const $app=document.getElementById("app"), $modal=document.getElementById("modalRoot");
 function go(screen,extra){ui=Object.assign({screen},extra||{});closeModal();render();window.scrollTo(0,0);}
 function topBar(title,backTo,hud){
-  if(title===null) return `<div class="top slim">${hud||""}<button class="iconbtn lockbtn" data-act="gate" aria-label="家長模式">${ic("lock")}</button></div>`;
+  if(title===null) return `<div class="top slim">${hud||""}<button class="iconbtn lockbtn" data-act="gate" aria-label="Parent mode">${ic("lock")}</button></div>`;
   return `<div class="top">${backTo?`<button class="back" data-act="go" data-s="${backTo}">${ic("back")} HOME</button>`:lion(baseMood(),"logo")}
-  <h1>${title}</h1>${hud||""}${backTo?"":`<button class="iconbtn lockbtn" data-act="gate" aria-label="家長模式">${ic("lock")}</button>`}</div>`;
+  <h1>${title}</h1>${hud||""}${backTo?"":`<button class="iconbtn lockbtn" data-act="gate" aria-label="Parent mode">${ic("lock")}</button>`}</div>`;
 }
 const side=(inner,actions)=>`<aside class="side">${inner}${actions?`<div class="actions">${actions}</div>`:""}</aside>`;
 function render(){
-  const f={home,payday,shop,pay,bought,bank,tree,move,game,parent:parentScreen}[ui.screen]||home;
+  const f={home,payday,shop,pay,bought,bank,tree,move,game,room,parent:parentScreen}[ui.screen]||home;
   $app.innerHTML=f();
   $app.dataset.screen=ui.screen; document.body.dataset.screen=ui.screen; $app.classList.toggle("fit",ui.screen!=="parent");
   if(ui.screen==="game") setupGame();
@@ -349,12 +281,12 @@ function render(){
 }
 function greeting(){
   const p=pendingPaydays();
-  if(state.extraPay&&state.extraPay.length) return "爸爸媽媽給你零用錢囉！快來分一分！";
-  if(p>0) return "發薪日到了！我帶硬幣來給你囉！";
+  if(state.extraPay&&state.extraPay.length) return "Pocket money! Sort it!";
+  if(p>0) return "Payday!";
   const w=state.wish&&state.shop.find(i=>i.id===state.wish);
-  if(w){const left=w.price-(state.spend+state.save);if(left<=0)return `${w.name}的錢夠了！要去買嗎？`;return `${w.name}還差 ${left} 元，加油！`;}
-  if(weather().k==="rain"&&state.seeds.length) return "搖錢樹在淋雨，我們一起等太陽出來。";
-  return `嗨 ${state.kidName}！今天要做什麼呢？`;
+  if(w){const left=w.price-(state.spend+state.save);if(left<=0)return `${w.name}: you have enough!`;return `${w.name}$${left} more to go!`;}
+  if(weather().k==="rain"&&state.seeds.length) return "It's raining on the tree.";
+  return `Hi ${state.kidName}!`;
 }
 function pine(x,y,h){const w=h*.42;let p=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y-h}" stroke="#2E5A1C" stroke-width="5"/>`;for(let i=0;i<7;i++){const yy=y-h*.12-i*h*.12, ww=w*(1-i*.12);p+=`<path d="M${x-ww/2} ${yy+ww*.28} L${x} ${yy} L${x+ww/2} ${yy+ww*.28}" fill="none" stroke="#4A805D" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>`;}return p;}
 function waves(x,y){return `<path d="M${x} ${y} q12 -16 24 -2 M${x+44} ${y+26} q12 -16 24 -2 M${x+10} ${y+52} q12 -16 24 -2" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`;}
@@ -399,21 +331,21 @@ function home(){
   const T=window.TOWN, p=pendingPaydays(), open=zonesOpen(), st=treeStage();
   const w=state.wish&&state.shop.find(i=>i.id===state.wish);
   let hud="";
-  if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay iconly" data-act="go" data-s="payday" aria-label="發薪日">${ic("moneybag")}</button>`;
+  if(p>0||(state.extraPay&&state.extraPay.length)) hud+=`<button class="hudbtn hudpay iconly" data-act="go" data-s="payday" aria-label="Payday">${ic("moneybag")}</button>`;
   if(w){ const have=state.spend+state.save, left=Math.max(0,w.price-have), pct=Math.min(100,have/w.price*100);
     hud+=`<button class="hudbtn hudwish" data-act="go" data-s="shop"><span class="wi">${itemIcon(w)}</span><span class="wt"><span class="bar"><i class="bs" style="width:${Math.min(pct,state.spend/w.price*100)}%"></i><i class="bv" style="width:${Math.max(0,pct-Math.min(pct,state.spend/w.price*100))}%"></i></span></span></button>`; }
   const gk=[.42,.58,.72,.86,1,1.14][st];
   const forest=T.L.forest.replace('class="growT" transform="translate(122 199)"',`class="growT" transform="translate(122 199) scale(${gk})"`);
   const L0=townL==null?T.stops.home[0]:townL;
-  return topBar(null,null,`<div class="hud">${hud}</div>`)+
+  return topBar(null,null,`<div class="hud">${starChip()}${hud}</div>`)+
   `<div class="townview" id="townview"><div class="townworld" id="townworld" style="width:2000px;height:1240px;font-size:20px">
-    <svg class="tground" viewBox="0 0 ${TW} ${TH}" aria-hidden="true">${T.ground}<g id="tcars"></g>${T.items}<g>${open>=2?T.beach:T.conR}</g><g>${open>=3?T.park:T.conB}</g><g id="tride"></g>${T.top}</svg>
-    ${tspot(732,476,172,168,`data-act="go" data-s="home" aria-label="HOME"`,T.L.home,tboard("HOME",null,"home"),"t-home")}
-    ${tspot(390,570,170,168,`data-act="go" data-s="shop" aria-label="SHOP"`,T.L.shop,tboard("SHOP",null))}
-    ${tspot(700,180,240,210,`data-act="go" data-s="tree" aria-label="FOREST"`,forest,tboard("FOREST",null),"t-forest")}
-    ${tspot(1100,508,190,186,`data-act="go" data-s="bank" aria-label="BANK"`,T.L.bank,tboard("BANK",null))}
-    ${open>=2?tspot(1560,500,130,90,`data-act="go" data-s="game" data-g="beach" data-stop="beach" aria-label="海邊"`,"",tboard("BEACH",null)):""}
-    ${open>=3?tspot(700,1080,180,110,`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="遊樂園"`,"",tboard("PARK",null)):""}
+    <svg class="tground" viewBox="0 0 ${TW} ${TH}" aria-hidden="true">${T.ground}<g id="tcars"></g>${T.items}<g>${open>=2?T.beach:T.conR}</g><g>${open>=3?T.park:T.conB}</g><g id="tstars"></g><g id="tride"></g>${T.top}</svg>
+    ${tspot(970,640,172,168,`data-act="go" data-s="home" aria-label="HOME"`,T.L.home,tboard("HOME",null,"home"),"t-home")}
+    ${tspot(330,650,170,168,`data-act="go" data-s="shop" aria-label="SHOP"`,T.L.shop,tboard("SHOP",null))}
+    ${tspot(290,190,240,210,`data-act="go" data-s="tree" aria-label="FOREST"`,forest,tboard("FOREST",null),"t-forest")}
+    ${tspot(1080,190,190,186,`data-act="go" data-s="bank" aria-label="BANK"`,T.L.bank,tboard("BANK",null))}
+    ${open>=2?tspot(1560,500,130,90,`data-act="go" data-s="game" data-g="beach" data-stop="beach" aria-label="beach"`,"",tboard("BEACH",null)):""}
+    ${open>=3?tspot(700,1080,180,110,`data-act="go" data-s="game" data-g="boss" data-stop="boss" aria-label="park"`,"",tboard("PARK",null)):""}
     ${lion(walkMood||baseMood(),"maplion tlion","")}
     <div class="tgrain"></div>
   </div><button class="thome" data-act="townhome" aria-label="HOME"><svg viewBox="0 0 40 40" width="34" height="34"><path d="M6 20L20 8L34 20" fill="none" stroke="#C56A4A" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 18V33H30V18" fill="#F1E5CC" stroke="#C56A4A" stroke-width="3.5" stroke-linejoin="round"/><rect x="17" y="23" width="7" height="10" fill="#7FA1BA"/></svg></button></div>
@@ -431,6 +363,7 @@ function initTown(){
   if(townL==null) townL=TOWN.stops.home[0];
   const p=townPlace(townL);
   if(townCam.x==null&&p) townCenter(p.x,p.y-60,false); else townApply();
+  townPts=null; drawTownStars();
   /* vehicles */
   const NSs="http://www.w3.org/2000/svg", loop=document.getElementById("tloop"), LL=loop.getTotalLength(), carsG=document.getElementById("tcars");
   let BUSL=0,bd=1e9; for(let l=0;l<LL;l+=4){ const q=loop.getPointAtLength(l); const e=(q.x-905)**2+(q.y-160)**2; if(e<bd){bd=e;BUSL=l;} }
@@ -453,14 +386,16 @@ function initTown(){
   /* drag to pan */
   view.addEventListener("pointerdown",e=>{ townPan={x:e.clientX,y:e.clientY,cx:townCam.x,cy:townCam.y}; townMoved=false; townCamT=null; });
   view.addEventListener("pointermove",e=>{ if(!townPan) return; const dx=e.clientX-townPan.x, dy=e.clientY-townPan.y; if(!townMoved&&Math.hypot(dx,dy)>9){ townMoved=true; view.classList.add("drag"); } if(townMoved){ townCam.x=townPan.cx-dx/townK; townCam.y=townPan.cy-dy/townK; townApply(); } });
-  const end=()=>{ townPan=null; view.classList.remove("drag"); }; view.addEventListener("pointerup",end); view.addEventListener("pointercancel",end); view.addEventListener("pointerleave",end);
+  const end=e=>{ const wasPan=townPan; townPan=null; view.classList.remove("drag");
+    if(e&&e.type==="pointerup"&&wasPan&&!townMoved&&!e.target.closest(".tspot,.lionbox,button")){ const r=view.getBoundingClientRect(), wx=townCam.x+(e.clientX-r.left)/townK, wy=townCam.y+(e.clientY-r.top)/townK; let L=townNearestL(wx,wy); if(L!=null){ L=townAllowedL(L); townWalkToL(L,null,()=>{}); } } }; view.addEventListener("pointerup",end); view.addEventListener("pointercancel",end); view.addEventListener("pointerleave",end);
   view.addEventListener("click",e=>{ if(townMoved){ e.stopPropagation(); e.preventDefault(); townMoved=false; } },true);
 }
-function townWalkTo(key,done){
-  const st=TOWN.stops[TSTOP[key]]; const walk=document.getElementById("twalk"); if(!st||!walk){ done(); return; }
+function townWalkTo(key,done){ const st=TOWN.stops[TSTOP[key]]; if(!st||!document.getElementById("twalk")){ done(); return; } townWalkToL(st[0],key,done); }
+function townWalkToL(to,key,done){
+  const walk=document.getElementById("twalk"); if(!walk){ done(); return; }
   if(moving){ moveTok++; moving=false; }
-  const to=st[0], from=townL==null?TOWN.stops.home[0]:townL; const box=mapBox();
-  const hit=()=>{ const el=document.querySelector(`.tspot[data-s="${key==="beach"||key==="boss"?"game":key}"]${key==="beach"||key==="boss"?`[data-stop="${key}"]`:""}`); if(el){ el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); } };
+  const from=townL==null?TOWN.stops.home[0]:townL; const box=mapBox();
+  const hit=()=>{ if(!key) return; const el=document.querySelector(`.tspot[data-s="${key==="beach"||key==="boss"?"game":key}"]${key==="beach"||key==="boss"?`[data-stop="${key}"]`:""}`); if(el){ el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit"); } };
   if(Math.abs(to-from)<6||!box){ hit(); setTimeout(done,250); return; }
   const tok=++moveTok; moving=true; walkTarget=key; walkMood="cheer"; setMood(box,"cheer"); box.classList.add("walking");
   const dur=clamp(Math.abs(to-from)/240*1000,500,3800), t0=performance.now(); let lastStep=0, px=walk.getPointAtLength(from).x;
@@ -469,28 +404,101 @@ function townWalkTo(key,done){
     if(Math.abs(p.x-px)>.4) mapLion.dir=p.x>px?1:-1; px=p.x;
     const dist=Math.abs(townL-from), ph=dist/stepLen*Math.PI, sw=Math.sin(ph); b._mv=b._mv||MV0(); Object.assign(b._mv,{jy:Math.abs(sw)*5,rot:mapLion.dir*3+sw*6,sx:1,sy:1-.03*Math.abs(Math.cos(ph))});
     const s=Math.floor(dist/stepLen); if(s!==lastStep){ lastStep=s; sfx("step"); }
-    townCenter(p.x,p.y-60,true);
-    if(t<1) requestAnimationFrame(fr); else { b.classList.remove("walking"); rest(b); moving=false; walkTarget=null; walkMood="wow"; setMood(b,"wow"); tada(); hit(); happyWiggle(b).then(()=>{ walkMood=null; if(tok===moveTok) done(); }); } };
+    townCenter(p.x,p.y-60,true); townCollect();
+    if(t<1) requestAnimationFrame(fr); else { b.classList.remove("walking"); rest(b); moving=false; walkTarget=null; walkMood="wow"; setMood(b,"wow"); if(key) tada(); hit(); happyWiggle(b).then(()=>{ walkMood=null; if(tok===moveTok) done(); }); } };
   requestAnimationFrame(fr);
 }
+/* ===== stars on the town paths + Achoubei's room ===== */
+function roomInit(){ if(typeof state.stars!=="number") state.stars=0; if(!state.room) state.room={owned:[]}; }
+const dayKey=()=>{ const t=new Date(); return t.getFullYear()+"-"+(t.getMonth()+1)+"-"+t.getDate(); };
+const starSVG=(r,c)=>{ let d=""; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r*.46:r; d+=(i?"L":"M")+(Math.cos(a)*rr).toFixed(1)+" "+(Math.sin(a)*rr).toFixed(1); } return `<path d="${d}Z" fill="${c||"#E8C95A"}" stroke="#F7EBC4" stroke-width="2.5" stroke-linejoin="round"/>`; };
+function starChip(){ roomInit(); return `<span class="hudbtn tstarchip" id="tstarchip">${starSVG(13)}<b id="tstarN">${state.stars}</b></span>`.replace(starSVG(13),`<svg viewBox="-16 -16 32 32" width="30" height="30">${starSVG(13)}</svg>`); }
+function bumpStars(){ const n=document.getElementById("tstarN"); if(n){ n.textContent=state.stars; const c=n.parentElement; c.classList.remove("bump"); void c.offsetWidth; c.classList.add("bump"); } }
+function townStarsToday(walk){ roomInit(); const d=dayKey(); const WL=walk.getTotalLength(), open=zonesOpen(), S=TOWN.stops;
+  if(!state.townStars||state.townStars.d!==d){ const lo=open>=3?40:S.shop[0]-10, hi=open>=2?WL-40:S.home[0]+10, left=[]; let g=0;
+    while(left.length<10&&g++<800){ const L=Math.round(lo+Math.random()*(hi-lo)); if(left.some(x=>Math.abs(x-L)<90)) continue; if(Object.values(S).some(s=>Math.abs(s[0]-L)<40)) continue; left.push(L); }
+    state.townStars={d,left}; save(); }
+  return state.townStars; }
+function drawTownStars(){ const g=document.getElementById("tstars"), walk=document.getElementById("twalk"); if(!g||!walk) return;
+  const ts=townStarsToday(walk); g.innerHTML=ts.left.map(L=>{ const p=walk.getPointAtLength(L); return `<g class="tstar" data-l="${L}" transform="translate(${p.x.toFixed(1)} ${(p.y-24).toFixed(1)})"><g class="tstar-in">${starSVG(21)}</g></g>`; }).join(""); }
+function townCollect(){ const ts=state.townStars; if(!ts||!ts.left.length||townL==null) return; const hit=ts.left.filter(L=>Math.abs(L-townL)<22); if(!hit.length) return;
+  ts.left=ts.left.filter(L=>!hit.includes(L)); state.stars=(state.stars||0)+hit.length; save(); sfx("star"); bumpStars();
+  hit.forEach(L=>{ const el=document.querySelector(`.tstar[data-l="${L}"]`); if(el){ el.classList.add("got"); setTimeout(()=>el.remove(),600); } });
+  if(!ts.left.length) setTimeout(()=>{ confetti(["star","star","heart"]); tada(); },300); }
+let townPts=null;
+function townNearestL(x,y){ const walk=document.getElementById("twalk"); if(!walk) return null; if(!townPts){ townPts=[]; const WL=walk.getTotalLength(); for(let l=0;l<=WL;l+=8){ const p=walk.getPointAtLength(l); townPts.push([l,p.x,p.y]); } }
+  let b=null,d=1e9; townPts.forEach(([l,px,py])=>{ const e=(px-x)**2+(py-y)**2; if(e<d){d=e;b=l;} }); return d<170*170?b:null; }
+function townAllowedL(L){ const open=zonesOpen(), S=TOWN.stops; if(open<3&&L<S.shop[0]-10) return S.shop[0]-10; if(open<2&&L>S.home[0]+10) return S.home[0]+10; return L; }
+
+/* ---- furniture ---- */
+const RC={wall:"#EAD9B6",wall2:"#E0CCA4",floor:"#C99A68",floor2:"#B88A5A",cream:"#F4E9D2",terra:"#C56A4A",orange:"#D58A45",pink:"#E2A7B8",sage:"#6A9C74",dgreen:"#2F5C47",blue:"#7FA1BA",lblue:"#9DBACB",yellow:"#E5CB6C",purple:"#6662B5",black:"#2A2624",brown:"#8A5F48"};
+const FURN=[
+ {id:"rug",cost:3,box:[300,500,440,110],art:`<ellipse cx="520" cy="560" rx="210" ry="46" fill="${RC.pink}"/><ellipse cx="520" cy="560" rx="160" ry="32" fill="none" stroke="${RC.cream}" stroke-width="6"/><ellipse cx="520" cy="560" rx="100" ry="18" fill="none" stroke="${RC.terra}" stroke-width="6"/>`},
+ {id:"plant",cost:2,box:[890,420,110,200],art:`<path d="M915 600L925 540H985L995 600Z" fill="${RC.terra}"/>${[-40,-18,0,18,40].map((a,i)=>`<path transform="translate(955 540) rotate(${a})" d="M0 0Q-14 -40 0 -80Q14 -40 0 0Z" fill="${i%2?RC.dgreen:RC.sage}"/>`).join("")}`},
+ {id:"picture",cost:2,box:[350,90,130,110],art:`<rect x="360" y="100" width="110" height="86" rx="3" fill="${RC.brown}"/><rect x="368" y="108" width="94" height="70" fill="${RC.lblue}"/><path d="M368 178L400 140L420 160L440 130L462 178Z" fill="${RC.sage}"/><circle cx="445" cy="122" r="7" fill="${RC.yellow}"/>`},
+ {id:"lights",cost:3,box:[0,10,1000,70],art:`<path d="M0 30Q125 70 250 30T500 30T750 30T1000 30" fill="none" stroke="${RC.black}" stroke-width="2"/>${Array.from({length:20},(_,i)=>{ const x=25+i*50, y=30+Math.abs(Math.sin((x/250)*Math.PI))*18; return `<ellipse cx="${x}" cy="${(y+8).toFixed(1)}" rx="6" ry="9" fill="${[RC.yellow,RC.pink,RC.lblue,RC.orange][i%4]}" class="bulb" style="animation-delay:${(i%4)*.4}s"/>`; }).join("")}`},
+ {id:"curtain",cost:3,box:[90,60,220,240],art:`<rect x="92" y="66" width="216" height="8" rx="4" fill="${RC.black}"/><path d="M100 72H150Q140 180 160 290H100Z" fill="${RC.terra}"/><path d="M300 72H250Q260 180 240 290H300Z" fill="${RC.terra}"/><path d="M112 72V286M288 72V286" stroke="${RC.cream}" stroke-width="3" opacity=".5"/>`},
+ {id:"desk",cost:8,box:[90,300,230,150],art:`<rect x="110" y="352" width="200" height="14" rx="3" fill="${RC.brown}"/><rect x="122" y="366" width="12" height="78" fill="${RC.brown}"/><rect x="286" y="366" width="12" height="78" fill="${RC.brown}"/><rect x="240" y="366" width="46" height="40" fill="#9C7055"/><circle cx="263" cy="386" r="3" fill="${RC.yellow}"/><path d="M150 352V318Q150 306 162 306H190Q202 306 202 318V352Z" fill="${RC.blue}"/><path d="M140 446V400H212V446M140 400H212" fill="none" stroke="${RC.terra}" stroke-width="7" stroke-linejoin="round"/><rect x="212" y="336" width="24" height="16" fill="${RC.yellow}"/><rect x="216" y="326" width="18" height="10" fill="${RC.pink}"/>`},
+ {id:"fishbowl",cost:6,box:[180,272,110,110],art:`<g transform="translate(60 -52)"><g transform="translate(-30 74)"><path d="M170 300Q160 260 205 258Q250 260 240 300Q250 346 205 348Q160 346 170 300Z" fill="${RC.lblue}" opacity=".85"/><path d="M178 278H232" stroke="${RC.cream}" stroke-width="4"/><g class="fish2"><path d="M195 310Q205 300 215 310Q205 320 195 310ZM195 310L188 304V316Z" fill="${RC.orange}"/></g><circle cx="222" cy="292" r="3" fill="none" stroke="${RC.cream}" stroke-width="1.5"/></g></g>`},
+ {id:"shelf",cost:6,box:[330,240,150,210],art:`<rect x="340" y="250" width="130" height="194" rx="3" fill="${RC.brown}"/>${[290,340,390].map(y=>`<rect x="348" y="${y}" width="114" height="6" fill="#6E4A37"/>`).join("")}${[[352,256,RC.terra],[366,262,RC.blue],[378,258,RC.yellow],[392,264,RC.sage],[420,306,RC.pink],[434,300,RC.purple],[448,308,RC.orange],[354,356,RC.lblue],[368,352,RC.terra]].map(([x,y,c])=>`<rect x="${x}" y="${y}" width="12" height="${290-y+(y>300?50:0)+(y>340?50:0)}" fill="${c}"/>`).join("")}<circle cx="430" cy="372" r="14" fill="${RC.yellow}"/>`},
+ {id:"lamp",cost:4,box:[500,220,90,240],art:`<ellipse cx="545" cy="446" rx="22" ry="6" fill="${RC.black}"/><rect x="542" y="290" width="6" height="156" fill="${RC.black}"/><path d="M515 292L528 240H562L575 292Z" fill="${RC.yellow}"/><ellipse cx="545" cy="300" rx="50" ry="14" fill="#FFF3C4" opacity=".35"/>`},
+ {id:"toybox",cost:5,box:[20,500,170,120],art:`<rect x="40" y="540" width="130" height="66" rx="5" fill="${RC.blue}"/><rect x="34" y="528" width="142" height="16" rx="4" fill="${RC.dgreen}"/><circle cx="70" cy="524" r="14" fill="${RC.terra}"/><rect x="96" y="508" width="20" height="22" fill="${RC.yellow}"/><path d="M126 528L140 500L154 528Z" fill="${RC.pink}"/><path d="M80 572H130" stroke="${RC.cream}" stroke-width="5" stroke-linecap="round"/>`},
+ {id:"beanbag",cost:5,box:[220,480,170,130],art:`<path d="M230 600Q220 520 290 500Q350 486 372 540Q392 596 330 604Z" fill="${RC.orange}"/><path d="M262 540Q300 520 340 548" fill="none" stroke="${RC.cream}" stroke-width="4" opacity=".6"/>`},
+ {id:"clock",cost:2,box:[700,80,100,100],art:`<circle cx="750" cy="130" r="38" fill="${RC.cream}" stroke="${RC.terra}" stroke-width="7"/><path d="M750 130V106M750 130L766 140" stroke="${RC.black}" stroke-width="4" stroke-linecap="round"/><circle cx="750" cy="130" r="4" fill="${RC.black}"/>`},
+ {id:"teddy",cost:4,box:[820,330,90,90],art:`<circle cx="846" cy="352" r="9" fill="${RC.brown}"/><circle cx="878" cy="352" r="9" fill="${RC.brown}"/><circle cx="862" cy="372" r="22" fill="${RC.brown}"/><ellipse cx="862" cy="410" rx="24" ry="20" fill="${RC.brown}"/><ellipse cx="862" cy="378" rx="9" ry="7" fill="#E3C4A6"/><circle cx="862" cy="375" r="3" fill="${RC.black}"/><circle cx="854" cy="366" r="2.4" fill="${RC.black}"/><circle cx="870" cy="366" r="2.4" fill="${RC.black}"/>`},
+
+{id:"stickers",cost:2,box:[480,80,120,130],art:`${[[500,100,14,"#E5CB6C"],[560,120,10,"#E2A7B8"],[520,160,12,"#9DBACB"],[580,180,16,"#E5CB6C"],[505,200,8,"#D58A45"]].map(([x,y,r,c])=>{ let d=""; for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r*.46:r; d+=(i?"L":"M")+(x+Math.cos(a)*rr).toFixed(1)+" "+(y+Math.sin(a)*rr).toFixed(1); } return `<path d="${d}Z" fill="${c}"/>`; }).join("")}`},
+ {id:"bunting",cost:2,box:[600,190,300,60],art:`<path d="M610 200Q750 232 890 200" fill="none" stroke="#2A2624" stroke-width="2"/>${Array.from({length:9},(_,i)=>{ const x=622+i*30, y=203+Math.sin(i/8*Math.PI)*14; return `<path d="M${x-11} ${y.toFixed(1)}L${x+11} ${y.toFixed(1)}L${x} ${(y+24).toFixed(1)}Z" fill="${["#C56A4A","#E5CB6C","#7FA1BA","#E2A7B8","#6A9C74"][i%5]}"/>`; }).join("")}`},
+ {id:"dream",cost:2,box:[830,60,90,150],art:`<path d="M872 64V80" stroke="#8A5F48" stroke-width="2"/><circle cx="872" cy="106" r="24" fill="none" stroke="#8A5F48" stroke-width="4"/><path d="M856 94L888 118M888 94L856 118M872 82V130M848 106H896" stroke="#F4E9D2" stroke-width="1.5"/>${[[856,130],[872,134],[888,130]].map(([x,y])=>`<path d="M${x} ${y}V${y+40}" stroke="#8A5F48" stroke-width="1.5"/><path d="M${x} ${y+30}q-6 10 0 22q6 -10 0 -22Z" fill="${x===872?"#E2A7B8":"#9DBACB"}"/>`).join("")}`},
+ {id:"moon",cost:3,box:[15,100,85,110],art:`<ellipse cx="56" cy="150" rx="40" ry="44" fill="#FFF3C4" opacity=".35"/><path d="M66 112a36 36 0 1 0 6 68a28 28 0 1 1 -6 -68Z" fill="#E5CB6C"/><circle cx="46" cy="140" r="3" fill="#C9A94A"/><circle cx="40" cy="160" r="4" fill="#C9A94A"/>`},
+ {id:"balloons",cost:3,box:[300,90,60,200],art:`<path d="M330 280Q322 220 318 160M330 280Q336 230 338 150" fill="none" stroke="#2A2624" stroke-width="1.4"/><ellipse cx="318" cy="136" rx="16" ry="20" fill="#C56A4A"/><ellipse cx="340" cy="124" rx="16" ry="20" fill="#7FA1BA"/><path d="M314 156l4 6 4-6Z" fill="#C56A4A"/><path d="M336 144l4 6 4-6Z" fill="#7FA1BA"/><ellipse cx="312" cy="128" rx="4" ry="6" fill="#fff" opacity=".4"/>`},
+ {id:"wallshelf",cost:3,box:[910,180,90,110],art:`<rect x="915" y="256" width="85" height="9" fill="#8A5F48"/><path d="M930 265v10M985 265v10" stroke="#8A5F48" stroke-width="4"/><path d="M924 256L928 234H948L952 256Z" fill="#C56A4A"/><path d="M938 234q-10 -20 0 -34q10 14 0 34Z" fill="#6A9C74"/><rect x="960" y="222" width="10" height="34" fill="#7FA1BA"/><rect x="972" y="228" width="9" height="28" fill="#E5CB6C"/><rect x="983" y="232" width="9" height="24" fill="#E2A7B8"/>`},
+ {id:"globe",cost:4,box:[282,309,70,70],art:`<g transform="translate(62 94)"><rect x="238" y="272" width="28" height="8" rx="2" fill="#8A5F48"/><path d="M252 272V262" stroke="#8A5F48" stroke-width="3"/><circle cx="252" cy="244" r="20" fill="#7FA1BA"/><path d="M240 236q6 -6 14 -2q4 8 -4 12q-8 2 -10 -10ZM256 250q8 -2 10 6q-4 6 -10 2Z" fill="#6A9C74"/><path d="M230 244a22 22 0 0 0 44 0" fill="none" stroke="#C9A94A" stroke-width="3"/></g>`},
+ {id:"guitar",cost:6,box:[910,290,90,170],art:`<g transform="rotate(12 960 380)"><rect x="955" y="298" width="10" height="80" fill="#8A5F48"/><rect x="951" y="290" width="18" height="16" rx="3" fill="#2A2624"/><path d="M960 370q-28 0 -26 30q-16 6 -10 28q8 22 36 22q28 0 36 -22q6 -22 -10 -28q2 -30 -26 -30Z" fill="#D58A45"/><circle cx="960" cy="410" r="9" fill="#2A2624"/><path d="M958 300V440M962 300V440" stroke="#F4E9D2" stroke-width=".8"/></g>`},
+ {id:"train",cost:5,box:[740,550,160,70],art:`<path d="M740 606H900" stroke="#8A5F48" stroke-width="4"/>${[0,1,2].map(i=>`<rect x="${750+i*48}" y="${572-(i===0?12:0)}" width="40" height="${26+(i===0?12:0)}" rx="5" fill="${["#C56A4A","#E5CB6C","#7FA1BA"][i]}"/><circle cx="${760+i*48}" cy="601" r="5" fill="#2A2624"/><circle cx="${780+i*48}" cy="601" r="5" fill="#2A2624"/>`).join("")}<rect x="754" y="552" width="10" height="10" fill="#2A2624"/><rect x="772" y="566" width="14" height="10" rx="2" fill="#F4E9D2"/>`},
+ {id:"slippers",cost:1,box:[600,560,90,50],art:`<ellipse cx="625" cy="590" rx="14" ry="22" transform="rotate(-70 625 590)" fill="#E2A7B8"/><ellipse cx="660" cy="596" rx="14" ry="22" transform="rotate(-80 660 596)" fill="#E2A7B8"/><circle cx="618" cy="584" r="5" fill="#F4E9D2"/><circle cx="652" cy="590" r="5" fill="#F4E9D2"/>`},
+ {id:"cat",cost:7,box:[390,505,110,70],art:`<path d="M400 560Q398 526 440 520Q478 516 490 548Q494 566 470 568H410Q400 568 400 560Z" fill="#2A2624"/><circle cx="414" cy="536" r="16" fill="#2A2624"/><path d="M402 526l2 -14 9 9ZM418 520l8 -12 3 13Z" fill="#2A2624"/><path d="M406 538q4 3 8 0M418 538q4 3 8 0" stroke="#E5CB6C" stroke-width="1.8" fill="none" stroke-linecap="round"/><path d="M490 556q14 6 6 -12" stroke="#2A2624" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M450 500h9l-9 10h9M462 490h6l-6 7h6" fill="none" stroke="#7FA1BA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`},
+ {id:"horse",cost:6,box:[185,500,110,95],art:`<g transform="translate(130 40)"><g transform="translate(-330 30)"><path d="M392 512Q440 532 488 512" fill="none" stroke="#C56A4A" stroke-width="6" stroke-linecap="round"/><path d="M408 512L414 484M472 512L466 484" stroke="#E5CB6C" stroke-width="5"/><path d="M406 486Q404 470 440 470H462Q470 452 482 450Q494 452 490 470Q486 484 470 486Z" fill="#E5CB6C"/><path d="M476 452q-10 -8 -18 4" fill="#C56A4A"/><circle cx="484" cy="460" r="2" fill="#2A2624"/><path d="M406 476q-12 4 -10 18" stroke="#C56A4A" stroke-width="4" fill="none" stroke-linecap="round"/></g></g>`},
+];
+const FURN_ORDER=["slippers","stickers","bunting","dream","rug","lights","curtain","picture","clock","moon","balloons","wallshelf","globe","lamp","plant","train","toybox","beanbag","teddy","shelf","fishbowl","guitar","horse","cat","desk"];
+function roomBase(){ return `<rect width="1000" height="440" fill="${RC.wall}"/><path d="M0 0H1000V440H0Z" fill="url(#rstripe)"/><rect y="430" width="1000" height="190" fill="${RC.floor}"/>${[470,520,575].map(y=>`<path d="M0 ${y}H1000" stroke="${RC.floor2}" stroke-width="3"/>`).join("")}${[120,380,640,900].map((x,i)=>`<path d="M${x+i*20} 430V470M${x+70} 470V520M${x+30} 520V575M${x+110} 575V620" stroke="${RC.floor2}" stroke-width="3"/>`).join("")}<rect y="424" width="1000" height="10" fill="${RC.cream}"/>
+  <rect x="110" y="80" width="180" height="200" rx="4" fill="${RC.cream}"/><rect x="122" y="92" width="156" height="176" fill="${RC.lblue}"/><circle cx="240" cy="130" r="18" fill="${RC.yellow}"/><path d="M140 200h60a14 14 0 0 0-16-16a20 20 0 0 0-36 2a12 12 0 0 0-8 14Z" fill="${RC.cream}"/><path d="M200 92V268M122 180H278" stroke="${RC.cream}" stroke-width="8"/>
+  <path d="M590 430V300Q590 250 640 250H860Q910 250 910 300V430Z" fill="${RC.terra}"/><path d="M610 430V310Q610 270 650 270H850Q890 270 890 310V430Z" fill="#B65E40"/>
+  <rect x="580" y="400" width="340" height="60" rx="14" fill="${RC.cream}"/><rect x="600" y="380" width="90" height="34" rx="16" fill="#FBF6EC"/>
+  <path d="M640 404H930V470Q930 486 914 486H640Z" fill="${RC.sage}"/>${Array.from({length:12},(_,i)=>`<path d="M${656+(i%6)*44} ${420+Math.floor(i/6)*30}h16" stroke="${RC.cream}" stroke-width="4" stroke-linecap="round"/>`).join("")}
+  <rect x="590" y="470" width="14" height="60" fill="${RC.brown}"/><rect x="900" y="470" width="14" height="60" fill="${RC.brown}"/><ellipse cx="750" cy="534" rx="190" ry="10" fill="#000" opacity=".1"/>`; }
+function roomSVG(own,fresh){ const order=FURN_ORDER.filter(id=>own.has(id)); const back=["moon","stickers","bunting","dream","wallshelf","lights","curtain","balloons","globe","picture","clock","shelf","guitar","lamp","desk","fishbowl"], front=["rug","cat","slippers","train","toybox","beanbag","horse","plant","teddy"];
+  const draw=ids=>ids.filter(id=>own.has(id)).map(id=>{ const f=FURN.find(x=>x.id===id); return `<g class="furn${id===fresh?" fresh":""}" data-f="${id}">${f.art}</g>`; }).join("");
+  return `<svg class="roomsvg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid slice"><defs><pattern id="rstripe" width="60" height="440" patternUnits="userSpaceOnUse"><rect x="0" width="30" height="440" fill="${RC.wall2}" opacity=".45"/></pattern></defs>${roomBase()}${draw(back.filter(i=>i!=="fishbowl"))}${draw(["fishbowl"])}${draw(front.filter(i=>i!=="teddy"))}</svg>${own.has("teddy")?`<svg class="roomsvg top" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid slice"><g class="furn${fresh==="teddy"?" fresh":""}">${FURN.find(x=>x.id==="teddy").art}</g></svg>`:""}`; }
+function room(){ roomInit(); const own=new Set(state.room.owned);
+  const cards=FURN_ORDER.map(id=>{ const f=FURN.find(x=>x.id===id), has=own.has(id), can=state.stars>=f.cost; const [x,y,w,h]=f.box;
+    return `<button class="fcard${has?" owned":can?"":" poor"}" data-act="furn" data-id="${id}" aria-label="${id}"><svg viewBox="${x-6} ${y-6} ${w+12} ${h+12}">${f.art}</svg><span class="fcost">${has?`<svg viewBox="0 0 20 20" width="22" height="22"><path d="M4 10l4 4 8-9" fill="none" stroke="#2F5C47" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`:`<svg viewBox="-16 -16 32 32" width="22" height="22">${starSVG(13)}</svg>${f.cost}`}</span></button>`; }).join("");
+  return topBar(`${ic("home")} HOME`,"home",`<div class="hud">${starChip()}</div>`).replace(` HOME</button>`,` TOWN</button>`)+
+   `<div class="roomwrap"><div class="roomscene" id="roomscene">${roomSVG(own,ui.fresh)}${lion("wave","roomlion","")}</div><div class="roomshop">${cards}</div></div>`; }
+function furnAsk(id){ const f=FURN.find(x=>x.id===id); if(!f) return; roomInit(); if(state.room.owned.includes(id)){ const g=document.querySelector(`.furn[data-f="${id}"]`); if(g){ g.classList.remove("fresh"); void g.getBBox; g.classList.add("fresh"); } return; }
+  const [x,y,w,h]=f.box, ok=state.stars>=f.cost;
+  openModal(`<div class="sheet fsheet"><svg class="fbig" viewBox="${x-10} ${y-10} ${w+20} ${h+20}">${f.art}</svg><div class="fprice"><svg viewBox="-16 -16 32 32" width="40" height="40">${starSVG(13)}</svg><b>${f.cost}</b></div>
+   <div class="row">${ok?`<button class="btn g" data-act="furnbuy" data-id="${id}"><svg viewBox="0 0 20 20" width="34" height="34"><path d="M4 10l4 4 8-9" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`:`<div class="fneed">${state.stars} / ${f.cost}</div>`}<button class="btn w" data-act="close">${ic("back")}</button></div></div>`);
+  if(!ok){ const b=document.querySelector(".roomlion"); if(b) setMood(b,"shy"); sfx("thud"); } }
+function furnBuy(id){ const f=FURN.find(x=>x.id===id); roomInit(); if(!f||state.stars<f.cost||state.room.owned.includes(id)) return; state.stars-=f.cost; state.room.owned.push(id); save(); closeModal(); go("room",{fresh:id}); tada(); confetti(["star","heart","star"]); const b=document.querySelector(".roomlion"); if(b){ setMood(b,"cheer"); setTimeout(()=>setMood(b,"wave"),1600); } }
 
 /* payday */
 function payday(){
   if(!ui.pd){ const ex=state.extraPay&&state.extraPay.length&&!pendingPaydays(); ui.pd={left:ex?state.extraPay.slice().sort((a,b)=>b-a):breakdown10(state.weekly),spend:[],save:[],tree:[],fresh:true,extra:!!ex}; }
   const pd=ui.pd, done=pd.left.length===0; setTimeout(()=>{ if(ui.pd) ui.pd.fresh=false; },50);
-  const line = done?"分好了！按「完成」就放進去囉！":"點一個罐子，把硬幣放進去！";
-  return topBar(`${ic("moneybag")} 發薪日`,"home")+
+  const line = done?"All sorted! Tap DONE.":"Tap a jar to drop coins in!";
+  return topBar(`${ic("moneybag")} Payday`,"home")+
   `<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion(done?"cheer":"wave")}`,
-    `<button class="btn w" data-act="pdundo" ${pd.spend.length+pd.save.length+pd.tree.length?"":"disabled"}>${ic("undo")} 拿回來</button>
-     <button class="btn g" data-act="pddone" ${done?"":"disabled"}>${ic("check")} 完成</button>`)}
+    `<button class="btn w" data-act="pdundo" ${pd.spend.length+pd.save.length+pd.tree.length?"":"disabled"}>${ic("undo")} Undo</button>
+     <button class="btn g" data-act="pddone" ${done?"":"disabled"}>${ic("check")} Done</button>`)}
   <main class="main">
-  <div class="card sky"><div class="pd-coins" id="pdLeft">${pd.left.map((v,i)=>coinEl(v,`style="--s:1.7;--d:${pd.fresh?i*0.12:0}s" data-i="${i}" class-x="dragcoin ${pd.fresh?"drop":""}"`)).join("")||`<span class="sub">硬幣都分完了 ${ic("check")}</span>`}</div>
-  ${pd.left.length?`<div class="pdhint">${ic("tap")} 用手指把硬幣拖到罐子裡！</div>`:""}</div>
+  <div class="card sky"><div class="pd-coins" id="pdLeft">${pd.left.map((v,i)=>coinEl(v,`style="--s:1.7;--d:${pd.fresh?i*0.12:0}s" data-i="${i}" class-x="dragcoin ${pd.fresh?"drop":""}"`)).join("")||`<span class="sub">All sorted ${ic("check")}</span>`}</div>
+  ${pd.left.length?`<div class="pdhint">${ic("tap")} Drag coins into the jars!</div>`:""}</div>
   <div class="pd-jars">
-    ${[["spend","bag","商店","j-spend","想買東西"],["save","bank","銀行","j-save","慢慢存"],["tree","sprout","搖錢樹","j-tree",`${state.lockWeeks} 週後收成`]].map(([k,e,n,c,h])=>`
+    ${[["spend","bag","Shop","j-spend","spend"],["save","bank","Bank","j-save","save"],["tree","sprout","Tree","j-tree",`${state.lockWeeks}  wks`]].map(([k,e,n,c,h])=>`
     <button class="jar ${c}" data-act="pdput" data-k="${k}" id="pd-${k}"><div class="ico">${ic(e)}</div><div class="nm">${n}</div><div class="hint">${h}</div>
-    <div class="amt">${pd[k].reduce((a,b)=>a+b,0)}<small> 元</small></div><div class="coins">${pd[k].map(v=>coinEl(v)).join("")}</div>
-    ${done?"":`<div class="tap">${ic("tap")} 點我放進來</div>`}</button>`).join("")}
+    <div class="amt">${pd[k].reduce((a,b)=>a+b,0)}<small> </small></div><div class="coins">${pd[k].map(v=>coinEl(v)).join("")}</div>
+    ${done?"":`<div class="tap">${ic("tap")} Tap to add</div>`}</button>`).join("")}
   </div></main></div>`;
 }
 function breakdown10(n){const out=[];n=Math.round(n);while(n>=10){out.push(10);n-=10;}while(n>=5){out.push(5);n-=5;}while(n>=1){out.push(1);n-=1;}return out;}
@@ -500,42 +508,42 @@ function shop(){
   const cat=ui.cat||"food";
   const items=state.shop.filter(i=>i.cat===cat);
   return topBar(`${ic("shop")} SHOP`,"home")+
-  `<div class="body">${side(`<div class="walletline">${ic("bag")}<span>商店有</span><b>${state.spend} 元</b><span class="coins">${coinsHTML(state.spend,6)}</span></div>
+  `<div class="body">${side(`<div class="walletline">${ic("bag")}<span>Shop</span><b>$${state.spend}</b><span class="coins">${coinsHTML(state.spend,6)}</span></div>
     <div class="tabs">${CATS.map(c=>`<button class="tab ${c.k===cat?"on":""}" data-act="cat" data-c="${c.k}"><span class="e">${ic(c.e)}</span>${c.n}</button>`).join("")}</div>
-    <button class="tab other" data-act="custom"><span class="e">${ic("gift")}</span>買別的東西</button>`)}
+    <button class="tab other" data-act="custom"><span class="e">${ic("gift")}</span>Something else</button>`)}
   <main class="main"><div class="items">${items.map(i=>`<button class="item ${i.price>state.spend?"cant":""}" data-act="item" data-id="${i.id}">
-    ${state.wish===i.id?`<span class="star">${ic("star")}</span>`:""}<div class="e">${itemIcon(i)}</div><div class="n">${esc(i.name)}</div><div class="p">${i.price} 元</div></button>`).join("")||'<div class="sub">這裡還沒有東西</div>'}</div></main></div>`;
+    ${state.wish===i.id?`<span class="star">${ic("star")}</span>`:""}<div class="e">${itemIcon(i)}</div><div class="n">${esc(i.name)}</div><div class="p">$${i.price}</div></button>`).join("")||'<div class="sub">Nothing here yet</div>'}</div></main></div>`;
 }
 function getItem(id){ return state.shop.find(i=>i.id===id) || (tmpItem&&tmpItem.id===id?tmpItem:null); }
 let tmpItem=null;
 function priceEditor(p){
-  return `<div class="pricebox"><span class="pl">實際價格</span><input id="mp" type="number" inputmode="numeric" min="0" max="99999" value="${p}"><span>元</span></div>
-  <div class="denoms">${DENOMS.slice().reverse().map(v=>`<button class="dn" data-act="mpadd" data-v="${v}"><span>+</span>${coinEl(v,'style="--s:.85"')}</button>`).join("")}<button class="dn clr" data-act="mpclr">清除</button></div>`;
+  return `<div class="pricebox"><span class="pl">Price</span><input id="mp" type="number" inputmode="numeric" min="0" max="99999" value="${p}"><span></span></div>
+  <div class="denoms">${DENOMS.slice().reverse().map(v=>`<button class="dn" data-act="mpadd" data-v="${v}"><span>+</span>${coinEl(v,'style="--s:.85"')}</button>`).join("")}<button class="dn clr" data-act="mpclr">Clear</button></div>`;
 }
 function itemModal(id){
   const it=getItem(id); if(!it) return;
   if(ui.mpFor!==id){ ui.mpFor=id; ui.mp=it.price; }
   const price=Math.max(0,Math.round(ui.mp||0)); const can=price>0&&state.spend>=price, total=state.spend+state.save;
-  const line = price<=0? "先輸入這個東西要多少錢喔！" : can? `${it.name}要 ${price} 元，你的商店有 ${state.spend} 元，可以買！`
-    : total>=price ? `商店只有 ${state.spend} 元，還差 ${price-state.spend} 元。可以從銀行拿錢出來喔！`
-    : `${it.name}要 ${price} 元，還差 ${price-state.spend} 元。先存起來，設成願望吧！`;
+  const line = price<=0? "Type the price first!" : can? `${it.name} costs $${price}. You have $${state.spend}. You can buy it!`
+    : total>=price ? `You have $${state.spend}. Need $${price-state.spend} more. Get some from the bank!`
+    : `${it.name} costs $${price}. Need $${price-state.spend} more. Make it a wish!`;
   openModal(`<div class="sheet wide buy"><div class="l"><div class="row" style="justify-content:center;gap:4px">${lion(can?"cheer":total>=price?"shy":"sad","","width:110px")}<div class="e">${itemIcon(it)}</div></div><div class="n">${esc(it.name)}</div>
     ${priceEditor(price)}
     <div class="coins" style="margin:8px 0;min-height:44px">${coinsHTML(price,10)}</div>
     <div class="sub" style="font-size:19px">${esc(line)}</div></div>
     <div class="btns">
-      ${can?`<button class="btn g" data-act="buy" data-id="${it.id}">${ic("coins")} 用錢付 ${price} 元</button>`:""}
-      ${price>0&&!can&&total>=price?`<button class="btn b" data-act="go" data-s="bank" data-atm="wd">${ic("bank")} 去銀行領錢</button>`:""}
-      ${tmpItem&&tmpItem.id===it.id?"":state.wish===it.id?`<button class="btn w" data-act="unwish">取消願望</button>`:`<button class="btn" data-act="wish" data-id="${it.id}">${ic("star")} 設成我的願望</button>`}
-      <button class="btn w" data-act="close">先不要</button></div></div>`);
+      ${can?`<button class="btn g" data-act="buy" data-id="${it.id}">${ic("coins")} Pay $${price}</button>`:""}
+      ${price>0&&!can&&total>=price?`<button class="btn b" data-act="go" data-s="bank" data-atm="wd">${ic("bank")} Get from bank</button>`:""}
+      ${tmpItem&&tmpItem.id===it.id?"":state.wish===it.id?`<button class="btn w" data-act="unwish">Cancel wish</button>`:`<button class="btn" data-act="wish" data-id="${it.id}">${ic("star")} Make a wish</button>`}
+      <button class="btn w" data-act="close">Not now</button></div></div>`);
 }
 function customModal(){
   const c=ui.cust||(ui.cust={name:"",cat:ui.cat||"food"});
-  openModal(`<div class="sheet wide buy"><div class="l"><div class="n">${ic("gift")} 買別的東西</div>
-    <div class="pricebox"><span class="pl">東西名稱</span><input id="cname" type="text" maxlength="12" placeholder="例如：貼紙" value="${esc(c.name)}"></div>
+  openModal(`<div class="sheet wide buy"><div class="l"><div class="n">${ic("gift")} Something else</div>
+    <div class="pricebox"><span class="pl">Name</span><input id="cname" type="text" maxlength="12" placeholder="e.g. stickers" value="${esc(c.name)}"></div>
     <div class="catpick">${CATS.map(x=>`<button class="dn ${x.k===c.cat?"on":""}" data-act="ccat" data-c="${x.k}">${ic(x.e)}<span>${x.n}</span></button>`).join("")}</div>
-    <div class="sub" style="font-size:18px;margin-top:8px">輸入名字、選分類，再按「下一步」輸入價格</div></div>
-    <div class="btns"><button class="btn g" data-act="cnext">${ic("next")} 下一步</button><button class="btn w" data-act="close">先不要</button></div></div>`);
+    <div class="sub" style="font-size:18px;margin-top:8px">Type a name, pick a type, then NEXT</div></div>
+    <div class="btns"><button class="btn g" data-act="cnext">${ic("next")} Next</button><button class="btn w" data-act="close">Not now</button></div></div>`);
 }
 
 /* coin picker (pay / move) */
@@ -543,37 +551,37 @@ function pickerState(){ if(!ui.pk){ const src=ui.screen==="pay"?"spend":ui.from;
 function pickerZones(srcName){
   const pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0);
   return {sum,html:`<div class="picker">
-    <div class="zone"><h3>${srcName}（點硬幣）</h3><div class="coins">${pk.wallet.map((v,i)=>pk.taken.includes(i)?"":coinEl(v,`data-act="pk" data-i="${i}"`)).join("")||'<span class="sub">沒有硬幣了</span>'}</div></div>
-    <div class="zone tray"><h3>拿出來的錢（點一下放回去）</h3><div class="coins">${pk.taken.map(i=>coinEl(pk.wallet[i],`data-act="pkback" data-i="${i}"`)).join("")||'<span class="sub">還沒拿</span>'}</div>
-    <div class="sum">${sum} 元</div><div class="need" id="need"></div></div></div>`};
+    <div class="zone"><h3>${srcName} (tap coins)</h3><div class="coins">${pk.wallet.map((v,i)=>pk.taken.includes(i)?"":coinEl(v,`data-act="pk" data-i="${i}"`)).join("")||'<span class="sub">No coins</span>'}</div></div>
+    <div class="zone tray"><h3>Your money (tap to put back)</h3><div class="coins">${pk.taken.map(i=>coinEl(pk.wallet[i],`data-act="pkback" data-i="${i}"`)).join("")||'<span class="sub">none yet</span>'}</div>
+    <div class="sum">$${sum}</div><div class="need" id="need"></div></div></div>`};
 }
 function pay(){
   const it0=getItem(ui.item); if(!it0){ui.screen="shop";return shop();}
   const it={...it0,price:ui.price||it0.price};
-  const {sum,html}=pickerZones(`${ic("bag")} 商店`);
+  const {sum,html}=pickerZones(`${ic("bag")} Shop`);
   const ok=sum>=it.price, change=sum-it.price;
-  const line = sum===0?`${it.name}要 ${it.price} 元，點錢拿出來付錢！`: !ok?`還差 ${it.price-sum} 元喔！`: change>0?`錢夠了！付 ${sum} 元，阿臭被會找你 ${change} 元。`:`剛剛好 ${it.price} 元！好厲害！`;
-  return topBar(`付錢：${itemIcon(it)} ${esc(it.name)}`,"home")+
-  `<div class="body">${side(`<div class="pricetag">${itemIcon(it)}<span>${it.price} 元</span></div><div class="bubble">${esc(line)}${sayBtn(line)}</div>${lion(ok?"cheer":sum>0?"shy":"wave")}`,
-    `<button class="btn w" data-act="go" data-s="shop">${ic("back")} 回商店</button><button class="btn g" data-act="paydo" ${ok?"":"disabled"}>${ic("pay")} 付錢！</button>`)}
+  const line = sum===0?`${it.name} costs $${it.price}. Tap money to pay!`: !ok?`Need $${it.price-sum} more!`: change>0?`Paid $${sum}. Your change is $${change}.`:`Exactly $${it.price}! Great!`;
+  return topBar(`Pay: ${itemIcon(it)} ${esc(it.name)}`,"home")+
+  `<div class="body">${side(`<div class="pricetag">${itemIcon(it)}<span>$${it.price}</span></div><div class="bubble">${esc(line)}${sayBtn(line)}</div>${lion(ok?"cheer":sum>0?"shy":"wave")}`,
+    `<button class="btn w" data-act="go" data-s="shop">${ic("back")} Shop</button><button class="btn g" data-act="paydo" ${ok?"":"disabled"}>${ic("pay")} Pay!</button>`)}
   <main class="main">${html}</main></div>`;
 }
 function move(){
-  const names={spend:`${ic("bag")} 商店`,save:`${ic("bank")} 銀行`,tree:`${ic("sprout")} 搖錢樹`};
+  const names={spend:`${ic("bag")} Shop`,save:`${ic("bank")} Bank`,tree:`${ic("sprout")} Tree`};
   const {sum,html}=pickerZones(names[ui.from]);
-  const line = ui.to==="tree" ? `要種多少錢呢？種下去要 ${state.lockWeeks} 週後才能收成喔！` : ui.to==="save"?"要存多少錢進銀行？":"要從銀行拿多少錢出來？";
+  const line = ui.to==="tree" ? `How much to plant? Ready in ${state.lockWeeks} weeks!` : ui.to==="save"?"How much to save?":"How much to take out?";
   return topBar(`${names[ui.from]} ${ic("next")} ${names[ui.to]}`,"home")+
   `<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion("shy")}`,
-    `<button class="btn w" data-act="go" data-s="${ui.back||"home"}">取消</button><button class="btn g" data-act="movedo" ${sum>0?"":"disabled"}>${ic("check")} 好了</button>`)}
+    `<button class="btn w" data-act="go" data-s="${ui.back||"home"}">Cancel</button><button class="btn g" data-act="movedo" ${sum>0?"":"disabled"}>${ic("check")} OK</button>`)}
   <main class="main">${html}</main></div>`;
 }
 function bought(){
   const v=ui.v; const cat=CATS.find(c=>c.k===v.cat);
-  const line=v.cat==="sub"?`訂閱了${v.name}！把兌換券給爸爸媽媽看，就可以一起聽${v.name}囉！`:`買到${v.name}了！把兌換券給爸爸媽媽看，就可以去買真的${v.name}囉！`;
-  return topBar(`${ic("party")} 買到了！`,"home")+
-  `<div class="body">${side(`<div class="bubble">${esc(line)}${sayBtn(line)}${ui.change>0?`<div style="margin-top:8px">找你 ${ui.change} 元：<span class="coins" style="display:inline-flex">${coinsHTML(ui.change)}</span></div>`:""}</div>${lion("cheer")}`,
-    `<button class="btn w" data-act="go" data-s="home">${ic("home")} HOME</button><button class="btn g" data-act="go" data-s="game" data-g="${v.cat}" data-e="${iconOf(v)}">${ic("play")} ${cat?cat.n:""}闖關</button>`)}
-  <main class="main center"><div class="ticket big"><div>${ic("ticket")} 兌換券</div><div class="e">${itemIcon(v)}</div><div class="tn">${esc(v.name)}</div><div class="sub">${v.price} 元・${new Date(v.boughtAt).toLocaleDateString("zh-TW")}</div></div></main></div>`;
+  const line=v.cat==="sub"?`You got ${v.name}! Show the ticket to Mom or Dad!`:`You got ${v.name}! Show the ticket to Mom or Dad!`;
+  return topBar(`${ic("party")} Got it!`,"home")+
+  `<div class="body">${side(`<div class="bubble">${esc(line)}${sayBtn(line)}${ui.change>0?`<div style="margin-top:8px">Change $${ui.change}:<span class="coins" style="display:inline-flex">${coinsHTML(ui.change)}</span></div>`:""}</div>${lion("cheer")}`,
+    `<button class="btn w" data-act="go" data-s="home">${ic("home")} HOME</button><button class="btn g" data-act="go" data-s="game" data-g="${v.cat}" data-e="${iconOf(v)}">${ic("play")} ${cat?cat.n:""} game</button>`)}
+  <main class="main center"><div class="ticket big"><div>${ic("ticket")} Ticket</div><div class="e">${itemIcon(v)}</div><div class="tn">${esc(v.name)}</div><div class="sub">$${v.price}・${new Date(v.boughtAt).toLocaleDateString("en-US")}</div></div></main></div>`;
 }
 
 /* bank */
@@ -587,42 +595,42 @@ function bank(){
   let lcd="", keys="", sideExtra="", line="";
   const key=(act,label,cls,extra,dis)=>`<button class="atmkey ${cls||""}" data-act="${act}" ${extra||""} ${dis?"disabled":""}>${label}</button>`;
   if(a.mode==="menu"){
-    line = state.save>0?`歡迎光臨！你在銀行存了 ${state.save} 元。要做什麼呢？`:"歡迎光臨！還沒有存錢喔，按「存錢」把錢放進來吧！";
-    lcd=`<div class="l1">您好，${esc(state.kidName)}！</div><div class="l2">存款餘額</div><div class="big">${state.save}<small> 元</small></div>
-      <div class="l3">${ic("sprout")} 下一個 1 元利息</div><div class="lbar"><i style="width:${prog}%"></i></div><div class="l4">每月 1 號發利息・年利率 ${r.toFixed(1)}%</div>`;
-    keys=`<div class="softkeys">${key("atm",`${ic("down")}<span>存錢</span>`,"sk g",'data-m="dep"',state.spend<=0)}${key("atm",`${ic("up")}<span>領錢</span>`,"sk o",'data-m="wd"',state.save<=0)}${key("atm",`${ic("sprout")}<span>種搖錢樹</span>`,"sk t",'data-m="tree"',state.save<=0)}</div>`;
+    line = state.save>0?`Hi! You have $${state.save} in the bank.`:"Hi! Tap SAVE to put money in.";
+    lcd=`<div class="l1">Hi, ${esc(state.kidName)}!</div><div class="l2">BALANCE</div><div class="big">${state.save}<small> </small></div>
+      <div class="l3">${ic("sprout")} Next $1 interest</div><div class="lbar"><i style="width:${prog}%"></i></div><div class="l4">Interest on the 1st · ${r.toFixed(1)}% a year</div>`;
+    keys=`<div class="softkeys">${key("atm",`${ic("down")}<span>SAVE</span>`,"sk g",'data-m="dep"',state.spend<=0)}${key("atm",`${ic("up")}<span>TAKE</span>`,"sk o",'data-m="wd"',state.save<=0)}${key("atm",`${ic("sprout")}<span>PLANT</span>`,"sk t",'data-m="tree"',state.save<=0)}</div>`;
   }else if(a.mode==="dep"){
-    line="把硬幣放進投幣口！點左邊的硬幣就會投進去喔！";
-    lcd=`<div class="l1">存款</div><div class="l2">請放入硬幣</div><div class="big">${a.amt}<small> 元</small></div><div class="lcoins">${a.taken.map(i=>coinEl(a.wallet[i],'style="--s:.8"')).join("")}</div>`;
-    keys=`<div class="softkeys">${key("atmcancel",`${ic("cross")}<span>取消</span>`,"sk r")}${key("atmok",`${ic("check")}<span>確定存入</span>`,"sk g","",a.amt<=0)}</div>`;
-    sideExtra=`<div class="card atmwallet"><div class="sub">${ic("bag")} 商店的錢（點我投幣）</div><div class="coins">${a.wallet.map((v,i)=>a.taken.includes(i)?"":coinEl(v,`data-act="atmin" data-i="${i}" style="--s:1.25"`)).join("")||'<span class="sub">沒有硬幣了</span>'}</div></div>`;
+    line="Tap coins to put them in!";
+    lcd=`<div class="l1">Bank</div><div class="l2">Insert coins</div><div class="big">${a.amt}<small> </small></div><div class="lcoins">${a.taken.map(i=>coinEl(a.wallet[i],'style="--s:.8"')).join("")}</div>`;
+    keys=`<div class="softkeys">${key("atmcancel",`${ic("cross")}<span>Cancel</span>`,"sk r")}${key("atmok",`${ic("check")}<span>SAVE</span>`,"sk g","",a.amt<=0)}</div>`;
+    sideExtra=`<div class="card atmwallet"><div class="sub">${ic("bag")} Shop money (tap to insert)</div><div class="coins">${a.wallet.map((v,i)=>a.taken.includes(i)?"":coinEl(v,`data-act="atmin" data-i="${i}" style="--s:1.25"`)).join("")||'<span class="sub">No coins</span>'}</div></div>`;
   }else if(a.mode==="wd"||a.mode==="tree"){
     const tr=a.mode==="tree";
-    line= tr?"要轉多少錢到搖錢樹？用下面的按鍵加加看！":"要領多少錢？用下面的按鍵加加看！";
-    lcd=`<div class="l1">${tr?"轉進搖錢樹":"提款"}</div><div class="l2">${tr?"要轉多少錢？":"要領多少錢？"}</div><div class="big">${a.amt}<small> 元</small></div><div class="l4">存款還有 ${state.save-a.amt} 元</div>`;
-    keys=`<div class="numkeys">${DENOMS.slice().reverse().map(v=>key("atmadd",`<span class="pl">+</span>${coinEl(v,'style="--s:.95"')}`,"nk",`data-v="${v}"`,a.amt+v>state.save)).join("")}${key("atmclr","清除","nk clr","",a.amt<=0)}</div>
-      <div class="softkeys">${key("atmcancel",`${ic("cross")}<span>取消</span>`,"sk r")}${key("atmok",`${ic("check")}<span>確定</span>`,"sk g","",a.amt<=0)}</div>`;
+    line= tr?"How much to plant?":"How much to take out?";
+    lcd=`<div class="l1">${tr?"Plant":"Take out"}</div><div class="l2">${tr?"How much?":"How much?"}</div><div class="big">${a.amt}<small> </small></div><div class="l4">Left in bank $${state.save-a.amt}</div>`;
+    keys=`<div class="numkeys">${DENOMS.slice().reverse().map(v=>key("atmadd",`<span class="pl">+</span>${coinEl(v,'style="--s:.95"')}`,"nk",`data-v="${v}"`,a.amt+v>state.save)).join("")}${key("atmclr","Clear","nk clr","",a.amt<=0)}</div>
+      <div class="softkeys">${key("atmcancel",`${ic("cross")}<span>Cancel</span>`,"sk r")}${key("atmok",`${ic("check")}<span>OK</span>`,"sk g","",a.amt<=0)}</div>`;
   }else if(a.mode==="busy"){
-    line="機器在動了…等一下下！"; lcd=`<div class="l1">處理中</div><div class="l2">請稍候…</div><div class="dots"><i></i><i></i><i></i></div>`;
+    line="Working…"; lcd=`<div class="l1">WORKING</div><div class="l2">Please wait…</div><div class="dots"><i></i><i></i><i></i></div>`;
   }else if(a.mode==="done"){
     const rc=a.rc||{};
-    line= rc.kind==="dep"?`存好了！銀行現在有 ${state.save} 元。拿好明細表喔！`: rc.kind==="tree"?`轉好了！${rc.amt} 元種到搖錢樹了！`:`領好了！${rc.amt} 元放進商店了！`;
-    lcd=`<div class="l1">交易完成</div><div class="l2">謝謝光臨！</div><div class="big">${ic("check")}</div><div class="l4">存款餘額 ${state.save} 元</div>`;
-    keys=`<div class="softkeys">${key("atmdone",`${ic("check")}<span>完成</span>`,"sk g")}</div>`;
+    line= rc.kind==="dep"?`Saved! The bank has $${state.save}.`: rc.kind==="tree"?`Done! $${rc.amt} planted!`:`Done! $${rc.amt} to the shop!`;
+    lcd=`<div class="l1">DONE</div><div class="l2">Thank you!</div><div class="big">${ic("check")}</div><div class="l4">Balance $${state.save}</div>`;
+    keys=`<div class="softkeys">${key("atmdone",`${ic("check")}<span>Done</span>`,"sk g")}</div>`;
   }
-  const rc=a.mode==="done"&&a.rc?`<div class="receipt" id="receipt"><b>阿臭被銀行</b><span>交易明細表</span><hr><span>${new Date(a.rc.t).toLocaleDateString("zh-TW")} ${new Date(a.rc.t).toLocaleTimeString("zh-TW",{hour:"2-digit",minute:"2-digit"})}</span><span>${a.rc.kind==="dep"?"存入":a.rc.kind==="tree"?"轉入搖錢樹":"領出"}　<b>${a.rc.amt} 元</b></span><span>存款餘額　<b>${state.save} 元</b></span><hr><span class="thx">謝謝光臨 ♥</span></div>`:"";
+  const rc=a.mode==="done"&&a.rc?`<div class="receipt" id="receipt"><b>ACHOUBEI BANK</b><span>RECEIPT</span><hr><span>${new Date(a.rc.t).toLocaleDateString("en-US")} ${new Date(a.rc.t).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"})}</span><span>${a.rc.kind==="dep"?"Saved":a.rc.kind==="tree"?"To tree":"Taken"} <b>$${a.rc.amt}</b></span><span>Balance <b>$${state.save}</b></span><hr><span class="thx">Thank you ♥</span></div>`:"";
   return topBar(`${ic("bank")} BANK`,"home")+
   `<div class="body">${side(`<div class="bubble">${esc(line)}${sayBtn(line)}</div>${sideExtra}${lion(a.mode==="done"?"cheer":a.mode==="dep"||a.mode==="busy"?"wow":"shy")}`)}
   <main class="main"><div class="atm">
-    <div class="atmtop"><span class="lamp"></span>阿臭被銀行<span class="atmsub">ATM</span><span class="lamp"></span></div>
+    <div class="atmtop"><span class="lamp"></span>ACHOUBEI BANK<span class="atmsub">ATM</span><span class="lamp"></span></div>
     <div class="atmface">
       <div class="atmscreen"><div class="lcd">${lcd}</div></div>
       <div class="atmside">${keys}</div>
     </div>
     <div class="atmslots">
-      <div class="slot" id="coinslot"><div class="mouth"></div><span>${ic("down")} 投幣口</span></div>
-      <div class="slot" id="cashslot"><div class="mouth wide"></div><span>${ic("up")} 出錢口</span><div class="cashout" id="cashout"></div></div>
-      <div class="slot" id="rcslot"><div class="mouth thin"></div><span>${ic("notebook")} 明細表</span>${rc}</div>
+      <div class="slot" id="coinslot"><div class="mouth"></div><span>${ic("down")} COINS IN</span></div>
+      <div class="slot" id="cashslot"><div class="mouth wide"></div><span>${ic("up")} CASH OUT</span><div class="cashout" id="cashout"></div></div>
+      <div class="slot" id="rcslot"><div class="mouth thin"></div><span>${ic("notebook")} RECEIPT</span>${rc}</div>
     </div>
   </div></main></div>`;
 }
@@ -635,16 +643,16 @@ function atmFinish(kind,amt){
     if(dispense){ const out=document.getElementById("cashout"); if(out){ breakdown(amt).slice(0,10).forEach((v,k)=>setTimeout(()=>{ out.insertAdjacentHTML("beforeend",coinEl(v,'class-x="pop" style="--s:1.1"')); clink(k%2===0); },k*140)); } }
   },500);
   setTimeout(()=>{
-    if(kind==="dep"){ state.spend-=amt; state.save+=amt; log("move","ATM 存進銀行",amt); }
-    else if(kind==="wd"){ state.save-=amt; state.spend+=amt; log("move","ATM 從銀行領出來",amt); }
-    else { state.save-=amt; state.seeds.push({id:uid(),amount:amt,value:amt,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+amt; log("plant","ATM 種搖錢樹（從銀行）",amt); }
+    if(kind==="dep"){ state.spend-=amt; state.save+=amt; log("move","ATM Saved to bank",amt); }
+    else if(kind==="wd"){ state.save-=amt; state.spend+=amt; log("move","ATM Taken from bank",amt); }
+    else { state.save-=amt; state.seeds.push({id:uid(),amount:amt,value:amt,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+amt; log("plant","ATM Plant tree (from bank)",amt); }
     save(); a.mode="done"; a.rc={kind,amt,t:Date.now()}; a.amt=0; a.taken=[]; a.wallet=null;
     render(); atmPrint(); tada(); if(kind==="dep") confetti(["coin","star","bank"]);
   }, dispense?600+Math.min(10,breakdown(amt).length)*140+500:1100);
 }
 
 /* tree growth: size follows the total ever planted, never shrinks */
-const TREE_STAGES=[{n:"種子",min:0},{n:"小樹苗",min:1},{n:"小樹",min:30},{n:"中樹",min:80},{n:"大樹",min:150},{n:"搖錢大樹",min:300}];
+const TREE_STAGES=[{n:"seed",min:0},{n:"sprout",min:1},{n:"small tree",min:30},{n:"medium tree",min:80},{n:"big tree",min:150},{n:"giant tree",min:300}];
 function treeStage(t){ t=t==null?(state.plantedTotal||0):t; const mins=[0,1,30,80,150,300]; let st=0; for(let i=1;i<mins.length;i++) if(t>=mins[i]) st=i; return st; }
 const FRUIT_BOX=[null,[400,330,600,460],[410,270,590,410],[330,110,670,390],[220,40,780,350],[220,40,780,350]];
 function treeArt(st,rain){
@@ -661,18 +669,18 @@ function treeArt(st,rain){
 }
 function growCard(){
   const st=treeStage(), t=state.plantedTotal||0, nx=TREE_STAGES[st+1];
-  if(!nx) return `<div class="card growcard"><div class="gt">${ic("star")} ${TREE_STAGES[st].n}</div><div class="sub">已經長到最大了！好厲害！</div></div>`;
+  if(!nx) return `<div class="card growcard"><div class="gt">${ic("star")} ${TREE_STAGES[st].n}</div><div class="sub">Fully grown!</div></div>`;
   const lo=TREE_STAGES[st].min, pct=Math.max(4,Math.min(100,(t-lo)/(nx.min-lo)*100));
-  return `<div class="card growcard"><div class="gt">${ic("sprout")} 現在是${TREE_STAGES[st].n}</div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">${st===0?"種下第一筆錢，就會冒出小樹苗！":`再種 ${nx.min-t} 元，會長成${nx.n}！`}</div></div>`;
+  return `<div class="card growcard"><div class="gt">${ic("sprout")} Now: ${TREE_STAGES[st].n}</div><div class="bar"><i style="width:${pct}%"></i></div><div class="sub">${st===0?"Plant money to get a sprout!":`Plant $${nx.min-t} more to grow a ${nx.n}!`}</div></div>`;
 }
 function checkGrow(){ const st=treeStage(); if(st>(state.treeSeen||0)&&!document.querySelector(".modal")){ showGrow(state.treeSeen||0,st); return true; } return false; }
 function showGrow(from,to){
-  const line=`搖錢樹長大了！變成${TREE_STAGES[to].n}！`;
+  const line=`The tree grew! Now a ${TREE_STAGES[to].n}!`;
   const art=s=>`<svg viewBox="-360 -620 720 660" class="growsvg" aria-hidden="true"><g filter="url(#rough2)"><g transform="scale(${[1.4,1.3,1.2,1,.95,.9][s]})">${treeArt(s,false)}</g></g></svg>`;
-  openModal(`<div class="sheet grow"><div class="n">${ic("sprout")} 搖錢樹長大了！</div><div class="growstage" id="growstage">${art(from)}</div><div class="sub" id="growtext">咦？搖錢樹好像在動…</div><div class="btns" id="growbtns" style="visibility:hidden"><button class="btn g" data-act="growdone" data-to="${to}">${ic("check")} 好棒！</button></div></div>`);
+  openModal(`<div class="sheet grow"><div class="n">${ic("sprout")} The tree grew!</div><div class="growstage" id="growstage">${art(from)}</div><div class="sub" id="growtext">The tree is moving…</div><div class="btns" id="growbtns" style="visibility:hidden"><button class="btn g" data-act="growdone" data-to="${to}">${ic("check")} Great!</button></div></div>`);
   setTimeout(()=>{ const g=document.getElementById("growstage"); if(!g) return; g.classList.add("shake"); sfx("boing"); },500);
   setTimeout(()=>{ const g=document.getElementById("growstage"); if(!g) return; g.classList.remove("shake"); g.innerHTML=art(to); g.classList.add("grown"); sfx("spin"); tada(); confetti(["sprout","star","coin"]);
-    document.getElementById("growtext").innerHTML=`${esc(line)} ${sayBtn(line)}`; say(line); react("cheer","長大了！",2000);
+    document.getElementById("growtext").innerHTML=`${esc(line)} ${sayBtn(line)}`; say(line); react("cheer","Grew!",2000);
     document.getElementById("growbtns").style.visibility="visible"; },1500);
 }
 
@@ -685,10 +693,10 @@ function tree(){
   const fb=FRUIT_BOX[treeStage()]||FRUIT_BOX[1]; const fbox=`left:${fb[0]/10}%;top:${fb[1]/5.6}%;width:${(fb[2]-fb[0])/10}%;height:${(fb[3]-fb[1])/5.6}%`;
   const pos=[[50,20],[25,38],[75,38],[38,58],[62,58],[15,62],[85,62],[50,44],[28,80],[72,80],[50,72],[10,85],[90,85]];
   const fruits=seeds.slice(0,pos.length).map((s,i)=>{const ripe=now-s.plantedAt>=lock;const days=Math.ceil((s.plantedAt+lock-now)/DAY);
-    return `<div class="fruit ${ripe?"ripe":""}" style="left:${pos[i][0]}%;top:${pos[i][1]}%">${coinEl(money(s.value)>=50?50:money(s.value)>=10?10:5).replace(/>\d+</,">"+money(s.value)+"<")}<span class="lk">${ripe?"可收成！":ic("lock")+days+"天"}</span></div>`;}).join("");
-  const line = treeStage()===0? "這裡只有一顆小種子。種下第一筆錢，它就會發芽喔！" : !seeds.length? "搖錢樹在等你種錢！種越多，樹會長越大喔！"
-    : w.k==="rain"? "下雨了，搖錢樹變小一點。不要怕，我們撐傘等太陽！"
-    : w.k==="sun"? "出太陽了！搖錢樹長得好好！" : "搖錢樹在等天氣消息。";
+    return `<div class="fruit ${ripe?"ripe":""}" style="left:${pos[i][0]}%;top:${pos[i][1]}%">${coinEl(money(s.value)>=50?50:money(s.value)>=10?10:5).replace(/>\d+</,">"+money(s.value)+"<")}<span class="lk">${ripe?"Ready!":ic("lock")+days+"d"}</span></div>`;}).join("");
+  const line = treeStage()===0? "Just a seed. Plant money to make it grow!" : !seeds.length? "Plant more, grow bigger!"
+    : w.k==="rain"? "Rain! The tree got smaller. Wait for the sun!"
+    : w.k==="sun"? "Sunny! The tree is happy!" : "Waiting for weather.";
     const diff=total-cost;
   return topBar(`${ic("tree")} FOREST`,"home")+
   `<div class="body rev"><main class="main treewrap"><div class="treebox"><svg viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g filter="url(#rough2)">
@@ -703,49 +711,49 @@ function tree(){
   </div></main>
   <aside class="side"><div class="bubble">${esc(line)}${sayBtn(line)}</div>${growCard()}
   <div class="split">
-    <div class="card green center"><div class="sub">搖錢樹上的錢</div><div class="bigamt">${money(total)}<small> 元</small></div>
-      <div class="sub" style="font-size:20px">種下去 ${cost} 元，${diff>=0.5?`<span class="up">多了 ${money(diff)} 元 ${ic("up")}</span>`:diff<=-0.5?`<span class="down">少了 ${money(-diff)} 元 ${ic("down")}</span>`:"差不多一樣"}</div>
+    <div class="card green center"><div class="sub">Money on the tree</div><div class="bigamt">${money(total)}<small> </small></div>
+      <div class="sub" style="font-size:20px">Planted $${cost}, ${diff>=0.5?`<span class="up">+$${money(diff)} ${ic("up")}</span>`:diff<=-0.5?`<span class="down">-$${money(-diff)} ${ic("down")}</span>`:"about the same"}</div>
       <div class="wk">${hist.map(h=>`<span>${ic(h.pct>=0?"sun":"rain")} ${h.date.slice(5).replace("-","/")}</span>`).join("")}</div></div>
     <div class="card" style="display:flex;flex-direction:column;gap:14px;justify-content:center">
-      <button class="btn g" data-act="go" data-s="move" data-from="spend" data-to="tree" data-back="tree" ${state.spend>0?"":"disabled"}>${ic("sprout")} 用商店的錢種</button>
-      <button class="btn g" data-act="go" data-s="move" data-from="save" data-to="tree" data-back="tree" ${state.save>0?"":"disabled"}>${ic("sprout")} 用銀行的錢種</button>
-      <div class="sub center" style="font-size:16px">搖錢樹跟著台灣 0050 股票長大，每週六更新天氣</div></div>
+      <button class="btn g" data-act="go" data-s="move" data-from="spend" data-to="tree" data-back="tree" ${state.spend>0?"":"disabled"}>${ic("sprout")} Use shop money</button>
+      <button class="btn g" data-act="go" data-s="move" data-from="save" data-to="tree" data-back="tree" ${state.save>0?"":"disabled"}>${ic("sprout")} Use bank money</button>
+      <div class="sub center" style="font-size:16px">The tree follows the 0050 stock. Weather updates every Saturday</div></div>
   </div>
   ${seeds.length?`<div class="seeds">${seeds.map(s=>{const ripe=now-s.plantedAt>=lock;const days=Math.ceil((s.plantedAt+lock-now)/DAY);const d=s.value-s.amount;
-    return `<div class="seed">${coinEl(10,'style="--s:1.2"')}<div style="flex:1"><div class="v">${money(s.value)} 元</div><div class="d">種 ${s.amount} 元 ${d>=0.5?`<span class="up">${ic("up")}${money(d)}</span>`:d<=-0.5?`<span class="down">${ic("down")}${money(-d)}</span>`:""}・${new Date(s.plantedAt).toLocaleDateString("zh-TW",{month:"numeric",day:"numeric"})}</div></div>
-    ${ripe?`<button class="btn sm g" data-act="harvest" data-id="${s.id}">收成</button>`:`<span class="sub">${ic("lock")} ${days} 天</span>`}</div>`;}).join("")}</div>`:""}</aside></div>`;
+    return `<div class="seed">${coinEl(10,'style="--s:1.2"')}<div style="flex:1"><div class="v">$${money(s.value)}</div><div class="d">Planted $${s.amount} ${d>=0.5?`<span class="up">${ic("up")}${money(d)}</span>`:d<=-0.5?`<span class="down">${ic("down")}${money(-d)}</span>`:""}・${new Date(s.plantedAt).toLocaleDateString("en-US",{month:"numeric",day:"numeric"})}</div></div>
+    ${ripe?`<button class="btn sm g" data-act="harvest" data-id="${s.id}">Pick</button>`:`<span class="sub">${ic("lock")} ${days} d</span>`}</div>`;}).join("")}</div>`:""}</aside></div>`;
 }
 function harvestModal(id){
   const s=state.seeds.find(x=>x.id===id); if(!s) return; const v=money(s.value);
-  const line=`這顆錢果子有 ${v} 元！要放到哪裡呢？`;
-  openModal(`<div class="sheet wide"><div class="l">${lion(v>=s.amount?"cheer":"sad","","width:160px;margin:0 auto")}<div class="n">收成 ${v} 元！</div><div class="coins" style="margin:10px 0">${coinsHTML(v)}</div><div class="sub">${line} ${sayBtn(line)}</div></div>
-  <div class="btns"><button class="btn r" data-act="harvestTo" data-id="${id}" data-to="spend">${ic("bag")} 放進商店</button><button class="btn b" data-act="harvestTo" data-id="${id}" data-to="save">${ic("bank")} 存進銀行</button><button class="btn w" data-act="close">再等等</button></div></div>`);
+  const line=`This fruit has $${v}! Where to put it?`;
+  openModal(`<div class="sheet wide"><div class="l">${lion(v>=s.amount?"cheer":"sad","","width:160px;margin:0 auto")}<div class="n">Picked $${v}!</div><div class="coins" style="margin:10px 0">${coinsHTML(v)}</div><div class="sub">${line} ${sayBtn(line)}</div></div>
+  <div class="btns"><button class="btn r" data-act="harvestTo" data-id="${id}" data-to="spend">${ic("bag")} To shop</button><button class="btn b" data-act="harvestTo" data-id="${id}" data-to="save">${ic("bank")} Saved to bank</button><button class="btn w" data-act="close">Wait</button></div></div>`);
 }
 
 /* ---------- games ---------- */
 const STORIES=[
-  {q:"阿臭被有 3 個 10 元，買布丁用掉 2 個，還剩幾個？",o:[["1 個","c10"],["2 個","c10c10"],["3 個","c10c10c10"]],a:0,coin:true},
-  {q:"哪一個硬幣最多錢？",o:[["1 元","c1"],["5 元","c5"],["10 元","c10"]],a:2,coin:true},
-  {q:"布丁要 20 元，要給幾個 10 元？",o:[["1 個","c10"],["2 個","c10c10"],["3 個","c10c10c10"]],a:1,coin:true},
-  {q:"下雨天搖錢樹變小了，阿臭被應該怎麼做？",o:[["撐傘等太陽","umbrella"],["全部挖出來","shovel"]],a:0},
-  {q:"5 元加 5 元，是多少錢？",o:[["5 元","c5"],["10 元","c10"],["50 元","c50"]],a:1,coin:true},
-  {q:"錢放在銀行，會發生什麼事？",o:[["慢慢變多","sprout"],["不見了","wind"]],a:0},
-  {q:"想買很貴的玩偶，錢不夠，可以怎麼做？",o:[["每週存一點","piggy"],["哭哭","cryface"]],a:0},
-  {q:"冰淇淋 30 元，你有 50 元，付錢後會找你多少？",o:[["10 元","c10"],["20 元","c10c10"],["50 元","c50"]],a:1,coin:true}
+  {q:"You have 3 × $10. Pudding uses 2. How many are left?",o:[["1 ","c10"],["2 ","c10c10"],["3 ","c10c10c10"]],a:0,coin:true},
+  {q:"Which coin is worth most?",o:[["$1","c1"],["$5","c5"],["$10","c10"]],a:2,coin:true},
+  {q:"Pudding is $20. How many $10 coins?",o:[["1 ","c10"],["2 ","c10c10"],["3 ","c10c10c10"]],a:1,coin:true},
+  {q:"Rain made the tree smaller. What should you do?",o:[["Wait for sun","umbrella"],["Dig it all up","shovel"]],a:0},
+  {q:"$5+ $5 = ?",o:[["$5","c5"],["$10","c10"],["$50","c50"]],a:1,coin:true},
+  {q:"What happens to money in the bank?",o:[["It grows","sprout"],["It's gone","wind"]],a:0},
+  {q:"A toy costs too much. What can you do?",o:[["Save a little each week","piggy"],["Cry","cryface"]],a:0},
+  {q:"Ice cream is $30. You pay $50. How much change?",o:[["$10","c10"],["$20","c10c10"],["$50","c50"]],a:1,coin:true}
 ];
 function game(){
   const g=ui.g;
-  if(g==="beach") return topBar(`${ic("shell")} 海浪撿貝殼`,"home")+`<div class="body one"><div class="bubble" id="bq"></div><div class="stage beach" id="stage"><div class="sea"><span></span><span></span></div><div class="beachtray"><span class="tl">撿到的錢</span><div class="coins" id="tray"></div><span class="tsum" id="tsum">0 元</span></div>${lion("wave","","","glion")}</div></div>`;
-  if(g==="boss") return topBar(`${ic("ferris")} 換你當店長`,"home")+`<div class="body">${side(`<div class="bubble" id="bq"></div>${lion("wave","","","glion")}`,`<button class="btn w" data-act="bosshint">${ic("star")} 提示</button><button class="btn g" data-act="bossgive">${ic("check")} 找好了！</button>`)}
+  if(g==="beach") return topBar(`${ic("shell")} Shell Catch`,"home")+`<div class="body one"><div class="bubble" id="bq"></div><div class="stage beach" id="stage"><div class="sea"><span></span><span></span></div><div class="beachtray"><span class="tl">Caught</span><div class="coins" id="tray"></div><span class="tsum" id="tsum">$0</span></div>${lion("wave","","","glion")}</div></div>`;
+  if(g==="boss") return topBar(`${ic("ferris")} Shopkeeper`,"home")+`<div class="body">${side(`<div class="bubble" id="bq"></div>${lion("wave","","","glion")}`,`<button class="btn w" data-act="bosshint">${ic("star")} Hint</button><button class="btn g" data-act="bossgive">${ic("check")} Done!</button>`)}
     <main class="main"><div class="counter card"><div class="cust" id="cust"></div><div class="paid" id="paid"></div></div>
-    <div class="split"><div class="zone"><h3>錢箱（點硬幣拿出來）</h3><div class="coins drawer">${[1,5,10].map(v=>coinEl(v,`data-act="bossadd" data-v="${v}" style="--s:1.6"`)).join("")}</div></div>
-    <div class="zone tray"><h3>要找給客人的錢（點一下放回去）</h3><div class="coins" id="tray"></div><div class="sum" id="tsum">0 元</div></div></div></main></div>`;
-  if(g==="food"){ const line=`阿臭被肚子餓了！點${ui.e||"食物"}給阿臭被吃！`;
-    return topBar(`${ic("food")} 請阿臭被吃點心`,"home")+`<div class="body one"><div class="bubble">${line}${sayBtn(line)} <b id="cnt"></b></div><div class="stage" id="stage">${lion("wow","","","glion")}</div></div>`; }
-  if(g==="toy"){ const line="翻翻看，找出一樣的玩具！";
-    return topBar(`${ic("teddy")} 翻牌遊戲`,"home")+`<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion("wave")}`)}<main class="main"><div class="cards" id="cards"></div></main></div>`; }
-  const line="阿臭被說故事！聽聽看，選出答案。";
-  return topBar(`${ic("book")} 阿臭被說故事`,"home")+`<div class="body">${side(`<div class="bubble" id="qbox">${line}</div>${lion("wave")}`)}<main class="main"><div id="qarea"></div></main></div>`;
+    <div class="split"><div class="zone"><h3>Cash box (tap coins)</h3><div class="coins drawer">${[1,5,10].map(v=>coinEl(v,`data-act="bossadd" data-v="${v}" style="--s:1.6"`)).join("")}</div></div>
+    <div class="zone tray"><h3>Change for the customer (tap to put back)</h3><div class="coins" id="tray"></div><div class="sum" id="tsum">$0</div></div></div></main></div>`;
+  if(g==="food"){ const line=`Feed me! Tap ${ui.e||"Food"}!`;
+    return topBar(`${ic("food")} Snack Time`,"home")+`<div class="body one"><div class="bubble">${line}${sayBtn(line)} <b id="cnt"></b></div><div class="stage" id="stage">${lion("wow","","","glion")}</div></div>`; }
+  if(g==="toy"){ const line="Find the pairs!";
+    return topBar(`${ic("teddy")} Memory Game`,"home")+`<div class="body">${side(`<div class="bubble">${line}${sayBtn(line)}</div>${lion("wave")}`)}<main class="main"><div class="cards" id="cards"></div></main></div>`; }
+  const line="Listen and pick the answer.";
+  return topBar(`${ic("book")} Story Quiz`,"home")+`<div class="body">${side(`<div class="bubble" id="qbox">${line}</div>${lion("wave")}`)}<main class="main"><div id="qarea"></div></main></div>`;
 }
 function setupGame(){
   const g=ui.g;
@@ -753,28 +761,28 @@ function setupGame(){
   if(g==="boss") return setupBoss();
   if(g==="food"){
     const st=document.getElementById("stage"), lion=document.getElementById("glion"); const e=ui.e||"food"; let left=6;
-    const cnt=document.getElementById("cnt"); cnt.textContent=`還有 ${left} 個`;
+    const cnt=document.getElementById("cnt"); cnt.textContent=`${left} left`;
     const spots=[[8,10],[30,6],[62,8],[84,12],[6,48],[86,46]];
     spots.forEach(([x,y])=>{const f=document.createElement("button");f.className="food";f.innerHTML=ic(e);f.style.left=x+"%";f.style.top=y+"%";
       f.onclick=()=>{if(f.dataset.done)return;f.dataset.done=1;const sr=st.getBoundingClientRect(),fr=f.getBoundingClientRect(),lr=lion.getBoundingClientRect();
         f.style.left=(lr.left-sr.left+lr.width/2-30)+"px";f.style.top=(lr.top-sr.top+lr.height*.25)+"px";f.style.transform="scale(.3)";f.style.opacity="0";
-        setTimeout(()=>{f.remove();lion.classList.remove("chomp");void lion.offsetWidth;lion.classList.add("chomp");moodAll("cheer",700);clink();left--;cnt.textContent=left?`還有 ${left} 個`:"";
-          if(!left) finishGame("阿臭被吃飽飽了！謝謝你！",["heart","yum",e]);},450);};
+        setTimeout(()=>{f.remove();lion.classList.remove("chomp");void lion.offsetWidth;lion.classList.add("chomp");moodAll("cheer",700);clink();left--;cnt.textContent=left?`${left} left`:"";
+          if(!left) finishGame("Yum! Thank you!",["heart","yum",e]);},450);};
       st.appendChild(f);});
   }else if(g==="toy"){
     const pool=["car","teddy","balloon","ball","dino","rocket","kite","blocks"].sort(()=>Math.random()-.5).slice(0,4);
     const deck=[...pool,...pool].sort(()=>Math.random()-.5); const el=document.getElementById("cards"); let open=[],found=0,lock=false;
     deck.forEach((t,i)=>{const b=document.createElement("button");b.className="mcard";b.dataset.k=t;b.innerHTML=ic("star");b.onclick=()=>{
       if(lock||b.classList.contains("open")||b.classList.contains("done"))return; b.classList.add("open");b.innerHTML=ic(t);clink();open.push(b);
-      if(open.length===2){lock=true;const [a,c]=open;setTimeout(()=>{if(a.dataset.k===c.dataset.k){a.classList.add("done");c.classList.add("done");found++;tada();react("cheer","找到了！",900);if(found===pool.length)finishGame("全部找到了！好厲害！",["🎉","⭐",...pool]);}
+      if(open.length===2){lock=true;const [a,c]=open;setTimeout(()=>{if(a.dataset.k===c.dataset.k){a.classList.add("done");c.classList.add("done");found++;tada();react("cheer","Found!",900);if(found===pool.length)finishGame("Found them all!",["🎉","⭐",...pool]);}
         else{a.classList.remove("open");c.classList.remove("open");a.innerHTML=ic("star");c.innerHTML=ic("star");react("shy",null,800);}open=[];lock=false;},700);}
     };el.appendChild(b);});
   }else{
     const qs=STORIES.slice().sort(()=>Math.random()-.5).slice(0,3); let qi=0, stars=0;
-    const show=()=>{const q=qs[qi];document.getElementById("qbox").innerHTML=`<div class="sub">第 ${qi+1} 題 / 3</div>${esc(q.q)}${sayBtn(q.q)}`;say(q.q);
+    const show=()=>{const q=qs[qi];document.getElementById("qbox").innerHTML=`<div class="sub">Question ${qi+1} / 3</div>${esc(q.q)}${sayBtn(q.q)}`;say(q.q);
       const area=document.getElementById("qarea");area.innerHTML=`<div class="qopts">${q.o.map((o,i)=>`<button class="qopt" data-i="${i}"><span style="font-size:44px">${q.coin&&o[1].startsWith("c")?o[1].split("c").filter(Boolean).map(v=>coinEl(v,'style="--s:1.4"')).join(" "):ic(o[1])}</span>${esc(o[0])}</button>`).join("")}</div>`;
-      area.querySelectorAll(".qopt").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i===q.a){b.classList.add("right");stars++;tada();say("答對了！");react("cheer",pick(LINES.right),1100);setTimeout(()=>{qi++;if(qi<qs.length)show();else finishGame(`答完了！得到 ${stars} 顆星星！`,["⭐","📚","💛"]);},1100);}
-        else{b.classList.remove("wrong");void b.offsetWidth;b.classList.add("wrong");say("再想想看");react("sad",pick(LINES.wrong),1500);}});};
+      area.querySelectorAll(".qopt").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(i===q.a){b.classList.add("right");stars++;tada();say("Right!");react("cheer",pick(LINES.right),1100);setTimeout(()=>{qi++;if(qi<qs.length)show();else finishGame(`Done! You got ${stars} stars!`,["⭐","📚","💛"]);},1100);}
+        else{b.classList.remove("wrong");void b.offsetWidth;b.classList.add("wrong");say("Try again");react("sad",pick(LINES.wrong),1500);}});};
     show();
   }
 }
@@ -783,9 +791,9 @@ function setupBeach(){
   const st=document.getElementById("stage"), bq=document.getElementById("bq"), tray=document.getElementById("tray"), tsum=document.getElementById("tsum");
   const T=[[6,7,9],[11,12,15],[16,18,21]]; let round=0, target=0, got=[], lock=false;
   const sum=()=>got.reduce((a,b)=>a+b,0);
-  function show(){ const line=`第 ${round+1} 關：撿到剛好 ${target} 元！`; bq.innerHTML=`<span class="sub">第 ${round+1} 關 / 3</span><br>撿到剛好 <b class="goal">${target} 元</b>！ ${sayBtn(line)}`;
-    tray.innerHTML=got.map((v,i)=>coinEl(v,`data-i="${i}" style="--s:1.2"`)).join(""); tsum.textContent=sum()+" 元"; }
-  function next(){ target=pick(T[round]); got=[]; lock=false; show(); say(`撿到剛好 ${target} 元！`); }
+  function show(){ const line=`Round ${round+1}: catch exactly $${target}!`; bq.innerHTML=`<span class="sub">Round ${round+1} / 3</span><br>Catch exactly <b class="goal">$${target}</b>! ${sayBtn(line)}`;
+    tray.innerHTML=got.map((v,i)=>coinEl(v,`data-i="${i}" style="--s:1.2"`)).join(""); tsum.textContent=sum()+" "; }
+  function next(){ target=pick(T[round]); got=[]; lock=false; show(); say(`Catch exactly $${target}!`); }
   tray.onclick=e=>{ const c=e.target.closest(".coin"); if(!c||lock) return; got.splice(+c.dataset.i,1); sfx("thud"); show(); };
   function spawn(){
     if(!document.body.contains(st)){ clearInterval(gameTimer); return; }
@@ -794,9 +802,9 @@ function setupBeach(){
     sh.innerHTML=`${ic("shell")}${coinEl(v,'style="--s:1.05"')}`;
     sh.onpointerdown=ev=>{ ev.stopPropagation(); if(lock||sh.dataset.got) return; sh.dataset.got=1; sh.classList.add("got"); setTimeout(()=>sh.remove(),400);
       got.push(v); sfx("star"); show(); const t=sum();
-      if(t===target){ lock=true; tada(); react("cheer",pick(["剛剛好！","好厲害！","答對了！"]),1300); confetti(["shell","coin","star"]);
-        setTimeout(()=>{ round++; if(round<3) next(); else { clearInterval(gameTimer); starsGot+=3; finishGame("撿貝殼高手！得到 3 顆星星！",["shell","star","coin"]); } },1400); }
-      else if(t>target){ lock=true; react("sad","太多了！放回去一個",1400); setTimeout(()=>{ got.pop(); lock=false; show(); },900); }
+      if(t===target){ lock=true; tada(); react("cheer",pick(["Exactly!","Great!","Right!"]),1300); confetti(["shell","coin","star"]);
+        setTimeout(()=>{ round++; if(round<3) next(); else { clearInterval(gameTimer); state.stars=(state.stars||0)+3; save(); finishGame("Shell master! +3 stars!",["shell","star","coin"]); } },1400); }
+      else if(t>target){ lock=true; react("sad","Too many! Put one back",1400); setTimeout(()=>{ got.pop(); lock=false; show(); },900); }
       else react("wow",null,500);
     };
     sh.addEventListener("animationend",()=>sh.remove());
@@ -809,73 +817,73 @@ function setupBoss(){
   const pool=state.shop.filter(i=>i.price<50); let n=0, cur=null; window._boss={tray:[]};
   const who=["teddy","dino","piggy","rocket"];
   function next(){
-    const it=pool.length?pick(pool):{icon:"pudding",name:"布丁",price:35};
+    const it=pool.length?pick(pool):{icon:"pudding",name:"pudding",price:35};
     const price=pool.length&&Math.random()<.6?it.price:pick([12,15,18,23,25,27,32,35,38,42,45,47]);
     cur={who:pick(who),it,price,change:50-price}; window._boss.tray=[]; render2();
-    const line=`我要買${it.name}，${price} 元。給你 50 元！`; bq.innerHTML=`<span class="sub">客人 ${n+1} / 3</span><br>${esc(line)} ${sayBtn(line)}<br><b>要找多少錢呢？</b>`; say(line+"要找多少錢呢？");
-    cust.innerHTML=`<span class="who">${ic(cur.who)}</span><span class="buy">${itemIcon(it)}<b>${price} 元</b></span>`;
-    paid.innerHTML=`<span class="sub">客人給你</span>${coinEl(50,'style="--s:1.5"')}`;
+    const line=`${it.name}, $${price}. Here is $50!`; bq.innerHTML=`<span class="sub">Customer ${n+1} / 3</span><br>${esc(line)} ${sayBtn(line)}<br><b>How much change?</b>`; say(line+"How much change?");
+    cust.innerHTML=`<span class="who">${ic(cur.who)}</span><span class="buy">${itemIcon(it)}<b>$${price}</b></span>`;
+    paid.innerHTML=`<span class="sub">Customer gives</span>${coinEl(50,'style="--s:1.5"')}`;
     cust.classList.remove("in"); void cust.offsetWidth; cust.classList.add("in");
   }
-  function render2(){ const t=window._boss.tray; tray.innerHTML=t.map((v,i)=>coinEl(v,`data-act="bossback" data-i="${i}" style="--s:1.3"`)).join("")||'<span class="sub">還沒拿</span>'; tsum.textContent=t.reduce((a,b)=>a+b,0)+" 元"; }
+  function render2(){ const t=window._boss.tray; tray.innerHTML=t.map((v,i)=>coinEl(v,`data-act="bossback" data-i="${i}" style="--s:1.3"`)).join("")||'<span class="sub">none yet</span>'; tsum.textContent=t.reduce((a,b)=>a+b,0)+" "; }
   window._boss.render=render2;
   window._boss.give=()=>{ const t=window._boss.tray.reduce((a,b)=>a+b,0);
-    if(t===cur.change){ tada(); confetti(["coin","star",cur.who]); react("cheer","謝謝店長！",1300); cust.classList.add("happy"); n++;
-      setTimeout(()=>{ cust.classList.remove("happy"); if(n<3) next(); else { starsGot+=3; finishGame("你是很棒的店長！得到 3 顆星星！",["coin","star","shop"]); } },1500); }
-    else if(t<cur.change){ react("shy",`還不夠喔！再多找一點`,1500); sfx("thud"); }
-    else { react("sad",`找太多了！拿一些回來`,1500); sfx("thud"); } };
-  window._boss.hint=()=>{ const msg=`從 ${cur.price} 數到 50，差 ${cur.change} 元喔！`; lionSay(msg); say(msg); };
+    if(t===cur.change){ tada(); confetti(["coin","star",cur.who]); react("cheer","Thanks!",1300); cust.classList.add("happy"); n++;
+      setTimeout(()=>{ cust.classList.remove("happy"); if(n<3) next(); else { state.stars=(state.stars||0)+3; save(); finishGame("Great shopkeeper! +3 stars!",["coin","star","shop"]); } },1500); }
+    else if(t<cur.change){ react("shy",`Not enough! Give more`,1500); sfx("thud"); }
+    else { react("sad",`Too much! Take some back`,1500); sfx("thud"); } };
+  window._boss.hint=()=>{ const msg=`Count from ${cur.price} to 50. That's $${cur.change}!`; lionSay(msg); say(msg); };
   next();
 }
-function finishGame(msg,set){confetti(set);tada();say(msg);setTimeout(()=>openModal(`<div class="sheet">${lion("cheer","","width:190px;margin:0 auto")}<div class="n">${esc(msg)}</div><div class="btns"><button class="btn g" data-act="go" data-s="home">${ic("home")} HOME</button><button class="btn w" data-act="regame">🔁 再玩一次</button></div></div>`),900);}
+function finishGame(msg,set){confetti(set);tada();say(msg);setTimeout(()=>openModal(`<div class="sheet">${lion("cheer","","width:190px;margin:0 auto")}<div class="n">${esc(msg)}</div><div class="btns"><button class="btn g" data-act="go" data-s="home">${ic("home")} HOME</button><button class="btn w" data-act="regame">🔁 Play again</button></div></div>`),900);}
 
 /* ---------- parent ---------- */
 function gate(){
   const a=6+Math.floor(Math.random()*4), b=6+Math.floor(Math.random()*4); ui.gate={a,b,in:""};
-  openModal(`<div class="sheet"><div class="n">${ic("lock")} 家長確認</div><div class="sub" style="margin-top:6px">請回答：</div><div class="h2" style="font-size:40px">${a} × ${b} = ?</div><div class="ans" id="ans"></div>
+  openModal(`<div class="sheet"><div class="n">${ic("lock")} Parent check</div><div class="sub" style="margin-top:6px">Answer:</div><div class="h2" style="font-size:40px">${a} × ${b} = ?</div><div class="ans" id="ans"></div>
   <div class="keypad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-act="key" data-k="${n}">${n}</button>`).join("")}<button data-act="close">${ic("cross")}</button><button data-act="key" data-k="0">0</button><button data-act="key" data-k="ok" style="background:var(--ok);color:#fff">OK</button></div></div>`);
 }
 function parentScreen(){
   const pend=state.vouchers.filter(v=>!v.redeemed), done=state.vouchers.filter(v=>v.redeemed).slice(0,8);
   const ws=(market.weeks||[]).filter(x=>x&&x.date).sort((a,b)=>a.date<b.date?1:-1).slice(0,10);
-  return `<div class="top"><button class="back" data-act="go" data-s="home">${ic("back")} 離開家長模式</button><h1>${ic("family")} 家長模式</h1></div>
+  return `<div class="top"><button class="back" data-act="go" data-s="home">${ic("back")} Exit parent mode</button><h1>${ic("family")} Parent mode</h1></div>
   <div class="pgrid">
-  <div class="card psec"><h3>${ic("ticket")} 兌換券（${pend.length} 張待兌換）</h3>
-    ${pend.map(v=>`<div class="prow"><span style="font-size:32px">${itemIcon(v)}</span><b style="flex:1">${esc(v.name)}・${v.price} 元</b><span class="note">${new Date(v.boughtAt).toLocaleDateString("zh-TW")}</span><button class="btn sm g" data-act="redeem" data-id="${v.id}">已兌換</button></div>`).join("")||'<div class="note">目前沒有待兌換的兌換券</div>'}
-    ${done.length?`<div class="note" style="margin-top:8px">最近已兌換：${done.map(v=>esc(v.name)).join("、")}</div>`:""}</div>
-  <div class="card psec"><h3>${ic("moneybag")} 金額</h3>
-    <div class="prow"><label>${ic("bag")} 商店 <input class="n" type="number" inputmode="numeric" id="p-spend" value="${state.spend}"></label><label>${ic("bank")} 存款 <input class="n" type="number" inputmode="numeric" id="p-save" value="${state.save}"></label><button class="btn sm" data-act="psaveamt">儲存金額</button></div>
-    <div class="prow">${ic("sprout")} 搖錢樹累積種了 ${state.plantedTotal||0} 元・目前是「${TREE_STAGES[treeStage()].n}」（${TREE_STAGES.slice(1).map(x=>x.n+" "+x.min).join("、")} 元）</div>
-    <div class="prow">${ic("tree")} 搖錢樹目前 ${money(treeTotal())} 元（${state.seeds.length} 筆，本金 ${state.seeds.reduce((a,s)=>a+s.amount,0)} 元）・利息累積 ${state.bank.accrued.toFixed(2)} 元</div>
-    <div class="prow">發薪：每週日 18:00・待領 ${pendingPaydays()} 週 <button class="btn sm w" data-act="padd">＋ 多發一週</button></div></div>
-  <div class="card psec"><h3>${ic("gear")} 設定</h3>
-    <div class="prow"><label>孩子名字 <input class="tx" id="s-name" value="${esc(state.kidName)}"></label><label>每週零用錢 <input class="n" type="number" id="s-weekly" value="${state.weekly}"></label></div>
-    <div class="prow"><label>存款真實年利率 % <input class="n" type="number" step="0.001" id="s-rate" value="${state.rate}"></label><label>放大倍數 × <input class="n" type="number" step="1" id="s-mult" value="${state.mult}"></label><label>搖錢樹鎖定週數 <input class="n" type="number" id="s-lock" value="${state.lockWeeks}"></label><button class="btn sm" data-act="psettings">儲存設定</button></div>
-    <div class="note">預設利率 0.825% 為臺灣銀行活期儲蓄存款牌告利率（2026/11/20）。放大倍數同時套用在存款利息和搖錢樹漲跌。</div></div>
-  <div class="card psec"><h3>${ic("moneybag")} 加發零用錢（紅包、獎勵）</h3>
-    <div class="note">現實中多給孩子的錢，照實際的硬幣和鈔票點進來，孩子會在「發薪日」畫面自己分配。</div>
-    <div class="prow"><div class="denoms">${DENOMS.slice().reverse().map(v=>`<button class="dn" data-act="xpadd" data-v="${v}"><span>+</span>${coinEl(v,'style="--s:.85"')}</button>`).join("")}<button class="dn clr" data-act="xpclr">清除</button></div></div>
-    <div class="prow"><div class="coins" style="justify-content:flex-start;min-height:40px">${(ui.xp||[]).map(v=>coinEl(v,'style="--s:.85"')).join("")||'<span class="note">還沒選</span>'}</div><b>共 ${(ui.xp||[]).reduce((a,b)=>a+b,0)} 元</b>
-      <button class="btn sm g" data-act="xpsend" ${(ui.xp||[]).length?"":"disabled"}>送給孩子</button></div>
-    ${state.extraPay&&state.extraPay.length?`<div class="note">等孩子分配中：${state.extraPay.reduce((a,b)=>a+b,0)} 元</div>`:""}</div>
-  <div class="card psec"><h3>${ic("ferris")} 地圖區域</h3>
-    ${ZONES.map((z,i)=>`<div class="prow"><b style="width:90px">${z.n}</b>${i===0?"一開始就開放":i<zonesOpen()?"已開放":`${zoneOpenDate(i+1).getMonth()+1}月${zoneOpenDate(i+1).getDate()}日開放`}${z.gn?`<span class="note">小遊戲：${z.gn}</span>`:""}</div>`).join("")}
-    <div class="prow"><button class="btn sm" data-act="pzone" ${zonesOpen()>=3?"disabled":""}>提前開放下一區</button><button class="btn sm w" data-act="pzonereset">恢復按月開放</button></div>
-    <div class="note">每個月 1 號開放一個新區域（${state.mapStart} 開始）。</div></div>
-  <div class="card psec"><h3>${ic("chart")} 0050 每週漲跌（自動排程每週六更新）</h3>
-    ${ws.map(w=>`<div class="prow"><b>${w.date}</b><span class="${w.pct>=0?"up":"down"}">${w.pct>=0?"+":""}${(+w.pct).toFixed(2)}%</span>${w.close?`<span class="note">收盤 ${w.close}</span>`:""}<span class="note">遊戲中 ${w.pct>=0?"+":""}${(w.pct*state.mult).toFixed(1)}%</span>${state.applied.includes(w.date)?'<span class="note">✓ 已套用</span>':""}</div>`).join("")||'<div class="note">還沒有資料</div>'}
-    <div class="prow">手動補一週：<input class="tx" type="date" id="m-date"><label>漲跌 % <input class="n" type="number" step="0.01" id="m-pct"></label><button class="btn sm" data-act="maddweek">加入</button></div>
-    <div class="note">日期請填那週的最後交易日（通常是週五）。</div></div>
-  <div class="card psec"><h3>${ic("shop")} 商品</h3>
-    ${state.shop.map(i=>`<div class="prow" data-row="${i.id}"><select data-f="icon" class="icsel">${Object.keys(ICON_LABELS).map(k=>`<option value="${k}" ${k===iconOf(i)?"selected":""}>${ICON_LABELS[k]}</option>`).join("")}</select><span class="icprev" style="font-size:40px">${itemIcon(i)}</span><input class="tx" value="${esc(i.name)}" data-f="name"><input class="n" type="number" value="${i.price}" data-f="price"> 元<select data-f="cat">${CATS.map(c=>`<option value="${c.k}" ${c.k===i.cat?"selected":""}>${c.n}</option>`).join("")}</select><button class="btn sm w" data-act="pdel" data-id="${i.id}">刪除</button></div>`).join("")}
-    <div class="row" style="margin-top:10px"><button class="btn sm w" data-act="padditem">＋ 新增商品</button><button class="btn sm" data-act="psaveshop">儲存商品</button></div></div>
-  <div class="card psec"><h3>${ic("notebook")} 紀錄</h3>${state.log.slice(0,40).map(l=>`<div class="prow"><span class="note" style="width:120px">${new Date(l.t).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span><span style="flex:1">${esc(l.text)}</span><b>${l.amt?(l.amt>0?"+":"")+l.amt:""}</b></div>`).join("")||'<div class="note">還沒有紀錄</div>'}</div>
-  <div class="card psec"><h3>${ic("notebook")} 備份／還原</h3>
-    <div class="note">把全部進度（金額、搖錢樹、兌換券、商品、設定）變成一段備份碼。要把雲端版的進度搬到 iPad App，或換新 iPad 時使用。</div>
-    <div class="prow"><button class="btn sm" data-act="bkcopy">${ic("notebook")} 複製備份碼</button>${isApp?`<button class="btn sm w" data-act="bkfile">下載備份檔</button>`:""}</div>
-    <div class="prow" style="flex-direction:column;align-items:stretch"><textarea id="bk-in" rows="3" placeholder="把備份碼貼在這裡" style="width:100%;font-size:14px;border:3px solid var(--line);border-radius:10px;padding:8px;font-family:monospace;-webkit-user-select:text;user-select:text"></textarea>
-      <div class="row"><button class="btn sm g" data-act="bkrestore">${ui.bkArm?"再按一次確定還原（會蓋掉目前進度）":"還原備份"}</button><label class="btn sm w" style="cursor:pointer">選擇備份檔<input type="file" accept=".json,application/json,text/plain" id="bk-file" style="display:none"></label></div></div></div>
-  <div class="card psec"><h3>${ic("warning")} 重新開始</h3><div class="note">清除所有金額、搖錢樹、兌換券與紀錄（商品和設定保留）。</div><div class="row" style="margin-top:10px"><button class="btn sm r" data-act="preset">${ui.resetArm?"再按一次確定清除":"清除全部紀錄"}</button></div></div>
+  <div class="card psec"><h3>${ic("ticket")} Tickets (${pend.length} to use)</h3>
+    ${pend.map(v=>`<div class="prow"><span style="font-size:32px">${itemIcon(v)}</span><b style="flex:1">${esc(v.name)}・$${v.price}</b><span class="note">${new Date(v.boughtAt).toLocaleDateString("en-US")}</span><button class="btn sm g" data-act="redeem" data-id="${v.id}">Used</button></div>`).join("")||'<div class="note">No tickets</div>'}
+    ${done.length?`<div class="note" style="margin-top:8px">Recently used: ${done.map(v=>esc(v.name)).join(", ")}</div>`:""}</div>
+  <div class="card psec"><h3>${ic("moneybag")} Money</h3>
+    <div class="prow"><label>${ic("bag")} Shop <input class="n" type="number" inputmode="numeric" id="p-spend" value="${state.spend}"></label><label>${ic("bank")} Bank <input class="n" type="number" inputmode="numeric" id="p-save" value="${state.save}"></label><button class="btn sm" data-act="psaveamt">Save</button></div>
+    <div class="prow">${ic("sprout")} Planted in total $${state.plantedTotal||0} · now a ${TREE_STAGES[treeStage()].n} ($${TREE_STAGES.slice(1).map(x=>x.n+" "+x.min).join(", ")})</div>
+    <div class="prow">${ic("tree")} Tree now $${money(treeTotal())} (${state.seeds.length} plantings, planted $${state.seeds.reduce((a,s)=>a+s.amount,0)}) · interest so far $${state.bank.accrued.toFixed(2)}</div>
+    <div class="prow">Payday: Sundays 18:00 · waiting: ${pendingPaydays()} week(s) <button class="btn sm w" data-act="padd">+ Extra week</button></div></div>
+  <div class="card psec"><h3>${ic("gear")} Settings</h3>
+    <div class="prow"><label>Kid's name <input class="tx" id="s-name" value="${esc(state.kidName)}"></label><label>Weekly money <input class="n" type="number" id="s-weekly" value="${state.weekly}"></label></div>
+    <div class="prow"><label>Real savings rate % <input class="n" type="number" step="0.001" id="s-rate" value="${state.rate}"></label><label>Multiplier × <input class="n" type="number" step="1" id="s-mult" value="${state.mult}"></label><label>Tree lock weeks <input class="n" type="number" id="s-lock" value="${state.lockWeeks}"></label><button class="btn sm" data-act="psettings">Save settings</button></div>
+    <div class="note">Default rate 0.825% is Bank of Taiwan's savings rate (2026/11/20). The multiplier applies to bank interest and tree changes.</div></div>
+  <div class="card psec"><h3>${ic("moneybag")} Extra money (gifts, rewards)</h3>
+    <div class="note">Extra real money for the kid. Tap the real coins and notes; the kid sorts them on Payday.</div>
+    <div class="prow"><div class="denoms">${DENOMS.slice().reverse().map(v=>`<button class="dn" data-act="xpadd" data-v="${v}"><span>+</span>${coinEl(v,'style="--s:.85"')}</button>`).join("")}<button class="dn clr" data-act="xpclr">Clear</button></div></div>
+    <div class="prow"><div class="coins" style="justify-content:flex-start;min-height:40px">${(ui.xp||[]).map(v=>coinEl(v,'style="--s:.85"')).join("")||'<span class="note">none</span>'}</div><b>Total $${(ui.xp||[]).reduce((a,b)=>a+b,0)}</b>
+      <button class="btn sm g" data-act="xpsend" ${(ui.xp||[]).length?"":"disabled"}>Give to kid</button></div>
+    ${state.extraPay&&state.extraPay.length?`<div class="note">Waiting for kid: $${state.extraPay.reduce((a,b)=>a+b,0)}</div>`:""}</div>
+  <div class="card psec"><h3>${ic("ferris")} Map places</h3>
+    ${ZONES.map((z,i)=>`<div class="prow"><b style="width:90px">${z.n}</b>${i===0?"Open from start":i<zonesOpen()?"Open":`${zoneOpenDate(i+1).getMonth()+1}/${zoneOpenDate(i+1).getDate()}`}${z.gn?`<span class="note">Game: ${z.gn}</span>`:""}</div>`).join("")}
+    <div class="prow"><button class="btn sm" data-act="pzone" ${zonesOpen()>=3?"disabled":""}>Open next place now</button><button class="btn sm w" data-act="pzonereset">Back to monthly</button></div>
+    <div class="note">A new place opens on the 1st of each month (from ${state.mapStart}).</div></div>
+  <div class="card psec"><h3>${ic("chart")} 0050 weekly change (updates every Saturday)</h3>
+    ${ws.map(w=>`<div class="prow"><b>${w.date}</b><span class="${w.pct>=0?"up":"down"}">${w.pct>=0?"+":""}${(+w.pct).toFixed(2)}%</span>${w.close?`<span class="note">Close ${w.close}</span>`:""}<span class="note">In game ${w.pct>=0?"+":""}${(w.pct*state.mult).toFixed(1)}%</span>${state.applied.includes(w.date)?'<span class="note">✓ used</span>':""}</div>`).join("")||'<div class="note">No data</div>'}
+    <div class="prow">Add a week:<input class="tx" type="date" id="m-date"><label>Change % <input class="n" type="number" step="0.01" id="m-pct"></label><button class="btn sm" data-act="maddweek">Add</button></div>
+    <div class="note">Use the last trading day of the week (usually Friday).</div></div>
+  <div class="card psec"><h3>${ic("shop")} Items</h3>
+    ${state.shop.map(i=>`<div class="prow" data-row="${i.id}"><select data-f="icon" class="icsel">${Object.keys(ICON_LABELS).map(k=>`<option value="${k}" ${k===iconOf(i)?"selected":""}>${ICON_LABELS[k]}</option>`).join("")}</select><span class="icprev" style="font-size:40px">${itemIcon(i)}</span><input class="tx" value="${esc(i.name)}" data-f="name"><input class="n" type="number" value="${i.price}" data-f="price"> <select data-f="cat">${CATS.map(c=>`<option value="${c.k}" ${c.k===i.cat?"selected":""}>${c.n}</option>`).join("")}</select><button class="btn sm w" data-act="pdel" data-id="${i.id}">Delete</button></div>`).join("")}
+    <div class="row" style="margin-top:10px"><button class="btn sm w" data-act="padditem">+ New item</button><button class="btn sm" data-act="psaveshop">Save items</button></div></div>
+  <div class="card psec"><h3>${ic("notebook")} History</h3>${state.log.slice(0,40).map(l=>`<div class="prow"><span class="note" style="width:120px">${new Date(l.t).toLocaleString("en-US",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span><span style="flex:1">${esc(l.text)}</span><b>${l.amt?(l.amt>0?"+":"")+l.amt:""}</b></div>`).join("")||'<div class="note">No history</div>'}</div>
+  <div class="card psec"><h3>${ic("notebook")} Backup / Restore</h3>
+    <div class="note">Turns all progress (money, tree, vouchers, items, settings) into one backup code. Use it to move to a new iPad.</div>
+    <div class="prow"><button class="btn sm" data-act="bkcopy">${ic("notebook")} Copy code</button>${isApp?`<button class="btn sm w" data-act="bkfile">Download file</button>`:""}</div>
+    <div class="prow" style="flex-direction:column;align-items:stretch"><textarea id="bk-in" rows="3" placeholder="Paste backup code here" style="width:100%;font-size:14px;border:3px solid var(--line);border-radius:10px;padding:8px;font-family:monospace;-webkit-user-select:text;user-select:text"></textarea>
+      <div class="row"><button class="btn sm g" data-act="bkrestore">${ui.bkArm?"Tap again to restore (replaces progress)":"Restore"}</button><label class="btn sm w" style="cursor:pointer">Choose file<input type="file" accept=".json,application/json,text/plain" id="bk-file" style="display:none"></label></div></div></div>
+  <div class="card psec"><h3>${ic("warning")} Start over</h3><div class="note">Clears all money, tree, tickets and history (items and settings stay).</div><div class="row" style="margin-top:10px"><button class="btn sm r" data-act="preset">${ui.resetArm?"Tap again to clear":"Clear all"}</button></div></div>
   </div><div class="sync" id="sync">${esc(syncNote)}</div>`;
 }
 
@@ -901,16 +909,18 @@ document.addEventListener("click",e=>{
   switch(act){
     case "say": e.stopPropagation(); say(el.dataset.t); break;
     case "close": closeModal(); break;
+    case "furn": furnAsk(el.dataset.id); break;
+    case "furnbuy": furnBuy(el.dataset.id); break;
     case "go": { const x={}; ["from","to","back","g","e","atm"].forEach(k=>{if(el.dataset[k])x[k]=el.dataset[k];});
       const tgt=el.dataset.s, stop=el.dataset.stop||tgt;
-      if(ui.screen==="home" && isTown() && TSTOP[stop]){ if(tgt==="home"){ townWalkTo("home",()=>{}); break; } townWalkTo(stop,()=>go(tgt,x)); break; }
+      if(ui.screen==="home" && isTown() && TSTOP[stop]){ if(tgt==="home"){ townWalkTo("home",()=>go("room")); break; } townWalkTo(stop,()=>go(tgt,x)); break; }
       if(ui.screen==="home" && STOPS[stop] && document.getElementById("road")){ walkTo(stop,()=>go(tgt,x)); break; }
       go(tgt,x); break; }
     case "cat": ui.cat=el.dataset.c; render(); break;
     case "atm": { const a=atmState(); a.mode=el.dataset.m; a.amt=0; a.taken=[]; a.wallet=null; atmBeep(1,true); render(); break; }
     case "atmin": { const a=atmState(); const i=+el.dataset.i; if(a.taken.includes(i)) return; const slot=document.querySelector("#coinslot .mouth"); const v=a.wallet[i];
       flyCoin(el,slot,v,()=>{ a.taken.push(i); a.amt+=v; atmBeep(1,true); clink(); render(); const m=document.querySelector("#coinslot"); if(m){ m.classList.remove("gulp"); void m.offsetWidth; m.classList.add("gulp"); } }); break; }
-    case "atmadd": { const a=atmState(); const v=+el.dataset.v; if(a.amt+v>state.save){ react("sad","存款不夠喔！",1200); return; } a.amt+=v; atmBeep(1,true); render(); break; }
+    case "atmadd": { const a=atmState(); const v=+el.dataset.v; if(a.amt+v>state.save){ react("sad","Not enough in the bank!",1200); return; } a.amt+=v; atmBeep(1,true); render(); break; }
     case "atmclr": { const a=atmState(); a.amt=0; atmBeep(1); render(); break; }
     case "atmcancel": { const a=atmState(); a.mode="menu"; a.amt=0; a.taken=[]; a.wallet=null; atmBeep(2); render(); break; }
     case "atmok": { const a=atmState(); if(a.amt<=0) return; atmBeep(1,true);
@@ -931,21 +941,21 @@ document.addEventListener("click",e=>{
     case "vtest": { const n=document.getElementById("v-name").value, p=+document.getElementById("v-pitch").value, r=+document.getElementById("v-rate").value;
       const keep=[state.voiceName,state.voicePitch,state.voiceRate]; state.voiceName=n||null; state.voicePitch=p; state.voiceRate=r; enVoice=null;
       speakEn("Hi! I'm your little lion blankie! Let's save some money together. Yay!"); [state.voiceName,state.voicePitch,state.voiceRate]=keep; enVoice=null; break; }
-    case "vsave": state.voiceName=document.getElementById("v-name").value||null; state.voicePitch=+document.getElementById("v-pitch").value; state.voiceRate=+document.getElementById("v-rate").value; enVoice=null; save(); toast("聲音已儲存","cheer"); break;
-    case "vreset": state.voiceName=null; state.voicePitch=1.5; state.voiceRate=.88; enVoice=null; save(); render(); toast("已恢復預設聲音"); break;
+    case "vsave": state.voiceName=document.getElementById("v-name").value||null; state.voicePitch=+document.getElementById("v-pitch").value; state.voiceRate=+document.getElementById("v-rate").value; enVoice=null; save(); toast("Sound saved","cheer"); break;
+    case "vreset": state.voiceName=null; state.voicePitch=1.5; state.voiceRate=.88; enVoice=null; save(); render(); toast("Sound reset"); break;
     case "bkcopy": { const code=backupCode(); const ta=document.getElementById("bk-in");
-      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(code):Promise.reject()).then(()=>toast("備份碼已複製！","cheer")).catch(()=>{ if(ta){ ta.value=code; ta.focus(); ta.select(); } toast("請手動複製下面框裡的備份碼"); }); break; }
-    case "bkfile": { try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([backupCode()],{type:"application/json"})); a.download=`阿臭被備份-${ymd(new Date())}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }catch(e){ toast("這裡不能下載，請用「複製備份碼」"); } break; }
-    case "bkrestore": { const t=(document.getElementById("bk-in")||{}).value; if(!t||!t.trim()){ toast("先把備份碼貼進框裡","shy"); return; }
+      (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(code):Promise.reject()).then(()=>toast("Code copied!","cheer")).catch(()=>{ if(ta){ ta.value=code; ta.focus(); ta.select(); } toast("Copy the code in the box"); }); break; }
+    case "bkfile": { try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([backupCode()],{type:"application/json"})); a.download=`achoubei-backup-${ymd(new Date())}.json`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000); }catch(e){ toast("Can't download here. Use COPY CODE."); } break; }
+    case "bkrestore": { const t=(document.getElementById("bk-in")||{}).value; if(!t||!t.trim()){ toast("Paste the code first","shy"); return; }
       if(!ui.bkArm){ ui.bkArm=true; const keep=t; render(); const ta=document.getElementById("bk-in"); if(ta) ta.value=keep; setTimeout(()=>{ ui.bkArm=false; },6000); return; }
       ui.bkArm=false; if(restoreFrom(t)) render(); break; }
     case "xpadd": { ui.xp=(ui.xp||[]).concat(+el.dataset.v); if(ui.xp.length>30) ui.xp.length=30; clink(); render(); break; }
     case "xpclr": ui.xp=[]; render(); break;
-    case "xpsend": { if(!(ui.xp||[]).length) return; state.extraPay=(state.extraPay||[]).concat(ui.xp).sort((a,b)=>b-a); log("adjust",`家長加發零用錢 ${ui.xp.reduce((a,b)=>a+b,0)} 元`,0); ui.xp=[]; save(); render(); toast("已送出！孩子打開遊戲就能分配","cheer"); break; }
-    case "pzone": state.zoneBonus=(state.zoneBonus||0)+1; save(); render(); toast("已提前開放下一區","cheer"); break;
-    case "pzonereset": state.zoneBonus=0; state.zonesSeen=1; save(); render(); toast("地圖已恢復成按月份開放"); break;
+    case "xpsend": { if(!(ui.xp||[]).length) return; state.extraPay=(state.extraPay||[]).concat(ui.xp).sort((a,b)=>b-a); log("adjust",`Extra money $${ui.xp.reduce((a,b)=>a+b,0)}`,0); ui.xp=[]; save(); render(); toast("Sent! The kid can sort it now.","cheer"); break; }
+    case "pzone": state.zoneBonus=(state.zoneBonus||0)+1; save(); render(); toast("Next place opened","cheer"); break;
+    case "pzonereset": state.zoneBonus=0; state.zonesSeen=1; save(); render(); toast("Places open monthly again"); break;
     case "item": ui.mpFor=null; itemModal(el.dataset.id); break;
-    case "wish": state.wish=el.dataset.id; save(); closeModal(); toast("設成願望了！回家看看還差多少","cheer"); render(); break;
+    case "wish": state.wish=el.dataset.id; save(); closeModal(); toast("Wish set!","cheer"); render(); break;
     case "unwish": state.wish=null; save(); closeModal(); render(); break;
     case "buy": { const it=getItem(el.dataset.id); const pr=Math.max(1,Math.round(ui.mp||0));
       if(it&&!(tmpItem&&tmpItem.id===it.id)&&it.price!==pr){ it.price=pr; save(); }
@@ -954,7 +964,7 @@ document.addEventListener("click",e=>{
     case "mpclr": ui.mp=0; itemModal(ui.mpFor); break;
     case "custom": ui.cust=null; customModal(); break;
     case "ccat": { const nm=(document.getElementById("cname")||{}).value||""; ui.cust={...(ui.cust||{}),name:nm,cat:el.dataset.c}; customModal(); break; }
-    case "cnext": { const nm=((document.getElementById("cname")||{}).value||"").trim(); if(!nm){ toast("先寫上東西的名字","shy"); return; }
+    case "cnext": { const nm=((document.getElementById("cname")||{}).value||"").trim(); if(!nm){ toast("Type a name first","shy"); return; }
       const c=ui.cust||{cat:"food"}; const icon={food:"food",book:"book",toy:"gift",sub:"podcast"}[c.cat]||"gift";
       tmpItem={id:"tmp-"+uid(),cat:c.cat,icon,name:nm.slice(0,12),price:0}; ui.mpFor=null; ui.mp=0; itemModal(tmpItem.id); break; }
     case "pk": { const pk=pickerState(); pk.taken.push(+el.dataset.i); clink(); render(); break; }
@@ -966,36 +976,36 @@ document.addEventListener("click",e=>{
       state.spend-=it.price; const v={id:uid(),itemId:it.id,cat:it.cat,icon:iconOf(it),name:it.name,price:it.price,boughtAt:Date.now(),redeemed:false};
       state.vouchers.unshift(v); if(state.vouchers.length>120) state.vouchers.length=120;
       if(state.wish===it.id) state.wish=null;
-      log("buy",`買了 ${it.name}`,-it.price); save(); tada(); confetti([iconOf(it),"party","star"]);
+      log("buy",`Bought ${it.name}`,-it.price); save(); tada(); confetti([iconOf(it),"party","star"]);
       go("bought",{v,change:sum-it.price}); break;
     }
     case "movedo": {
       const pk=pickerState(); const sum=pk.taken.reduce((a,i)=>a+pk.wallet[i],0); if(!sum||state[ui.from]<sum) return;
       state[ui.from]-=sum;
-      if(ui.to==="tree"){ state.seeds.push({id:uid(),amount:sum,value:sum,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+sum; log("plant",`種搖錢樹（從${ui.from==="spend"?"商店":"存款"}）`,sum); }
-      else { state[ui.to]+=sum; log("move",ui.to==="save"?"存進銀行":"從銀行拿出來",sum); }
+      if(ui.to==="tree"){ state.seeds.push({id:uid(),amount:sum,value:sum,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+sum; log("plant",`Plant tree (from ${ui.from==="spend"?"Shop":"Bank"})`,sum); }
+      else { state[ui.to]+=sum; log("move",ui.to==="save"?"Saved to bank":"Take from bank",sum); }
       save(); tada();
       const back=ui.to==="tree"?"tree":ui.back||"home";
-      const to0=ui.to; go(back); toast(to0==="tree"?`種下 ${sum} 元！${state.lockWeeks} 週後來收成`:to0==="save"?`存了 ${sum} 元，好棒！`:`拿出 ${sum} 元，放進商店了`,"cheer"); break;
+      const to0=ui.to; go(back); toast(to0==="tree"?`Planted $${sum}! Ready in ${state.lockWeeks} weeks`:to0==="save"?`Saved $${sum}!`:`Took $${sum} to the shop`,"cheer"); break;
     }
     case "pdput": {
       if(busy||drag) return; const pd=ui.pd; if(!pd||!pd.left.length) return; busy=true;
       const k=el.dataset.k; const v=pd.left[0]; const from=document.querySelector('#pdLeft .coin');
-      clink(); flyCoin(from,el,v,()=>{pd.left.shift();pd[k].push(v);busy=false;render(); if(!pd.left.length){tada();say("分好了！按完成就放進去囉！");react("cheer","分好了！",1500);}}); break;
+      clink(); flyCoin(from,el,v,()=>{pd.left.shift();pd[k].push(v);busy=false;render(); if(!pd.left.length){tada();say("All sorted! Tap DONE.");react("cheer","Done!",1500);}}); break;
     }
     case "pdundo": { const pd=ui.pd; for(const k of ["tree","save","spend"]){ if(pd[k].length){ pd.left.unshift(pd[k].pop()); break; } } render(); break; }
     case "pddone": {
       const pd=ui.pd; if(pd.left.length) return; const s=pd.spend.reduce((a,b)=>a+b,0), b=pd.save.reduce((a,c)=>a+c,0), t=pd.tree.reduce((a,c)=>a+c,0);
       state.spend+=s; state.save+=b; if(t>0){ state.seeds.push({id:uid(),amount:t,value:t,plantedAt:Date.now()}); state.plantedTotal=(state.plantedTotal||0)+t; }
       if(pd.extra){ state.extraPay=null; } else { const lp=parseYmd(state.lastPaid); lp.setDate(lp.getDate()+7); state.lastPaid=ymd(lp); }
-      log("payday",`${pd.extra?"額外零用錢":"發薪日"}：商店 ${s}・銀行 ${b}・搖錢樹 ${t}`,s+b+t); save(); confetti(); tada();
-      go("home"); toast(`放好了！商店 ${s} 元、銀行 ${b} 元、搖錢樹 ${t} 元`,"cheer"); break;
+      log("payday",`${pd.extra?"Extra money":"Payday"}: Shop ${s} · Bank ${b} · Tree ${t}`,s+b+t); save(); confetti(); tada();
+      go("home"); toast(`Done! Shop $${s}, Bank $${b}, Tree $${t}`,"cheer"); break;
     }
     case "harvest": harvestModal(el.dataset.id); break;
     case "harvestTo": {
       const s=state.seeds.find(x=>x.id===el.dataset.id); if(!s) return; const v=money(s.value); const to=el.dataset.to;
-      state.seeds=state.seeds.filter(x=>x!==s); state[to]+=v; log("harvest",`搖錢樹收成（種 ${s.amount} 元）`,v); save(); closeModal(); confetti(["sprout","coin","star"]); tada();
-      render(); toast(v>s.amount?`收成 ${v} 元，比種下去多了 ${v-s.amount} 元！`:v<s.amount?`收成 ${v} 元，比種下去少了 ${s.amount-v} 元。下次多等等太陽！`:`收成 ${v} 元！`, v>=s.amount?"cheer":"sad"); break;
+      state.seeds=state.seeds.filter(x=>x!==s); state[to]+=v; log("harvest",`Tree picked (planted $${s.amount})`,v); save(); closeModal(); confetti(["sprout","coin","star"]); tada();
+      render(); toast(v>s.amount?`Picked $${v}. That's $${v-s.amount} more!`:v<s.amount?`Picked $${v}. That's $${s.amount-v} less. Wait for sun next time!`:`Picked $${v}!`, v>=s.amount?"cheer":"sad"); break;
     }
     case "regame": closeModal(); render(); break;
     case "gate": gate(); break;
@@ -1006,47 +1016,47 @@ document.addEventListener("click",e=>{
       else if(g.in.length<3){ g.in+=k; ans.textContent=g.in; }
       break;
     }
-    case "redeem": { const v=state.vouchers.find(x=>x.id===el.dataset.id); if(v){v.redeemed=true;v.redeemedAt=Date.now();log("redeem",`兌換 ${v.name}`,0);save();render();} break; }
+    case "redeem": { const v=state.vouchers.find(x=>x.id===el.dataset.id); if(v){v.redeemed=true;v.redeemedAt=Date.now();log("redeem",`Used ${v.name}`,0);save();render();} break; }
     case "psaveamt": { const sp=Math.max(0,Math.round(+document.getElementById("p-spend").value||0)), sv=Math.max(0,Math.round(+document.getElementById("p-save").value||0));
-      if(sp!==state.spend||sv!==state.save){ log("adjust",`家長調整：消費 ${state.spend}→${sp}，存款 ${state.save}→${sv}`,0); state.spend=sp; state.save=sv; save(); } render(); toast("金額已儲存"); break; }
+      if(sp!==state.spend||sv!==state.save){ log("adjust",`Parent edit: shop ${state.spend}→${sp}, bank ${state.save}→${sv}`,0); state.spend=sp; state.save=sv; save(); } render(); toast("Saved"); break; }
     case "padd": { const lp=parseYmd(state.lastPaid); lp.setDate(lp.getDate()-7); state.lastPaid=ymd(lp); save(); render(); break; }
     case "psettings": {
-      state.kidName=(document.getElementById("s-name").value||"寶貝").trim().slice(0,12);
+      state.kidName=(document.getElementById("s-name").value||"Buddy").trim().slice(0,12);
       state.weekly=Math.max(0,Math.round(+document.getElementById("s-weekly").value||0));
       state.rate=Math.max(0,+document.getElementById("s-rate").value||0);
       state.mult=Math.max(1,Math.round(+document.getElementById("s-mult").value||1));
       state.lockWeeks=Math.max(0,Math.round(+document.getElementById("s-lock").value||0));
-      save(); render(); toast("設定已儲存"); break;
+      save(); render(); toast("Settings saved"); break;
     }
     case "maddweek": {
       const d=document.getElementById("m-date").value, p=parseFloat(document.getElementById("m-pct").value);
-      if(!d||!isFinite(p)){toast("請填日期和漲跌 %","sad");return;}
-      const weeks=(market.weeks||[]).filter(w=>w.date!==d); weeks.push({date:d,pct:p,source:"手動"}); market={...market,weeks};
+      if(!d||!isFinite(p)){toast("Enter date and change %","sad");return;}
+      const weeks=(market.weeks||[]).filter(w=>w.date!==d); weeks.push({date:d,pct:p,source:"manual"}); market={...market,weeks};
       try{localStorage.setItem(LS+"-m",JSON.stringify(market));}catch(e){}
       if(marketRef) marketRef.set(clone(market)).catch(()=>{});
-      applyMarket(false); render(); toast("已加入這週的 0050 漲跌"); break;
+      applyMarket(false); render(); toast("Added this week's 0050 change"); break;
     }
-    case "padditem": { readShopForm(); state.shop.push({id:uid(),cat:"toy",icon:"gift",name:"新商品",price:50}); save(); render(); break; }
+    case "padditem": { readShopForm(); state.shop.push({id:uid(),cat:"toy",icon:"gift",name:"New item",price:50}); save(); render(); break; }
     case "pdel": { readShopForm(); state.shop=state.shop.filter(i=>i.id!==el.dataset.id); if(state.wish===el.dataset.id) state.wish=null; save(); render(); break; }
-    case "psaveshop": readShopForm(); save(); render(); toast("商品已儲存"); break;
+    case "psaveshop": readShopForm(); save(); render(); toast("Items saved"); break;
     case "preset": {
       if(!ui.resetArm){ ui.resetArm=true; render(); setTimeout(()=>{ui.resetArm=false;},5000); return; }
       const keep={shop:state.shop,kidName:state.kidName,weekly:state.weekly,rate:state.rate,mult:state.mult,lockWeeks:state.lockWeeks};
-      state=Object.assign(defaultState(),keep); state.applied=(market.weeks||[]).map(w=>w.date); ui.resetArm=false; save(); render(); toast("已重新開始"); break;
+      state=Object.assign(defaultState(),keep); state.applied=(market.weeks||[]).map(w=>w.date); ui.resetArm=false; save(); render(); toast("Restarted"); break;
     }
   }
 });
 document.addEventListener("change",e=>{ if(e.target.id==="mp"){ ui.mp=Math.max(0,Math.min(99999,Math.round(+e.target.value||0))); const id=ui.mpFor; setTimeout(()=>{ if(document.getElementById("mp")&&ui.mpFor===id) itemModal(id); },0); return; } if(e.target.id==="cname"&&ui.cust){ ui.cust.name=e.target.value; } });
-document.addEventListener("change",e=>{ if(e.target.id==="bk-file"&&e.target.files&&e.target.files[0]){ const f=e.target.files[0]; const rd=new FileReader(); rd.onload=()=>{ const ta=document.getElementById("bk-in"); if(ta) ta.value=rd.result; toast("已讀入備份檔，按「還原備份」確認"); }; rd.readAsText(f); } });
+document.addEventListener("change",e=>{ if(e.target.id==="bk-file"&&e.target.files&&e.target.files[0]){ const f=e.target.files[0]; const rd=new FileReader(); rd.onload=()=>{ const ta=document.getElementById("bk-in"); if(ta) ta.value=rd.result; toast("File loaded. Tap RESTORE."); }; rd.readAsText(f); } });
 document.addEventListener("input",e=>{ if(e.target.id==="v-pitch"){ const o=document.getElementById("v-pv"); if(o) o.textContent=(+e.target.value).toFixed(2); } if(e.target.id==="v-rate"){ const o=document.getElementById("v-rv"); if(o) o.textContent=(+e.target.value).toFixed(2); } });
 function readShopForm(){
   document.querySelectorAll("[data-row]").forEach(r=>{const it=state.shop.find(i=>i.id===r.dataset.row); if(!it) return;
-    r.querySelectorAll("[data-f]").forEach(inp=>{const f=inp.dataset.f; let v=inp.value; if(f==="price") v=Math.max(1,Math.round(+v||1)); if(f==="name") v=(v||"商品").slice(0,12); if(f==="icon") v=ICONS[v]?v:"gift"; it[f]=v;});});
+    r.querySelectorAll("[data-f]").forEach(inp=>{const f=inp.dataset.f; let v=inp.value; if(f==="price") v=Math.max(1,Math.round(+v||1)); if(f==="name") v=(v||"Items").slice(0,12); if(f==="icon") v=ICONS[v]?v:"gift"; it[f]=v;});});
 }
 
-/* ---------- 阿臭被 map game: hop movement, free roaming, star pickups ---------- */
+/* ---------- map game: hop movement, free roaming, star pickups ---------- */
 const ZW=1000;
-const ZONES=[{n:"小鎮"},{n:"海邊",game:"beach",gn:"海浪撿貝殼"},{n:"遊樂園",game:"boss",gn:"換你當店長"}];
+const ZONES=[{n:"Town"},{n:"beach",game:"beach",gn:"Shell Catch"},{n:"park",game:"boss",gn:"Shopkeeper"}];
 const STOPS={shop:[215,505],bank:[580,505],tree:[680,282],payday:[865,410],beach:[1560,450],boss:[2430,500]};
 function monthsSince(a){const [y,m]=a.split("-").map(Number), d=new Date(); return (d.getFullYear()-y)*12+(d.getMonth()+1-m);}
 function zonesOpen(){ return Math.max(1,Math.min(3,1+monthsSince(state.mapStart||ym(new Date()))+(state.zoneBonus||0))); }
@@ -1061,20 +1071,20 @@ function updateEdges(){
   l.classList.toggle("hide",camT<=5); const ls=l.querySelector("span"); if(z>0&&ls) ls.textContent=ZONES[z-1].n;
   const rs=r.querySelector("span"); const nz=Math.min(2,Math.floor((camT+ZW*.5)/ZW)+1);
   if(nz>=3||camT>=o*ZW-ZW-5&&o>=3){ r.classList.add("hide"); }
-  else{ r.classList.remove("hide"); r.classList.toggle("locked",nz>=o); if(rs) rs.textContent=nz>=o?`${ZONES[nz].n} ${zoneOpenDate(nz+1).getMonth()+1}/${zoneOpenDate(nz+1).getDate()} 開放`:ZONES[nz].n; }
+  else{ r.classList.remove("hide"); r.classList.toggle("locked",nz>=o); if(rs) rs.textContent=nz>=o?`${ZONES[nz].n} ${zoneOpenDate(nz+1).getMonth()+1}/${zoneOpenDate(nz+1).getDate()} `:ZONES[nz].n; }
 }
 let peekTimer=null;
 function peekLocked(){ const o=zonesOpen(); if(o>=3) return; camT=maxCam(); const b=mapBox(); setMood(b,"shy");
-  lionSay(`${ZONES[o].n}${zoneOpenDate(o+1).getMonth()+1}月${zoneOpenDate(o+1).getDate()}日才會開喔！`,b);
+  lionSay(`${ZONES[o].n}${zoneOpenDate(o+1).getMonth()+1}/${zoneOpenDate(o+1).getDate()}!`,b);
   clearTimeout(peekTimer); peekTimer=setTimeout(()=>{ if(!pan) camT=(zonesOpen()-1)*ZW; },1800); }
 function panZone(d){
   const o=zonesOpen(), z=clamp(Math.round(camT/ZW)+d,0,2);
   if(z>=o){ peekLocked(); return; }
   camT=clamp(z*ZW,0,maxCam()); sfx("boing");
 }
-const WALK_SAY={shop:["去商店囉！","衝呀～商店！"],bank:["去銀行！","存錢去！"],tree:["去看搖錢樹！","搖錢樹等我！"],payday:["領錢囉！"],beach:["去海邊囉！"],boss:["去遊樂園當店長！"]};
-const ARRIVE_SAY={shop:"到商店了！",bank:"到銀行了！",tree:"搖錢樹到了！",payday:"發薪日！",beach:"海邊到了！",boss:"遊樂園到了！"};
-const STAR_SAY=["找到星星！","亮晶晶！","耶！星星！","再一顆！"];
+const WALK_SAY={shop:["To the shop!","Go, shop!"],bank:["To the bank!","Save!"],tree:["To the tree!","Tree time!"],payday:["Cash!"],beach:["To the beach!"],boss:["To the park!"]};
+const ARRIVE_SAY={shop:"Shop!",bank:"Bank!",tree:"Tree!",payday:"Payday!",beach:"Beach!",boss:"Park!"};
+const STAR_SAY=["Star!","Shiny!","Yay! Star!","One more!"];
 let mapLion={x:4,y:90,L:null,dir:1}, walkMood=null, moveTok=0, moving=false, walkTarget=null;
 let stars=[], starsGot=0, lastWander=Date.now(); const stopL={}; let roadRange=null;
 const MV0=()=>({jy:0,sx:1,sy:1,rot:0,on:false});
@@ -1162,8 +1172,8 @@ function mapTap(e){
   const rc=m.getBoundingClientRect(); const x=camX+(e.clientX-rc.left)/rc.width*1000, y=(e.clientY-rc.top)/rc.height*620;
   const hit=nearestL(r,x,y), range=getRange(r), box=mapBox();
   tapMark(e.clientX-rc.left,e.clientY-rc.top,hit.d<110);
-  const o=zonesOpen(); if(x>o*ZW-20){ setMood(box,"shy"); lionSay(`${ZONES[Math.min(2,o)].n}還沒開放喔！`,box); return; }
-  if(hit.d>110){ setMood(box,"shy"); lionSay(pick(["那邊過不去啦！","要走紅色小路喔！","我只能走小路～"]),box); return; }
+  const o=zonesOpen(); if(x>o*ZW-20){ setMood(box,"shy"); lionSay(`${ZONES[Math.min(2,o)].n} isn't open yet!`,box); return; }
+  if(hit.d>110){ setMood(box,"shy"); lionSay(pick(["Can't go there!","Stay on the path!","Path only!"]),box); return; }
   const to=clamp(hit.l,range[0],range[1]); walkTarget=null; setMood(box,"cheer");
   hopTo(to).then(ok=>{ if(ok){ const b=mapBox(); setMood(b,b?b.dataset.base:"wave"); } });
 }
@@ -1177,7 +1187,7 @@ function checkStars(l){ if(!stars.length) return; const hit=stars.filter(s=>Math
     const m=worldEl(); if(m){ const f=document.createElement("div"); f.className="plus"; f.textContent="+1"; f.style.left=s.x+"%"; f.style.top=s.y+"%"; m.appendChild(f); setTimeout(()=>f.remove(),800); } });
   sfx("star"); const c=document.getElementById("starCount"); if(c){ c.textContent=starsGot; c.parentElement.classList.remove("bump"); void c.offsetWidth; c.parentElement.classList.add("bump"); }
   lionSay(pick(STAR_SAY),mapBox());
-  if(!stars.length){ setTimeout(()=>{ confetti(["star","star","heart"]); tada(); lionSay("全部找到了！",mapBox()); setTimeout(()=>{ if(ui.screen==="home"){ spawnStars(); const m=worldEl(); if(m){ m.querySelectorAll(".mapstar").forEach(x=>x.remove()); m.insertAdjacentHTML("beforeend",starsHTML()); } } },2500); },300); }
+  if(!stars.length){ setTimeout(()=>{ confetti(["star","star","heart"]); tada(); lionSay("All found!",mapBox()); setTimeout(()=>{ if(ui.screen==="home"){ spawnStars(); const m=worldEl(); if(m){ m.querySelectorAll(".mapstar").forEach(x=>x.remove()); m.insertAdjacentHTML("beforeend",starsHTML()); } } },2500); },300); }
 }
 let starsOpen=0;
 function afterHomeRender(){ if(isTown()) initTown(); else { const r=road(); if(!r) return; ensureLion(); getRange(r); Object.keys(STOPS).forEach(k=>{ if(stopL[k]==null) stopL[k]=nearestL(r,...STOPS[k]).l; });
@@ -1189,8 +1199,8 @@ function afterHomeRender(){ if(isTown()) initTown(); else { const r=road(); if(!
   const o=zonesOpen(); if(automationsRan && (state.zonesSeen||1)<o){ const z=(state.zonesSeen||1); showUnlock(z); }
 }
 function showUnlock(z){
-  const zn=ZONES[z]; const line=`新地圖開放了！${zn.n}有新的小遊戲「${zn.gn}」！`;
-  openModal(`<div class="sheet unlock"><div class="ulart">${ic(z===1?"shell":"ferris")}</div>${lion("cheer","","width:160px;margin:-10px auto 0")}<div class="n">新地圖：${zn.n}！</div><div class="sub">${esc(line)} ${sayBtn(line)}</div><div class="btns"><button class="btn g" data-act="zonego" data-z="${z}">${ic("next")} 去看看！</button></div></div>`);
+  const zn=ZONES[z]; const line=`New place: ${zn.n}! New game: ${zn.gn}!`;
+  openModal(`<div class="sheet unlock"><div class="ulart">${ic(z===1?"shell":"ferris")}</div>${lion("cheer","","width:160px;margin:-10px auto 0")}<div class="n">New: ${zn.n}!</div><div class="sub">${esc(line)} ${sayBtn(line)}</div><div class="btns"><button class="btn g" data-act="zonego" data-z="${z}">${ic("next")} Let's go!</button></div></div>`);
   confetti(["star","heart",z===1?"shell":"ferris"]); tada(); say(line);
 }
 /* idle: wander a little now and then */
@@ -1202,7 +1212,7 @@ setInterval(()=>{ const now=Date.now();
   const to=clamp(mapLion.L+(Math.random()<.5?-1:1)*(60+Math.random()*90),lo,hi); hopTo(to,{speed:200}).then(ok=>{ if(ok){ const b=mapBox(); setMood(b,b?b.dataset.base:"wave"); } });
 },1000);
 
-/* ---------- 阿臭被 character engine ---------- */
+/* ---------- character engine ---------- */
 function baseMood(){
   switch(ui.screen){
     case "home": { if(pendingPaydays()>0) return "cheer"; const w=state.wish&&state.shop.find(i=>i.id===state.wish); if(w&&state.spend+state.save>=w.price) return "cheer"; if(weather().k==="rain"&&state.seeds.length) return "sad"; return "wave"; }
@@ -1213,10 +1223,10 @@ function baseMood(){
   }
 }
 const LINES={
-  tap:["嘻嘻，好癢！","我是阿臭被！","抱抱～","要一起存錢嗎？","你今天好棒！","哇！嚇我一跳！","我最喜歡你了！","錢要好好用喔！"],
-  wake:["啊！我醒了！","呼～睡飽了！"],
-  shop:["去買東西囉！"],bank:["存起來，慢慢變多！"],tree:["去看搖錢樹！"],payday:["發錢囉！"],home:["回家囉～"],
-  nomoney:["錢不夠耶…","再存一下下！"],right:["答對了！","好聰明！"],wrong:["嗯…再想想？"]
+  tap:["Hee hee!","I'm Achoubei!","Hug!","Let's save!","You're great!","Whoa!","I love you!","Spend wisely!"],
+  wake:["I'm awake!","Good morning!"],
+  shop:["Shopping!"],bank:["Save it, watch it grow!"],tree:["To the tree!"],payday:["Money!"],home:["Home!"],
+  nomoney:["Not enough…","Save a bit more!"],right:["Right!","Smart!"],wrong:["Hmm… try again?"]
 };
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 let moodTimer=null, lastAct=Date.now(), sleeping=false;
@@ -1273,7 +1283,7 @@ let drag=null;
 function startDrag(e,el){
   const r=el.getBoundingClientRect(); const g=el.cloneNode(true); g.classList.add("ghost"); g.classList.remove("drop");
   g.style.left=r.left+"px"; g.style.top=r.top+"px"; g.style.width=r.width+"px"; g.style.height=r.height+"px"; document.body.appendChild(g);
-  el.style.visibility="hidden"; drag={el,g,i:+el.dataset.i,ox:e.clientX-r.left,oy:e.clientY-r.top,w:r.width,h:r.height}; clink(); react("wow","拖到罐子裡！",900);
+  el.style.visibility="hidden"; drag={el,g,i:+el.dataset.i,ox:e.clientX-r.left,oy:e.clientY-r.top,w:r.width,h:r.height}; clink(); react("wow","Drag to a jar!",900);
 }
 function jarAt(x,y){ const t=document.elementFromPoint(x,y); return t&&t.closest('[data-act="pdput"]'); }
 function moveDrag(e){ const d=drag; d.g.style.left=(e.clientX-d.ox)+"px"; d.g.style.top=(e.clientY-d.oy)+"px"; const j=jarAt(e.clientX,e.clientY);
@@ -1282,7 +1292,7 @@ function endDrag(e){ const d=drag; drag=null; const j=jarAt(e.clientX,e.clientY)
   const pd=ui.pd;
   if(j&&pd&&pd.left[d.i]!=null){ const v=pd.left[d.i]; pd.left.splice(d.i,1); pd[j.dataset.k].push(v); d.g.remove(); sfx("star");
     render(); const nj=document.getElementById("pd-"+j.dataset.k); if(nj){ nj.classList.add("bounce1"); setTimeout(()=>nj.classList.remove("bounce1"),400); }
-    if(!pd.left.length){ tada(); confetti(["coin","star","heart"]); say("分好了！按完成就放進去囉！"); react("cheer","分好了！",1500); }
+    if(!pd.left.length){ tada(); confetti(["coin","star","heart"]); say("All sorted! Tap DONE."); react("cheer","Done!",1500); }
   } else { d.g.classList.add("back"); const r=d.el.getBoundingClientRect(); d.g.style.left=r.left+"px"; d.g.style.top=r.top+"px"; setTimeout(()=>{ d.g.remove(); d.el.style.visibility=""; },260); sfx("thud"); }
 }
 function cancelDrag(){ const d=drag; drag=null; if(!d) return; d.g.remove(); d.el.style.visibility=""; }

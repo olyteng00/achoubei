@@ -1,4 +1,4 @@
-/* 阿臭被零用錢 — hand-drawn flat icon set (viewBox 0 0 100 100) */
+/* Achoubei Money — hand-drawn flat icon set (viewBox 0 0 100 100) */
 (function(){
 const K="#2A211B",T="#13707A",Y="#F6C21C",O="#EE5B14",B="#8C5A3B",C="#FFF7EA",W="#FFFDF7",P="#F29A8E",R="#E8402A",L="#2F9ADB",G="#5C9B3B",S="#D9DDE2";
 const dots=(arr,c,r)=>arr.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="${r||2.6}" fill="${c}"/>`).join("");
@@ -84,7 +84,7 @@ ball:`<circle cx="50" cy="50" r="40" fill="${Y}"/><path d="M14 40 C34 50 66 50 8
 kite:`<path d="M50 6 L80 42 L50 80 L20 42Z" fill="${Y}"/><path d="M50 6 L80 42 H50Z M50 80 L20 42 H50Z" fill="${T}"/><path d="M50 80 q-8 8 0 12 q8 4 -4 8" fill="none" stroke="${B}" stroke-width="3"/><path d="M44 88 l-6 -4 v8z M56 94 l6 -4 v8z" fill="${O}"/>`,
 dino:`<path d="M12 70 C12 52 30 44 46 46 C54 30 66 18 82 22 C92 24 92 38 82 40 L72 40 C70 50 72 62 66 70 L66 88 H56 V76 H34 V88 H24 V76 C16 76 12 74 12 70Z" fill="${G}"/><circle cx="80" cy="30" r="3.5" fill="${K}"/>${[[38,42],[50,36],[60,26]].map(([x,y])=>`<path d="M${x-6} ${y+4} L${x} ${y-8} L${x+6} ${y+4}Z" fill="${Y}"/>`).join("")}`
 };
-const LABELS={yakult:"養樂多",pudding:"布丁",icecream:"冰淇淋",donut:"甜甜圈",eggcake:"雞蛋糕",strawberry:"草莓",stickerbook:"貼紙書",crayon:"蠟筆",puzzle:"拼圖",picturebook:"繪本",book:"書",balloon:"氣球",bubbles:"泡泡水",capsule:"扭蛋",car:"小汽車",teddy:"玩偶",blocks:"積木",rocket:"火箭",ball:"球",kite:"風箏",dino:"恐龍",food:"便當",podcast:"Podcast",gift:"禮物",star:"星星",heart:"愛心"};
+const LABELS={yakult:"Yakult",pudding:"Pudding",icecream:"Ice cream",donut:"Donut",eggcake:"Egg cake",strawberry:"Strawberries",stickerbook:"Sticker book",crayon:"Crayons",puzzle:"Puzzle",picturebook:"Picture book",book:"Book",balloon:"Balloon",bubbles:"Bubbles",capsule:"Capsule toy",car:"Toy car",teddy:"Plush toy",blocks:"Blocks",rocket:"Rocket",ball:"Ball",kite:"Kite",dino:"Dino",food:"Lunch box",podcast:"Podcast",gift:"Gift",star:"Star",heart:"Heart"};
 const EMOJI={"🧃":"yakult","🍮":"pudding","🍦":"icecream","🍩":"donut","🧇":"eggcake","🍓":"strawberry","🌟":"stickerbook","🖍️":"crayon","🧩":"puzzle","📘":"picturebook","🎈":"balloon","🫧":"bubbles","🥚":"capsule","🚗":"car","🧸":"teddy","🧱":"blocks","🎁":"gift"};
 window.ICONS=I; window.ICON_LABELS=LABELS; window.EMOJI2ICON=EMOJI;
 window.ic=function(name,cls){const body=I[name]||I.gift;return `<svg class="ic ${cls||""}" viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;};

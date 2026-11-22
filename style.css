@@ -666,3 +666,42 @@ html,body{background:var(--grain-d),var(--grain),#6A9C74;background-size:220px,2
 #app[data-screen="home"]{padding:0!important;max-width:none!important;margin:0}
 #app[data-screen="home"] .townview,#app.fit[data-screen="home"] .townview{height:100vh;height:100dvh;border-radius:0}
 body:has(#app[data-screen="home"]){padding:0}
+/* stars on the map */
+.tstar-in{animation:tstarbob 1.6s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes tstarbob{from{transform:translateY(0) rotate(-8deg)}to{transform:translateY(-6px) rotate(8deg)}}
+.tstar.got .tstar-in{animation:tstarget .55s ease-out forwards}
+@keyframes tstarget{to{transform:translateY(-60px) scale(1.6);opacity:0}}
+.tstarchip{gap:6px;font-size:24px;color:#2A2624;--fill:#FBF6EC}
+.tstarchip b{font-weight:400;min-width:1ch}
+.tstarchip.bump{animation:bump .35s ease-out}
+/* HOME room */
+.roomwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;flex:1;min-height:0;margin-top:10px}
+.roomscene{position:relative;border-radius:22px;overflow:hidden;background:#EAD9B6;aspect-ratio:1000/620;max-height:100%;align-self:start;width:100%}
+#app.fit .roomscene{max-height:calc(100dvh - 120px);width:auto;justify-self:center}
+.roomsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.roomsvg.top{z-index:3;pointer-events:none}
+.roomscene .roomlion{position:absolute;left:73%;top:73%;width:15%;transform:translate(-50%,-92%);z-index:2}
+.furn.fresh{animation:furnpop .7s cubic-bezier(.3,1.6,.5,1) both;transform-box:fill-box;transform-origin:center bottom}
+@keyframes furnpop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+.bulb{animation:bulb 1.6s ease-in-out infinite alternate}@keyframes bulb{to{opacity:.45}}
+.fish2{animation:fish2 4s ease-in-out infinite alternate}@keyframes fish2{to{transform:translateX(18px)}}
+.roomshop{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start;overflow:auto;padding:4px 4px 12px;max-height:calc(100dvh - 110px)}
+.fcard{position:relative;border:0;border-radius:16px;background:#FBF6EC;padding:8px 6px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,.12);font:inherit}
+.fcard svg{width:100%;height:78px}
+.fcard .fcost{display:flex;align-items:center;gap:4px;font-size:22px;color:#2A2624}
+.fcard .fcost svg{width:22px;height:22px}
+.fcard.poor{opacity:.55}
+.fcard.owned{background:#DCE8D6}
+.fcard:active{transform:scale(.96)}
+.fsheet{display:flex;flex-direction:column;align-items:center;gap:12px}
+.fbig{width:min(60vw,320px);height:200px}
+.fprice{display:flex;align-items:center;gap:8px;font-size:40px}
+.fprice b{font-weight:400}
+.fneed{font-size:28px;padding:10px 18px;color:#9E4F35}
+@media (orientation:portrait),(max-width:899px){ .roomwrap{grid-template-columns:1fr} .roomshop{grid-template-columns:repeat(4,1fr);max-height:none} }
+#app.fit .roomscene,.roomscene{width:min(100%,calc((100dvh - 120px) * 1.6129));max-height:none;justify-self:center}
+/* labels sit on a soft patch of grass so paths don't run through the letters */
+.tboard .hand{position:relative}
+.tboard{isolation:isolate}
+.tboard::before{content:"";position:absolute;left:-.5em;right:-.5em;top:-.3em;bottom:-.3em;background:#6A9C74;border-radius:1.2em;filter:blur(3px);z-index:-1}
+.t-forest .tboard{top:99%}
