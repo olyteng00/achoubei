@@ -1,7 +1,7 @@
 {
- "name": "阿臭被零用錢",
- "short_name": "阿臭被",
- "lang": "zh-Hant-TW",
+ "name": "Achoubei Money",
+ "short_name": "Achoubei",
+ "lang": "en",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
