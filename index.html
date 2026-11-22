@@ -14,14 +14,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=e4076cd888">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><filter id="rough" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="7"/></filter><filter id="roughS" x="-8%" y="-8%" width="116%" height="116%"><feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="5"/><feDisplacementMap in="SourceGraphic" scale="2.5"/></filter><filter id="rough2" x="-5%" y="-5%" width="110%" height="110%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter></svg>
 <div id="app"></div>
 <div id="modalRoot"></div>
-<script src="icons.js"></script>
-<script src="town-data.js"></script>
+<script src="icons.js?v=e4076cd888"></script>
+<script src="town-data.js?v=e4076cd888"></script>
 <script>
 "use strict";
 const MOODS={wave:"lion-wave.webp",cheer:"lion-cheer.webp",wow:"lion-wow.webp",shy:"lion-shy.webp",sad:"lion-sad.webp",sleep:"lion-sleep.webp"};
@@ -112,7 +112,7 @@ function standalone(){
   isApp=true; syncNote="資料存在這台 iPad・記得在家長模式定期備份"; updateSync();
   runAutomations(); refreshMarket();
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ refreshMarket(); payInterest(); if(["home","bank","tree"].includes(ui.screen)) render(); } });
-  try{ if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost") && window.top===window) navigator.serviceWorker.register("sw.js").catch(()=>{}); }catch(e){}
+  try{ if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost") && window.top===window) { const hadSW=!!navigator.serviceWorker.controller; navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{ r.update(); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) r.update(); }); }).catch(()=>{}); navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(hadSW&&!window.__swr){ window.__swr=1; location.reload(); } }); } }catch(e){}
 }
 function mergeWeeks(list,src){
   if(!Array.isArray(list)||!list.length) return false; let changed=false; const have=new Map((market.weeks||[]).map(w=>[w.date,w]));
